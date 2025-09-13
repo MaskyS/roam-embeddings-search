@@ -82,7 +82,7 @@ Given these scenarios, we must use a strategy that adapts to the block's role. W
 +-----------------+      +----------------------+
 ```
 
-## 4. Technology Stack
+## 4. Technology Stack & Deployment
 
 -   **Backend Service:** **Python 3.10+** with the **FastAPI** web framework.
 -   **Vector Database:** **ChromaDB**.
@@ -90,29 +90,302 @@ Given these scenarios, we must use a strategy that adapts to the block's role. W
 -   **Roam Extension:** **JavaScript**.
 -   **Deployment:** **Docker Compose**.
 
-## 5. Detailed Implementation Plan
+### Docker Architecture:
+- **ChromaDB Container:** Runs on port 8000, persists data in `./chroma_data`
+- **Backend Container:** Python/FastAPI on port 8001, hot-reloads with mounted `./backend` volume
+- **Environment:** Uses `.env` file for secrets (Roam API token, Google API key)
+- **Package Management:** Uses `uv` for fast Python dependency installation
+- **Development:** Containers support hot-reload for rapid iteration
 
-### Phase 1: Backend Setup & Initial Indexing
+## 5. Development Philosophy: REPL Approach
 
-1.  **Environment Setup:** Create `docker-compose.yml`, `backend/Dockerfile`, and `.env` files.
-2.  **Initial Indexing Script (`sync.py`):** Connects to ChromaDB, fetches the full graph from Roam, applies the **"Adaptive Context"** logic to each block, generates embeddings, and saves them to ChromaDB. Saves a timestamp upon completion.
+We use a REPL (Read-Eval-Print-Loop) methodology for iterative development:
 
-### Phase 2: Incremental Syncing Strategy
+### **Observe** - Learn from real data
+- Test each enhancement against actual Roam data
+- Measure concrete improvements (e.g., search quality)
+- Identify patterns and edge cases
 
-1.  **Modify Sync Script:** Use a Datalog query to fetch only blocks edited since the last sync timestamp, along with their required context (parents, siblings).
-2.  **Create Sync API Endpoint:** Expose a `POST /sync` endpoint in FastAPI to trigger the sync script.
+### **Orient** - Understand implications
+- Analyze what the observations mean
+- Identify the next most impactful improvement
+- Consider technical constraints
 
-### Phase 3: Search API Endpoint
+### **Decide** - Choose minimal change
+- Select the smallest change that addresses a real limitation
+- Build on proven infrastructure
+- Define clear success metrics
 
-1.  **Create Search Endpoint:** Define `GET /search?q=...`. This will embed the query `q` and return the top `k` most similar `block_uid`s from ChromaDB.
+### **Act** - Implement and measure
+- Make the change
+- Test with real data
+- Document learnings
 
-### Phase 4: Roam Extension Frontend
+This approach ensures:
+- **Small failures** - Easy to rollback or fix
+- **Testable iterations** - Clear success metrics
+- **Compounding knowledge** - Each version informs the next
+- **Early value delivery** - Improvements are usable immediately
 
-1.  **Setup:** Add a "Semantic Search" command to the command palette.
-2.  **UI:** Create a search input and a "Sync Now" button. The button calls `POST /sync`; the search input calls `GET /search`.
-3.  **Display Results:** Use `window.roamAlphaAPI.ui.components.renderBlock` to display the returned `block_uid`s interactively.
+## 6. Technical Specifications
 
-## 6. Configuration
+### Core Parameters:
+- **Embedding Model:** `models/gemini-embedding-001` (3072 dimensions)
+- **Context Limit:** 8000 characters (configurable as `MAX_CONTEXT_LENGTH`)
+- **Batch Size:** 50 blocks per pull-many request (optional, adjustable for rate limiting)
+- **Rate Limit:** 50 requests/minute/graph (Roam API constraint)
+- **Query Timeout:** 20 seconds (Roam API constraint)
+- **Search Results Limit:** 50 maximum (configurable)
+- **Query Length Limit:** 1000 characters (prevent token overflow)
+
+## 7. Technical Implementation Details
+
+### Key Discoveries:
+
+1. **Roam's Data Model:**
+   - Pages have `:node/title` attribute
+   - Blocks have `:block/string` attribute
+   - Both can be parents, requiring different handling
+
+2. **Pull API Capabilities:**
+   - Supports reverse lookups: `{:block/_children [...]}` gets parent info
+   - Supports nested patterns for fetching related data in one request
+   - More efficient than multiple separate queries
+
+3. **Enhanced Pull Selectors:**
+   ```clojure
+   [:block/uid :block/string
+    {:block/children [:block/uid :block/string :block/order]}
+    {:block/_children [:block/uid :block/string :node/title
+                      {:block/children [:block/uid :block/string :block/order]}]}]
+   ```
+   This single selector gets:
+   - Current block's data
+   - Its children (if any)
+   - Its parent
+   - Its siblings (parent's children)
+
+4. **Context Building Patterns:**
+   - **Parent blocks:** Concatenate with children as bullet points
+   - **Leaf blocks with siblings:** `Parent > prev → current → next`
+   - **Page children:** `Page Title > block text`
+
+### Important Gotchas:
+
+- The parent from reverse lookup doesn't automatically include its children
+- Must explicitly request parent's children for sibling context
+- Pages don't have sibling relationships (only blocks do)
+
+## 7. Detailed Implementation Plan
+
+### Current Implementation Status:
+
+✅ **Completed:**
+- Docker environment with ChromaDB and FastAPI backend
+- Connection to Roam Backend API with proper authentication
+- Enhanced pull selectors with parent and sibling context
+- Adaptive context building for parent and leaf blocks (v5)
+- Full graph sync with paginated batching (`sync_full.py`)
+- Google Gemini embeddings integration (models/gemini-embedding-001)
+- Semantic search API with block enrichment
+- Highlight generation for search matches
+
+🚧 **In Progress:**
+- Performance optimization for large graphs
+- Block reference resolution
+
+📋 **Future Work:**
+- Incremental sync with cascade effects
+- Roam Extension UI
+- Related blocks endpoint
+
+### Phase 2: Full Graph Sync (`sync_full.py`)
+- **Paginated Strategy:** Due to 20-second timeout on Roam API
+  1. Get all UIDs with lightweight query (no text/children)
+  2. Use `pull-many` in batches of 50 blocks
+  3. Build adaptive context for each block
+  4. Pass context as documents to ChromaDB
+- **Rate Limiting:** 50 requests/minute - add sleep between batches
+- **Context Limits:** Truncate to 8000 characters (configurable constant)
+- **Page Handling:** Pages appear as parents with `:node/title` - format as "Page Title > child text"
+- **Block References:** Resolve `((block-ref))` and `[[page-links]]` to actual text
+- **Progress Tracking:** Log progress for large graphs
+- **Save timestamp** for future incremental syncs
+
+### Phase 3: Incremental Sync Strategy (FUTURE)
+
+**Why Complex:** Our Adaptive Context strategy creates dependencies between blocks. When one block changes, multiple embeddings become stale.
+
+#### Cascade Effects Problem
+
+When a block is modified, the following embeddings need updates:
+
+```
+Modified Block (B)
+├─ Parent (P)        → If B is a child, P's context includes B's text
+├─ Siblings (S1, S2) → Their sliding windows include B
+└─ Children (C1, C2) → If B is parent, their context includes B
+
+Total affected: 1 modified + potentially 5+ related blocks
+```
+
+**Example Scenario:**
+1. User edits "Open source" to "Free and open source"
+2. Must re-embed:
+   - The block itself (text changed)
+   - Parent block "Pros:" (its children context changed)
+   - Sibling "Runs locally" (its sliding window changed)
+   - Sibling "Good Python client" (its sliding window changed)
+
+#### Query Strategy
+
+```clojure
+; Find all blocks edited since last sync
+[:find ?uid ?edit-time
+ :where 
+ [?b :block/uid ?uid]
+ [?b :block/edit-time ?edit-time]
+ [(> ?edit-time LAST_SYNC_TIMESTAMP)]]
+```
+
+Then for each modified block:
+1. Pull the block with full context selector
+2. Identify all affected blocks (parent, siblings, children)
+3. Build set of UIDs needing re-embedding
+4. Process entire set (avoiding duplicates)
+
+#### Deletion Handling Challenge
+
+Roam API doesn't provide deletion events, leading to four possible approaches:
+
+1. **Ignore for MVP** 
+   - Stale embeddings remain in ChromaDB
+   - Won't match new searches well
+   - Simplest approach, acceptable for MVP
+
+2. **Full Comparison**
+   - Query all UIDs from Roam
+   - Compare with ChromaDB collection
+   - Delete missing UIDs
+   - Expensive but thorough
+
+3. **Track Block Count**
+   - Monitor total block count
+   - If significant decrease, trigger full resync
+   - Heuristic approach, may miss some deletions
+
+4. **Event Log (Future)**
+   - If Roam adds deletion events to API
+   - Would be the ideal solution
+   - Not currently available
+
+**Recommendation:** Start with approach #1 (ignore), implement #2 when needed.
+
+#### Implementation Complexity
+
+- Must track last sync timestamp persistently
+- Need efficient set operations for affected blocks
+- Careful handling of cascading updates
+- Consider rate limits when processing affected blocks
+- May need to batch updates for large changes
+
+**Note:** Due to cascade complexity, implement only after full sync is battle-tested
+
+### Phase 4: Roam Extension
+- Add "Semantic Search" command to command palette
+- Create search UI with real-time results
+- Use `window.roamAlphaAPI.ui.components.renderBlock` for display
+- Add "Sync Now" button to trigger backend sync
+
+## 8. Search Design Decisions
+
+### Why Semantic Search
+- **Goal:** Find blocks by meaning, not just keyword matching
+- **Benefit:** Discovers conceptually related content even with different wording
+- **Trade-off:** Requires embedding generation and vector storage
+
+### Enrichment Strategy
+- **Decision:** Pull latest block data from Roam after ChromaDB query
+- **Rationale:** Ensures search results show current content, not stale cached data
+- **Cost:** Additional API call but guarantees accuracy
+
+### Distance vs Similarity Conversion
+- **ChromaDB:** Returns distance (0-2 range, lower is better)
+- **User-facing:** Convert to similarity (0-1 range, higher is better)
+- **Formula:** `similarity = 1 - (distance / 2)`
+
+### Highlight Generation
+- **Approach:** Case-insensitive word matching in both original text and context
+- **Smart Snippets:** Centers around first match with configurable window
+- **Limitation:** Simple word matching, not semantic highlighting
+
+### Query Processing
+- **Decision:** Use raw query without expansion
+- **Rationale:** Predictable results, no unexpected matches
+- **Alternative considered:** Query expansion with synonyms (too unpredictable)
+
+### Result Filtering
+- **Pre-filter:** Use ChromaDB's `where` clause for block_type filtering (efficient)
+- **Post-filter:** Apply similarity threshold after retrieval (flexible)
+- **Limit:** Hard cap at 50 results to manage pull-many performance
+
+### Empty Block Handling
+- **Discovery:** Some blocks have no `:block/string` or `:node/title`
+- **Decision:** Skip these during sync (likely queries, embeds, buttons)
+- **Benefit:** Improves search relevance by excluding non-text content
+
+## 9. API Endpoints
+
+### GET /
+- **Description:** Health check and status
+- **Response:** Graph name, collection document count
+
+### GET /search
+- **Description:** Semantic search across Roam blocks
+- **Parameters:**
+  - `q` (required): Search query text
+  - `limit` (optional): Number of results (1-50, default 10)
+  - `threshold` (optional): Similarity threshold (0-1, filters results)
+  - `block_type` (optional): Filter by "parent" or "leaf"
+- **Response Structure:**
+  ```json
+  {
+    "query": "search text",
+    "results": [{
+      "uid": "block-uid",
+      "similarity": 0.95,
+      "distance": 0.1,
+      "block": {
+        "text": "current block text",
+        "text_preview": { "text": "snippet", "highlights": [...] },
+        "parent_text": "parent block text",
+        "type": "leaf|parent",
+        "is_page": false,
+        "has_children": true
+      },
+      "context": {
+        "used_for_embedding": "full context text",
+        "preview": { "text": "snippet", "highlights": [...] }
+      },
+      "metadata": { ... }
+    }],
+    "count": 10,
+    "execution_time": 3.2
+  }
+  ```
+- **Error Handling:**
+  - 400: Empty query
+  - 500: Service unavailable
+
+### POST /sync
+- **Description:** Trigger full graph sync (currently placeholder)
+- **Response:** Success message with UIDs processed
+
+### GET /health-check
+- **Description:** Check Roam API connectivity
+- **Response:** Status and total block count in graph
+
+## 10. Configuration
 
 A `.env` file will be used for secrets:
 ```
@@ -122,7 +395,68 @@ ROAM_API_TOKEN="roam-graph-token-..."
 GOOGLE_API_KEY="AIza..."
 ```
 
-## 7. Open Questions
+## 9. Expected Context Output Examples
 
-1.  **Handling Deletions:** For the MVP, we will ignore deleted blocks.
-2.  **Sync Trigger:** The MVP will have a manual "Sync Now" button.
+**Sequential List:**
+```
+Pros: > Open source → Runs locally → Good Python client
+```
+
+**Isolated Block:**
+```
+Decision on ChromaDB > Evaluate vector database options
+```
+
+**Page Child:**
+```
+Project Plan > Overview of the semantic search system
+```
+
+## 10. Known Issues and Limitations
+
+### Current Limitations
+
+1. **Block References Not Resolved**
+   - `((block-uid))` references remain as UIDs in context
+   - `[[page-name]]` links not expanded to page content
+   - Impact: Reduced context quality for blocks with many references
+   - Solution: Implement reference resolution in context building
+
+2. **Special Blocks Not Supported**
+   - Query blocks, embeds, and buttons have no text content
+   - Currently skipped during sync
+   - Could potentially index their configuration/query text
+
+3. **No Incremental Sync**
+   - Must run full sync to capture changes
+   - Becomes inefficient for large graphs with frequent updates
+   - Solution outlined in Phase 3 (complex due to cascade effects)
+
+4. **Character-Based Truncation**
+   - Using character count instead of token count for limits
+   - May occasionally exceed model token limits for non-ASCII text
+   - Solution: Implement proper tokenization
+
+5. **Simple Highlight Matching**
+   - Only matches exact words, not semantic concepts
+   - Case-insensitive but doesn't handle stemming
+   - Solution: Would require NLP processing
+
+### Performance Considerations
+
+- Full sync takes ~1-2 seconds per block (including embeddings)
+- Search enrichment adds ~3-5 seconds for pull-many
+- Large graphs (>10,000 blocks) may hit rate limits
+
+### API Constraints
+
+- Roam API: 20-second timeout, 50 requests/minute
+- Google Gemini: Context limit of ~8000 tokens
+- ChromaDB: Collection dimension fixed after creation
+
+## 11. Open Questions
+
+1.  **Handling Deletions:** Currently ignoring (see Phase 3 for options)
+2.  **Sync Trigger:** Manual trigger vs scheduled vs webhook
+3.  **Reference Expansion Depth:** How deep to follow block references?
+4.  **Context Budget Allocation:** How to split 8000 chars between parent/siblings/children?

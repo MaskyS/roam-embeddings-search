@@ -1,0 +1,29 @@
+- Work in progress, for now see https://github.com/panterarocks49/settings-panel-example/blob/main/extension.js for an example of how to use it
+- Roam handles removing dom elements / settings set with the extension API
+- **methods**
+    - `extensionAPI`
+        - `.settings`
+            - Settings are scoped to your extension, there is no risk of it conflicting with another extension
+                - They are persisted across devices as well
+            - `.set`
+                - key
+                - value
+            - `.get`
+                - key
+            - `.getAll`
+            - `.panel`
+                - `.create`
+                    - config
+                        - For an example config see https://github.com/panterarocks49/settings-panel-example/blob/main/extension.js
+                    - **Note regarding "id" in a setting**: they must be non-empty strings and can't contain ".", "#", "$", "[", or "]"
+        - `.ui`
+            - `.commandPalette`
+                - `.addCommand`
+                    - same as [window.roamAlphaAPI.ui.commandPalette.addCommand](((rAkidgrv3))) (please follow the link for documentation)
+                        - only difference is: when you use this version from extensionAPI, the commands are associated with your extension and so you have convenient grouping (in for example the Hotkeys window)
+                    - [[Migration Guide]] from [roamAlphaAPI.ui.commandPalette.addCommand](((rAkidgrv3))) to extensionAPI's version
+                        - [[Loom video]]:
+                          {{[[video]]: https://www.loom.com/share/f51a889a8e444ceb8c8eab15654d2650}}
+                - `.removeCommand`
+                    - same as [window.roamAlphaAPI.ui.commandPalette.removeCommand](((eG9ulEdWq))) (please follow the link for documentation)
+                        - in contrast to the roamAlphaAPI's version, you do not need to call this on `onunload` - if you call via extensionAPI, will be cleaned automatically on unload
