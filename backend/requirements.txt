@@ -1,0 +1,8 @@
+
+fastapi
+uvicorn[standard]
+chromadb-client
+google-generativeai
+httpx
+python-dotenv
+pydantic-settings

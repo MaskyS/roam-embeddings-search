@@ -1,0 +1,17 @@
+# ChromaDB Configuration
+# This file configures the ChromaDB server running in Docker
+
+# Allow clients to reset the database (useful for development)
+allow_reset: false
+
+# Persist data to disk
+persist_directory: /data
+
+# Anonymized telemetry
+anonymized_telemetry: false
+
+# API implementation
+chroma_api_impl: rest
+
+# Log level
+log_level: INFO

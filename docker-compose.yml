@@ -1,0 +1,22 @@
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_data:/data
+      - ./chroma_config.yaml:/config.yaml
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - chromadb
+    env_file:
+      - .env
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
