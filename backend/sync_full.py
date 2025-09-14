@@ -10,6 +10,7 @@ print("[sync_full] Starting...")
 
 import asyncio
 import json
+import re
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Set
@@ -308,14 +309,29 @@ async def sync_full_graph():
                 continue
             
             # Check if this is a page
-            is_page = ':node/title' in block_data
+            # Pages have :node/title OR are Daily Note Pages (DNPs) with UIDs like MM-DD-YYYY
+            is_dnp = bool(uid and re.match(r'^\d{2}-\d{2}-\d{4}$', uid))
+            is_page = ':node/title' in block_data or is_dnp
             
             # Determine block type
             has_children = bool(block_data.get(':block/children'))
             has_parent = bool(block_data.get(':block/_children'))
             
             # Build context based on block type
-            if has_children:
+            # DNPs and pages are special cases
+            if is_page:
+                block_type = "page"
+                if is_dnp:
+                    # DNPs usually just have their date as title
+                    context = original_text[:MAX_CONTEXT_LENGTH]
+                elif has_children:
+                    # Regular pages with children
+                    context = build_parent_block_context(block_data)
+                else:
+                    # Regular pages without children
+                    context = original_text[:MAX_CONTEXT_LENGTH]
+                parent_blocks += 1  # Count pages as parent blocks for stats
+            elif has_children:
                 context = build_parent_block_context(block_data)
                 block_type = "parent"
                 parent_blocks += 1

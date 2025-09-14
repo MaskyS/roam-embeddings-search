@@ -305,8 +305,8 @@ async def search(
                 "text_preview": text_highlights,
                 "parent_text": parent_text,
                 "type": metadata.get('block_type', 'unknown'),
-                "is_page": metadata.get('is_page', 'false') == 'true',
-                "has_children": metadata.get('has_children', 'false') == 'true'
+                "is_page": metadata.get('is_page', 'False') == 'True',
+                "has_children": metadata.get('has_children', 'False') == 'True'
             },
             "context": {
                 "used_for_embedding": context_used[:500],  # First 500 chars
