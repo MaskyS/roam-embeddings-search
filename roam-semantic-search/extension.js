@@ -274,11 +274,14 @@ function renderResults(results) {
     };
 
     // Format the context to show what was actually searched
+    // Use a container that we'll render with renderString for proper Roam formatting
     const contextDisplay =
       embeddingContext && embeddingContext !== result.block?.text
         ? `<div class="rss-result-embedding-context">
            <span class="rss-context-label">Matched context:</span>
-           <span class="rss-context-text">${escapeHtml(truncate(contextPreview, 250))}</span>
+           <div class="rss-context-render" id="rss-context-${result.uid}">
+             <span class="rss-context-text rss-context-fallback">${escapeHtml(truncate(contextPreview, 250))}</span>
+           </div>
          </div>`
         : "";
 
@@ -295,10 +298,10 @@ function renderResults(results) {
     resultDiv.className = `rss-result ${index === 0 ? "rss-selected" : ""}`;
     resultDiv.dataset.uid = result.uid;
     resultDiv.dataset.index = index;
-
     // Create the structure with a placeholder for renderBlock
+    // ${parentText ? `<div class="rss-result-parent">📍 ${escapeHtml(truncate(parentText, 100))}</div>` : ""}
     resultDiv.innerHTML = `
-      ${parentText ? `<div class="rss-result-parent">📍 ${escapeHtml(truncate(parentText, 100))}</div>` : ""}
+
       <div class="rss-result-header">
         <div class="rss-block-container" id="rss-block-${result.uid}"></div>
         ${typeIndicator}
@@ -349,7 +352,7 @@ function renderResults(results) {
           window.roamAlphaAPI.ui.components.renderBlock({
             uid: result.uid,
             el: blockContainer,
-            "zoom-path?": false, // Don't show breadcrumbs
+            "zoom-path?": true, // Don't show breadcrumbs
             "read-only?": true, // Make it read-only in search results
           });
         } catch (error) {
@@ -360,6 +363,51 @@ function renderResults(results) {
           // Fallback to text if renderBlock fails
           blockContainer.innerHTML = `<div class="rss-fallback-text">${escapeHtml(result.block?.text || "Failed to load block")}</div>`;
         }
+      }
+    }
+
+    // After rendering the block, render the context using renderString
+    const contextContainer = document.getElementById(
+      `rss-context-${result.uid}`,
+    );
+    if (contextContainer && embeddingContext) {
+      // Remove the fallback text once we render
+      const fallback = contextContainer.querySelector(".rss-context-fallback");
+
+      try {
+        // Create a new container for renderString
+        const renderContainer = document.createElement("div");
+        renderContainer.className = "rss-context-rendered";
+        contextContainer.appendChild(renderContainer);
+
+        // Use renderString to render the context with Roam formatting
+        window.roamAlphaAPI.ui.components
+          .renderString({
+            string: embeddingContext,
+            el: renderContainer,
+          })
+          .then(() => {
+            // Remove fallback once successfully rendered
+            if (fallback) {
+              fallback.style.display = "none";
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `[Semantic Search] Failed to render context for ${result.uid}:`,
+              error,
+            );
+            // Keep fallback visible on error
+            if (renderContainer) {
+              renderContainer.remove();
+            }
+          });
+      } catch (error) {
+        console.error(
+          `[Semantic Search] Error setting up context render for ${result.uid}:`,
+          error,
+        );
+        // Keep fallback visible on error
       }
     }
   });
@@ -710,6 +758,38 @@ function addStyles() {
         line-height: 1.4;
       }
 
+      .rss-context-render {
+        max-height: 150px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .rss-context-rendered {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      /* Style Roam elements within context */
+      .rss-context-rendered .rm-page-ref {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      .rss-context-rendered .rm-page-ref:hover {
+        text-decoration: underline;
+      }
+
+      .rss-context-rendered .rm-block-ref {
+        font-size: 12px;
+        border-bottom: 1px solid #3b82f6;
+      }
+
+      /* Style the [[current block]] emphasis */
+      .rss-context-rendered strong {
+        color: #059669;
+        font-weight: 600;
+      }
+
       .rss-result-similarity {
         display: flex;
         align-items: center;
@@ -780,6 +860,18 @@ function addStyles() {
 
       .roam-body-main.bp3-dark .rss-context-text {
         color: #a1a1aa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered .rm-page-ref {
+        color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered .rm-block-ref {
+        border-bottom-color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered strong {
+        color: #4ade80;
       }
 
       .roam-body-main.bp3-dark .rss-result-parent {

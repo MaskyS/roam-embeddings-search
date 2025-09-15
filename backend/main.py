@@ -69,6 +69,7 @@ app.add_middleware(
         "https://roamresearch.com",
         "https://*.roamresearch.com",  # Subdomains
         "https://relemma-git-roam-app-store.roamresearch.com",  # Roam Depot dev
+        "https://relemma-git-new-renderblockadditions.roamresearch.com",
         "http://localhost:*",  # Local development
         "http://127.0.0.1:*",  # Local development
     ],
@@ -112,7 +113,7 @@ async def pull_many_blocks(uids: List[str]) -> List[Optional[Dict]]:
     """Pull multiple blocks at once using pull-many for efficiency"""
     if not uids:
         return []
-    
+
     url = f"https://api.roamresearch.com/api/graph/{settings.roam_graph_name}/pull-many"
     headers = {
         "X-Authorization": f"Bearer {settings.roam_api_token}",
@@ -123,10 +124,10 @@ async def pull_many_blocks(uids: List[str]) -> List[Optional[Dict]]:
     # Build eids string for pull-many - must be properly formatted Clojure vector
     eids_list = " ".join([f'[:block/uid "{uid}"]' for uid in uids])
     eids_str = f"[{eids_list}]"
-    
+
     # Simpler selector for search results
     selector_str = "[:block/uid :block/string :node/title {:block/parents [:block/uid :block/string :node/title]} {:block/refs [:block/uid :block/string]}]"
-    
+
     pull_data = {
         "eids": eids_str,
         "selector": selector_str
@@ -149,11 +150,11 @@ def highlight_matches(text: str, query: str, max_length: int = 200) -> Dict:
     """Find and highlight query matches in text"""
     if not text or not query:
         return {"text": text[:max_length] if text else "", "highlights": []}
-    
+
     # Create case-insensitive pattern for each word in query
     query_words = query.lower().split()
     highlights = []
-    
+
     # Find all matches
     for word in query_words:
         if len(word) < 2:  # Skip very short words
@@ -165,10 +166,10 @@ def highlight_matches(text: str, query: str, max_length: int = 200) -> Dict:
                 "end": match.end(),
                 "word": match.group()
             })
-    
+
     # Sort highlights by position
     highlights.sort(key=lambda x: x["start"])
-    
+
     # Find best snippet around first match or start of text
     if highlights:
         first_match = highlights[0]["start"]
@@ -177,13 +178,13 @@ def highlight_matches(text: str, query: str, max_length: int = 200) -> Dict:
     else:
         snippet_start = 0
         snippet_end = min(len(text), max_length)
-    
+
     snippet = text[snippet_start:snippet_end]
     if snippet_start > 0:
         snippet = "..." + snippet
     if snippet_end < len(text):
         snippet = snippet + "..."
-    
+
     # Adjust highlight positions relative to snippet
     adjusted_highlights = []
     offset = snippet_start - (3 if snippet_start > 0 else 0)  # Account for "..."
@@ -194,7 +195,7 @@ def highlight_matches(text: str, query: str, max_length: int = 200) -> Dict:
                 "end": h["end"] - offset,
                 "word": h["word"]
             })
-    
+
     return {
         "text": snippet,
         "highlights": adjusted_highlights
@@ -212,30 +213,30 @@ async def search(
     Returns blocks most similar to the query with full block data from Roam.
     """
     start_time = time.time()
-    
+
     # Validate query
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    
+
     # Truncate query if too long
     MAX_QUERY_LENGTH = 1000
     if len(q) > MAX_QUERY_LENGTH:
         q = q[:MAX_QUERY_LENGTH]
-    
+
     print(f"[Search] Query: '{q}', limit: {limit}, threshold: {threshold}, block_type: {block_type}")
-    
+
     # Get collection
     try:
         collection = get_collection()
     except Exception as e:
         print(f"[Search] Failed to get collection: {e}")
         raise HTTPException(status_code=500, detail="Search service unavailable")
-    
+
     # Build where clause for filtering
     where = {}
     if block_type:
         where["block_type"] = block_type
-    
+
     # Query ChromaDB
     try:
         results = collection.query(
@@ -247,7 +248,7 @@ async def search(
     except Exception as e:
         print(f"[Search] ChromaDB query error: {e}")
         raise HTTPException(status_code=500, detail="Search query failed")
-    
+
     # Check if we have results
     if not results['ids'] or not results['ids'][0]:
         return {
@@ -256,33 +257,33 @@ async def search(
             "count": 0,
             "execution_time": time.time() - start_time
         }
-    
+
     # Extract UIDs for pull-many
     result_uids = results['ids'][0]
-    
+
     # Pull full block data from Roam
     print(f"[Search] Pulling {len(result_uids)} blocks from Roam...")
     block_data_list = await pull_many_blocks(result_uids)
-    
+
     # Format results
     formatted_results = []
     for i in range(len(result_uids)):
         uid = result_uids[i]
         distance = results['distances'][0][i]
-        
+
         # Apply threshold if specified (distance is 0-2, where 0 is perfect match)
         # Convert to similarity (0-1 scale where 1 is perfect match)
         similarity = 1 - (distance / 2)  # Normalize assuming max distance is 2
         if threshold and similarity < threshold:
             continue
-        
+
         # Get metadata and context
         metadata = results['metadatas'][0][i]
         context_used = results['documents'][0][i]
-        
+
         # Get full block data
         block_data = block_data_list[i] if i < len(block_data_list) else None
-        
+
         # Extract current block text
         if block_data:
             current_text = block_data.get(':block/string', '') or block_data.get(':node/title', '')
@@ -291,11 +292,11 @@ async def search(
         else:
             current_text = metadata.get('original_text', '')
             parent_text = None
-        
+
         # Generate highlights
         text_highlights = highlight_matches(current_text, q)
         context_highlights = highlight_matches(context_used, q, max_length=300)
-        
+
         formatted_results.append({
             "uid": uid,
             "similarity": round(similarity, 4),
@@ -314,10 +315,10 @@ async def search(
             },
             "metadata": metadata
         })
-    
+
     execution_time = time.time() - start_time
     print(f"[Search] Completed in {execution_time:.2f}s, returning {len(formatted_results)} results")
-    
+
     return {
         "query": q,
         "results": formatted_results,

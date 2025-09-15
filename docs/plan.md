@@ -137,6 +137,8 @@ This approach ensures:
 - **Query Timeout:** 20 seconds (Roam API constraint)
 - **Search Results Limit:** 50 maximum (configurable)
 - **Query Length Limit:** 1000 characters (prevent token overflow)
+- **Max Siblings in Context:** 4 siblings (2 before, 2 after current block)
+- **Min Sibling Space:** 50 characters (siblings excluded if less space available)
 
 ## 7. Technical Implementation Details
 
@@ -167,7 +169,12 @@ This approach ensures:
 
 4. **Context Building Patterns:**
    - **Parent blocks:** Concatenate with children as bullet points
-   - **Leaf blocks with siblings:** `Parent > prev → current → next`
+   - **Leaf blocks:** Smart allocation with multi-sibling support:
+     - Parent gets up to 1/3 of total space (2666 chars)
+     - Unused parent space redistributed to current block and siblings
+     - Up to 6 siblings included using middle-out selection
+     - Distance-weighted space allocation (closer siblings get more space)
+     - Format: `Parent > sib1 → sib2 → [[current]] → sib3 → sib4`
    - **Page children:** `Page Title > block text`
 
 ### Important Gotchas:
@@ -184,17 +191,23 @@ This approach ensures:
 - Docker environment with ChromaDB and FastAPI backend
 - Connection to Roam Backend API with proper authentication
 - Enhanced pull selectors with parent and sibling context
-- Adaptive context building for parent and leaf blocks (v5)
+- Adaptive context building with smart allocation:
+  - Dynamic parent space redistribution
+  - Multi-sibling support (up to 6 siblings)
+  - Middle-out sibling selection
+  - Distance-weighted space allocation
 - Full graph sync with paginated batching (`sync_full.py`)
+- Command-line arguments for sync control (`--clear`, `--test N`)
 - Google Gemini embeddings integration (models/gemini-embedding-001)
 - Semantic search API with block enrichment
 - Highlight generation for search matches
+- Multi-sibling context tracking and statistics
 
 🚧 **In Progress:**
 - Performance optimization for large graphs
-- Block reference resolution
 
 📋 **Future Work:**
+- Block reference resolution (((uid)) expansion)
 - Incremental sync with cascade effects
 - Roam Extension UI
 - Related blocks endpoint
@@ -203,13 +216,21 @@ This approach ensures:
 - **Paginated Strategy:** Due to 20-second timeout on Roam API
   1. Get all UIDs with lightweight query (no text/children)
   2. Use `pull-many` in batches of 50 blocks
-  3. Build adaptive context for each block
+  3. Build adaptive context for each block with smart allocation
   4. Pass context as documents to ChromaDB
-- **Rate Limiting:** 50 requests/minute - add sleep between batches
+- **Command-line Options:**
+  - `--clear`: Clear existing embeddings before sync (default: incremental)
+  - `--test N`: Limit sync to first N blocks for testing
+- **Smart Context Allocation:**
+  - Parent blocks: Concatenate with all children until space limit
+  - Leaf blocks: Dynamic allocation based on content needs
+  - Redistributes unused parent space to current block and siblings
+  - Includes up to 4 siblings using middle-out selection
+  - Distance-weighted space distribution (closer = more space)
+- **Rate Limiting:** 50 requests/minute - configurable delay between batches
 - **Context Limits:** Truncate to 8000 characters (configurable constant)
 - **Page Handling:** Pages appear as parents with `:node/title` - format as "Page Title > child text"
-- **Block References:** Resolve `((block-ref))` and `[[page-links]]` to actual text
-- **Progress Tracking:** Log progress for large graphs
+- **Progress Tracking:** Log progress for large graphs with statistics
 - **Save timestamp** for future incremental syncs
 
 ### Phase 3: Incremental Sync Strategy (FUTURE)
@@ -242,7 +263,7 @@ Total affected: 1 modified + potentially 5+ related blocks
 ```clojure
 ; Find all blocks edited since last sync
 [:find ?uid ?edit-time
- :where 
+ :where
  [?b :block/uid ?uid]
  [?b :block/edit-time ?edit-time]
  [(> ?edit-time LAST_SYNC_TIMESTAMP)]]
@@ -258,7 +279,7 @@ Then for each modified block:
 
 Roam API doesn't provide deletion events, leading to four possible approaches:
 
-1. **Ignore for MVP** 
+1. **Ignore for MVP**
    - Stale embeddings remain in ChromaDB
    - Won't match new searches well
    - Simplest approach, acceptable for MVP
@@ -418,9 +439,9 @@ Project Plan > Overview of the semantic search system
 
 1. **Block References Not Resolved**
    - `((block-uid))` references remain as UIDs in context
-   - `[[page-name]]` links not expanded to page content
+   - Page references `[[page-name]]` are preserved but not expanded
    - Impact: Reduced context quality for blocks with many references
-   - Solution: Implement reference resolution in context building
+   - Solution: Implement batch-local + on-demand reference resolution
 
 2. **Special Blocks Not Supported**
    - Query blocks, embeds, and buttons have no text content
