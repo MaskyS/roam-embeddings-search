@@ -11,12 +11,11 @@ let searchState = {
   error: null,
   abortController: null,
   commands: [], // Track commands for cleanup
-  hidePages: false, // Toggle to filter out page results
 };
 
 // Configuration - will be moved to settings panel
 const DEFAULT_CONFIG = {
-  backendURL: "http://localhost:8002", // Changed to semantic backend port
+  backendURL: "http://localhost:8001",
   searchLimit: 20,
   debounceDelay: 300,
 };
@@ -42,10 +41,9 @@ class SearchAPI {
     }
   }
 
-  async search(query, signal, excludePages = false) {
+  async search(query, signal) {
     try {
-      // Simplified URL for the new semantic-only backend
-      const url = `${this.baseURL}/search?q=${encodeURIComponent(query)}&limit=${config.searchLimit}&exclude_pages=${excludePages}`;
+      const url = `${this.baseURL}/search?q=${encodeURIComponent(query)}&limit=${config.searchLimit}`;
       const response = await fetch(url, { signal });
 
       if (!response.ok) {
@@ -103,13 +101,6 @@ function createModal() {
         <div class="rss-search">
           <input type="text" class="rss-input bp3-input" placeholder="Enter search query..." />
         </div>
-        <div class="rss-filters">
-          <label class="bp3-control bp3-switch rss-filter-switch">
-            <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? 'checked' : ''} />
-            <span class="bp3-control-indicator"></span>
-            Blocks only
-          </label>
-        </div>
         <div class="rss-status"></div>
         <div class="rss-results"></div>
       </div>
@@ -132,20 +123,6 @@ function createModal() {
   closeBtn.addEventListener("click", closeModal);
   input.addEventListener("input", debouncedSearch);
   document.addEventListener("keydown", handleKeydown);
-
-  // Add toggle listener
-  const toggleCheckbox = modal.querySelector(".rss-hide-pages-toggle");
-  if (toggleCheckbox) {
-    toggleCheckbox.addEventListener("change", (e) => {
-      searchState.hidePages = e.target.checked;
-      // Save preference
-      if (extensionAPI) {
-        extensionAPI.settings.set("hide-pages", searchState.hidePages);
-      }
-      // Re-run search with new filter setting
-      performSearch();
-    });
-  }
 
   // Focus input with a small delay to ensure DOM is ready
   setTimeout(() => {
@@ -268,82 +245,172 @@ function renderResults(results) {
   if (!resultsEl) return;
 
   if (!results || results.length === 0) {
-    resultsEl.innerHTML = searchState.hidePages
-      ? '<div class="rss-no-results">No block results found (try disabling "Blocks only" filter)</div>'
-      : '<div class="rss-no-results">No results found</div>';
+    resultsEl.innerHTML = '<div class="rss-no-results">No results found</div>';
     return;
   }
 
   searchState.results = results;
   searchState.selectedIndex = 0;
-  resultsEl.innerHTML = ""; // Clear previous results
 
+  // Clear previous results
+  resultsEl.innerHTML = "";
+
+  // Render each result
   results.forEach((result, index) => {
     const similarity = result.similarity || 0;
     const percentage = (similarity * 100).toFixed(0);
-    const pageTitle = result.page_title || "Untitled Page";
-    const parentText = result.parent_text || "";
-    const isPage = result.document_type === "page";
+    const parentText = result.block?.parent_text || "";
+    const blockType = result.block?.type || "unknown";
 
-    // Pages don't need breadcrumbs, chunks show their context
-    let breadcrumbHtml = "";
-    if (!isPage) {
-      const breadcrumb = parentText ?
-        `${escapeHtml(pageTitle)} > ${escapeHtml(parentText)}` :
-        escapeHtml(pageTitle);
-      breadcrumbHtml = `<div class="rss-result-breadcrumb">${breadcrumb}</div>`;
-    }
+    // Get the embedding context - this is what actually matched!
+    const embeddingContext = result.context?.used_for_embedding || "";
+    const contextPreview =
+      result.context?.preview?.text || embeddingContext.substring(0, 200);
 
-    // The backend now sends pre-formatted text with ^^highlight^^ syntax
-    let chunkTextWithHighlights = result.chunk_text_preview || "";
+    // Truncate texts if too long
+    const truncate = (text, maxLen) => {
+      if (!text) return "";
+      return text.length > maxLen ? text.substring(0, maxLen) + "..." : text;
+    };
 
-    // For pages, format as [[Page Name]]
-    if (isPage) {
-      // Remove any existing highlights and add page reference brackets
-      const cleanPageName = chunkTextWithHighlights.replace(/\^\^/g, '');
-      chunkTextWithHighlights = `[[${cleanPageName}]]`;
-    }
+    // Format the context to show what was actually searched
+    // Use a container that we'll render with renderString for proper Roam formatting
+    const contextDisplay =
+      embeddingContext && embeddingContext !== result.block?.text
+        ? `<div class="rss-result-embedding-context">
+           <span class="rss-context-label">Matched context:</span>
+           <div class="rss-context-render" id="rss-context-${result.uid}">
+             <span class="rss-context-text rss-context-fallback">${escapeHtml(truncate(contextPreview, 250))}</span>
+           </div>
+         </div>`
+        : "";
 
+    // Add type indicator
+    const typeIndicator =
+      blockType === "parent"
+        ? '<span class="rss-type-badge rss-type-parent">📄 Parent</span>'
+        : blockType === "leaf"
+          ? '<span class="rss-type-badge rss-type-leaf">🍃 Leaf</span>'
+          : "";
+
+    // Create result container
     const resultDiv = document.createElement("div");
-    resultDiv.className = `rss-result ${index === 0 ? "rss-selected" : ""} ${isPage ? "rss-page-result" : ""}`;
+    resultDiv.className = `rss-result ${index === 0 ? "rss-selected" : ""}`;
     resultDiv.dataset.uid = result.uid;
     resultDiv.dataset.index = index;
-
+    // Create the structure with a placeholder for renderBlock
+    // ${parentText ? `<div class="rss-result-parent">📍 ${escapeHtml(truncate(parentText, 100))}</div>` : ""}
     resultDiv.innerHTML = `
-      ${breadcrumbHtml}
-      <div class="rss-chunk-container" id="rss-chunk-${result.uid}-${index}">
-        <!-- Fallback content in case renderString fails -->
-        ${escapeHtml(chunkTextWithHighlights.replace(/\^\^/g, ''))}
+
+      <div class="rss-result-header">
+        <div class="rss-block-container" id="rss-block-${result.uid}"></div>
+        ${typeIndicator}
       </div>
+      ${contextDisplay}
       <div class="rss-result-similarity">
         <div class="rss-similarity-bar">
           <div class="rss-similarity-fill" style="width: ${percentage}%;"></div>
         </div>
-        <span class="rss-similarity-value">${percentage}% match${isPage ? ' (page)' : ''}</span>
+        <span class="rss-similarity-value">${percentage}% match</span>
       </div>
     `;
 
+    // Add click handler
     resultDiv.addEventListener("click", (event) => {
-      handleResultClick(result.uid, event);
+      // Don't trigger if clicking on the rendered block itself
+      if (!event.target.closest(".roam-block")) {
+        handleResultClick(result.uid, event);
+      }
     });
 
+    // Append to results
     resultsEl.appendChild(resultDiv);
 
-    const chunkContainer = document.getElementById(`rss-chunk-${result.uid}-${index}`);
-    if (chunkContainer) {
+    // Now render the block or page
+    const blockContainer = document.getElementById(`rss-block-${result.uid}`);
+    if (blockContainer) {
+      // Check if it's a page or a block
+      const isPage =
+        result.block?.is_page || result.metadata?.is_page === "true";
+
+      if (isPage) {
+        // For pages, just show the title as plain text with page styling
+        const pageTitle =
+          result.block?.text ||
+          result.metadata?.original_text ||
+          "Untitled Page";
+        blockContainer.innerHTML = `
+          <div class="rss-page-title">
+            <span class="rm-page-ref__brackets">[[</span>
+            <span class="rm-page-ref">${escapeHtml(pageTitle)}</span>
+            <span class="rm-page-ref__brackets">]]</span>
+          </div>
+        `;
+      } else {
+        // For blocks, use renderBlock
+        try {
+          window.roamAlphaAPI.ui.components.renderBlock({
+            uid: result.uid,
+            el: blockContainer,
+            "zoom-path?": true, // Don't show breadcrumbs
+            "read-only?": true, // Make it read-only in search results
+          });
+        } catch (error) {
+          console.error(
+            `[Semantic Search] Failed to render block ${result.uid}:`,
+            error,
+          );
+          // Fallback to text if renderBlock fails
+          blockContainer.innerHTML = `<div class="rss-fallback-text">${escapeHtml(result.block?.text || "Failed to load block")}</div>`;
+        }
+      }
+    }
+
+    // After rendering the block, render the context using renderString
+    const contextContainer = document.getElementById(
+      `rss-context-${result.uid}`,
+    );
+    if (contextContainer && embeddingContext) {
+      // Remove the fallback text once we render
+      const fallback = contextContainer.querySelector(".rss-context-fallback");
+
       try {
-        // renderString will now handle the ^^highlight^^ syntax automatically
-        window.roamAlphaAPI.ui.components.renderString({
-          el: chunkContainer,
-          string: chunkTextWithHighlights,
-        });
-      } catch (e) {
-        console.error("[Semantic Search] renderString failed:", e);
-        // The fallback text is already in the container
+        // Create a new container for renderString
+        const renderContainer = document.createElement("div");
+        renderContainer.className = "rss-context-rendered";
+        contextContainer.appendChild(renderContainer);
+
+        // Use renderString to render the context with Roam formatting
+        window.roamAlphaAPI.ui.components
+          .renderString({
+            string: embeddingContext,
+            el: renderContainer,
+          })
+          .then(() => {
+            // Remove fallback once successfully rendered
+            if (fallback) {
+              fallback.style.display = "none";
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `[Semantic Search] Failed to render context for ${result.uid}:`,
+              error,
+            );
+            // Keep fallback visible on error
+            if (renderContainer) {
+              renderContainer.remove();
+            }
+          });
+      } catch (error) {
+        console.error(
+          `[Semantic Search] Error setting up context render for ${result.uid}:`,
+          error,
+        );
+        // Keep fallback visible on error
       }
     }
   });
-  updateSelection();
 }
 
 function handleResultClick(uid, event) {
@@ -387,7 +454,6 @@ async function performSearch() {
     const response = await searchAPI.search(
       query,
       searchState.abortController.signal,
-      searchState.hidePages
     );
 
     if (response && response.results) {
@@ -434,6 +500,7 @@ function addStyles() {
         align-items: center;
         justify-content: center;
       }
+
       .rss-backdrop {
         position: absolute;
         top: 0;
@@ -442,6 +509,7 @@ function addStyles() {
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
       }
+
       .rss-container {
         position: relative;
         background: var(--bg-color, white);
@@ -451,8 +519,8 @@ function addStyles() {
         display: flex;
         flex-direction: column;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
       }
+
       .rss-header {
         padding: 16px 20px;
         border-bottom: 1px solid var(--border-color, #e5e7eb);
@@ -460,45 +528,59 @@ function addStyles() {
         justify-content: space-between;
         align-items: center;
       }
+
       .rss-title {
         margin: 0;
         font-size: 18px;
         color: var(--text-color, #202020);
       }
-      .rss-close { font-size: 24px; }
+
+      .rss-close {
+        font-size: 24px;
+      }
+
       .rss-search {
         padding: 16px 20px;
-      }
-      .rss-input { width: 100%; }
-      .rss-filters {
-        padding: 8px 20px 12px 20px;
         border-bottom: 1px solid var(--border-color, #e5e7eb);
-        background: var(--bg-color, white);
-        position: relative;
-        z-index: 1;
       }
-      .rss-filter-switch {
-        margin: 0;
-        font-size: 13px;
-        display: flex;
-        align-items: center;
+
+      .rss-input {
+        width: 100%;
       }
-      .rss-status { padding: 0 20px; min-height: 20px; }
-      .rss-loading, .rss-error, .rss-success { padding: 8px 0; }
-      .rss-error { color: #dc2626; }
-      .rss-success { color: #059669; font-size: 12px; }
+
+      .rss-status {
+        padding: 0 20px;
+        min-height: 20px;
+      }
+
+      .rss-loading {
+        padding: 8px 0;
+        color: #6b7280;
+      }
+
+      .rss-error {
+        padding: 8px 0;
+        color: #dc2626;
+      }
+
+      .rss-success {
+        padding: 8px 0;
+        color: #059669;
+        font-size: 12px;
+      }
+
       .rss-results {
         flex: 1;
         overflow-y: auto;
         padding: 16px 20px;
-        max-height: calc(80vh - 200px);
-        position: relative;
       }
+
       .rss-no-results {
         padding: 20px;
         text-align: center;
         color: #6b7280;
       }
+
       .rss-result {
         padding: 12px;
         margin-bottom: 8px;
@@ -507,14 +589,144 @@ function addStyles() {
         cursor: pointer;
         transition: background-color 0.2s;
       }
+
       .rss-result:hover {
         background-color: var(--hover-bg, #f9fafb);
       }
+
       .rss-result.rss-selected {
         background-color: var(--selected-bg, #eff6ff);
         border-color: var(--selected-border, #3b82f6);
       }
-      .rss-result-breadcrumb {
+
+      .rss-result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 4px;
+      }
+
+      .rss-block-container {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Let Roam blocks render naturally - commenting out all hiding for now */
+
+      /* .rss-block-container .roam-block {
+        padding: 0;
+        margin: 0;
+      } */
+
+      /* .rss-block-container .roam-block-container {
+        padding: 0;
+      } */
+
+      /* Hide only the controls and bullets, not the block itself */
+      /* .rss-block-container .controls,
+      .rss-block-container .rm-bullet,
+      .rss-block-container .block-expand {
+        display: none !important;
+      } */
+
+      /* Hide embeds and iframes in search results */
+      /* .rss-block-container iframe,
+      .rss-block-container .twitter-tweet,
+      .rss-block-container .youtube-embed,
+      .rss-block-container .rm-iframe,
+      .rss-block-container .rm-embed {
+        display: none !important;
+      } */
+
+      /* Show smaller images */
+      /* .rss-block-container img {
+        max-height: 50px;
+        max-width: 100px;
+        object-fit: contain;
+      } */
+
+      /* Add indicator for hidden embeds */
+      /* .rss-block-container iframe + span::after,
+      .rss-block-container .twitter-tweet + span::after {
+        content: " [embed hidden]";
+        color: #9ca3af;
+        font-size: 11px;
+        font-style: italic;
+      } */
+
+      /* Ensure block text is visible and properly styled */
+      /* .rss-block-container .rm-block-main {
+        font-size: 14px;
+        line-height: 1.4;
+        padding-left: 0 !important;
+      } */
+
+      /* .rss-block-container .rm-block__input {
+        max-height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      } */
+
+      /* Remove indent for cleaner look */
+      /* .rss-block-container .rm-block__self {
+        margin-left: 0 !important;
+      } */
+
+      /* Hide child blocks in search results */
+      /* .rss-block-container .rm-block-children {
+        display: none;
+      } */
+
+      .rss-fallback-text {
+        font-size: 14px;
+        color: var(--text-color, #202020);
+        line-height: 1.4;
+      }
+
+      /* Style for page titles */
+      .rss-page-title {
+        font-size: 14px;
+        line-height: 1.4;
+        color: var(--text-color, #202020);
+      }
+
+      .rss-page-title .rm-page-ref {
+        color: #106ba3;
+        text-decoration: none;
+      }
+
+      .rss-page-title .rm-page-ref__brackets {
+        color: #a7b6c2;
+      }
+
+      /* Dark mode page styling */
+      .roam-body-main.bp3-dark .rss-page-title .rm-page-ref {
+        color: #5a9fd4;
+      }
+
+      .roam-body-main.bp3-dark .rss-page-title .rm-page-ref__brackets {
+        color: #5c7080;
+      }
+
+      .rss-type-badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-left: 8px;
+        white-space: nowrap;
+      }
+
+      .rss-type-parent {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+
+      .rss-type-leaf {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .rss-result-parent {
         font-size: 11px;
         color: #6b7280;
         margin-bottom: 8px;
@@ -523,52 +735,148 @@ function addStyles() {
         border-radius: 3px;
         display: inline-block;
       }
-      .rss-chunk-container {
-        font-size: 14px;
-        line-height: 1.5;
-        color: var(--text-color, #202020);
+
+      .rss-result-embedding-context {
+        background: #f9fafb;
+        border-left: 3px solid #3b82f6;
+        padding: 6px 8px;
+        margin: 8px 0;
+        border-radius: 2px;
       }
+
+      .rss-context-label {
+        font-size: 11px;
+        color: #3b82f6;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .rss-context-text {
+        font-size: 12px;
+        color: #4b5563;
+        line-height: 1.4;
+      }
+
+      .rss-context-render {
+        max-height: 150px;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .rss-context-rendered {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      /* Style Roam elements within context */
+      .rss-context-rendered .rm-page-ref {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      .rss-context-rendered .rm-page-ref:hover {
+        text-decoration: underline;
+      }
+
+      .rss-context-rendered .rm-block-ref {
+        font-size: 12px;
+        border-bottom: 1px solid #3b82f6;
+      }
+
+      /* Style the [[current block]] emphasis */
+      .rss-context-rendered strong {
+        color: #059669;
+        font-weight: 600;
+      }
+
       .rss-result-similarity {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 8px;
       }
+
       .rss-similarity-bar {
         flex: 1;
         height: 4px;
         background: #e5e7eb;
         border-radius: 2px;
       }
+
       .rss-similarity-fill {
         height: 100%;
         background: #3b82f6;
         border-radius: 2px;
       }
+
       .rss-similarity-value {
         font-size: 11px;
         color: #6b7280;
       }
 
       /* Dark mode support */
-      .roam-body-main.bp3-dark .rss-container { background: #2f3136; }
+      .roam-body-main.bp3-dark .rss-container {
+        background: #2f3136;
+      }
+
       .roam-body-main.bp3-dark .rss-title,
-      .roam-body-main.bp3-dark .rss-chunk-container { color: #dcddde; }
+      .roam-body-main.bp3-dark .rss-result-text {
+        color: #dcddde;
+      }
+
       .roam-body-main.bp3-dark .rss-header,
       .roam-body-main.bp3-dark .rss-search,
-      .roam-body-main.bp3-dark .rss-filters,
-      .roam-body-main.bp3-dark .rss-result { border-color: #4a4d52; }
-      .roam-body-main.bp3-dark .rss-result:hover { background-color: #393c43; }
+      .roam-body-main.bp3-dark .rss-result {
+        border-color: #4a4d52;
+      }
+
+      .roam-body-main.bp3-dark .rss-result:hover {
+        background-color: #393c43;
+      }
+
       .roam-body-main.bp3-dark .rss-result.rss-selected {
         background-color: #404449;
         border-color: #5a9fd4;
       }
-      .roam-body-main.bp3-dark .rss-result-breadcrumb {
+
+      .roam-body-main.bp3-dark .rss-type-parent {
+        background: #1e3a5f;
+        color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-type-leaf {
+        background: #1f3a28;
+        color: #4ade80;
+      }
+
+      .roam-body-main.bp3-dark .rss-result-embedding-context {
+        background: #393c43;
+        border-left-color: #5a9fd4;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-label {
+        color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-text {
+        color: #a1a1aa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered .rm-page-ref {
+        color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered .rm-block-ref {
+        border-bottom-color: #60a5fa;
+      }
+
+      .roam-body-main.bp3-dark .rss-context-rendered strong {
+        color: #4ade80;
+      }
+
+      .roam-body-main.bp3-dark .rss-result-parent {
         color: #9ca3af;
         background: #374151;
-      }
-      .roam-body-main.bp3-dark .rss-filters {
-        background: #2f3136;
       }
     </style>
   `;
@@ -672,9 +980,6 @@ export default {
       extensionAPI.settings.get("debounce-delay") ||
       DEFAULT_CONFIG.debounceDelay;
 
-    // Load filter preference
-    searchState.hidePages = extensionAPI.settings.get("hide-pages") || false;
-
     // Initialize API client
     searchAPI = new SearchAPI(config.backendURL);
 
@@ -744,7 +1049,6 @@ export default {
       error: null,
       abortController: null,
       commands: [],
-      hidePages: false,
     };
 
     console.log("[Semantic Search] Extension unloaded.");

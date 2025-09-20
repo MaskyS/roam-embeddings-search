@@ -1,5 +1,13 @@
 
 services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    command: serve
+
   chromadb:
     image: chromadb/chroma:latest
     ports:
@@ -17,6 +25,21 @@ services:
       - ./backend:/app
     depends_on:
       - chromadb
+      - ollama
     env_file:
       - .env
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+  backend-semantic:
+    build:
+      context: ./backend
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - chromadb
+      - ollama
+    env_file:
+      - .env
+    command: uvicorn main_semantic:app --host 0.0.0.0 --port 8000 --reload
