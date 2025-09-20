@@ -1,4 +1,3 @@
-
 fastapi
 uvicorn[standard]
 chromadb-client
@@ -6,3 +5,7 @@ google-generativeai
 httpx
 python-dotenv
 pydantic-settings
+chonkie[semantic]
+sentence-transformers
+ollama
+voyageai
