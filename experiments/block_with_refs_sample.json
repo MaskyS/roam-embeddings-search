@@ -1,0 +1,32 @@
+{
+  ":block/uid": "LidMjhZr4",
+  ":block/string": "This will only get easier and flexible over time. For instance, a recent update brought [[collapsible parentheticals]], where you can insert some text inline, and allow the user to expand it to get more details.",
+  ":block/_children": [
+    {
+      ":block/children": [
+        {
+          ":block/uid": "FLrx_lbNu",
+          ":block/order": 0,
+          ":block/string": "In Roam, you can indent a block under another one to show it's related to it, or expands upon the details to the parent block."
+        },
+        {
+          ":block/uid": "2HpyE0F-w",
+          ":block/order": 1,
+          ":block/string": "This enables you to decide the depth at which you want to explore each idea, and get a bird's-eye view of a page very quickly."
+        },
+        {
+          ":block/uid": "LidMjhZr4",
+          ":block/order": 2,
+          ":block/string": "This will only get easier and flexible over time. For instance, a recent update brought [[collapsible parentheticals]], where you can insert some text inline, and allow the user to expand it to get more details."
+        },
+        {
+          ":block/uid": "aCC3Uf3JC",
+          ":block/order": 3,
+          ":block/string": "Roam allows knowledge graphs to become scale-free/fractal. See here."
+        }
+      ],
+      ":block/uid": "vH6WbGy3j",
+      ":block/string": "**Identable & Expandable thought = Programmable Context**"
+    }
+  ]
+}

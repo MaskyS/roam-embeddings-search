@@ -1,0 +1,1527 @@
+{
+  ":node/title": "Free Hierarchy",
+  ":block/children": [
+    {
+      ":block/children": [
+        {
+          ":block/uid": "WZNzTK9lE",
+          ":block/order": 1,
+          ":block/string": "You can actually expand this to pretty much every information database client at present. We just don't get to rearrange the pieces of information freely."
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "V1zmXSqoC",
+              ":block/order": 0,
+              ":block/string": "Nodes are not free to leave\u2014 you're locked in by network effects and your data. When you cannot take **all** your data with you, information cannot flow freely."
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "_5w2OAmMm",
+                  ":block/order": 0,
+                  ":block/string": "The company's terms of ~~censorship~~ service limit your information sources (i.e. nodes at source level), while the algorithm selects the content in your feed (i.e. nodes at post level), when **__you__** should be in charge."
+                },
+                {
+                  ":block/uid": "CtRxJnMYB",
+                  ":block/order": 1,
+                  ":block/string": "The designers of the company lock you in to only a handful of hierarchies of those nodes, and these are almost always of linear and ephemereal nature."
+                },
+                {
+                  ":block/uid": "87YvUr8AE",
+                  ":block/order": 2,
+                  ":block/string": "The mechanism to filter out redundant nodes is pitiful"
+                }
+              ],
+              ":block/uid": "oFAJ8OyKW",
+              ":block/order": 1,
+              ":block/string": "You do not have complete freedom over the information you consume"
+            }
+          ],
+          ":block/uid": "3IYegDh5Y",
+          ":block/order": 0,
+          ":block/string": "At the time of writing, there are huge uproars against social media companies. Using free hierarchies, we can predict why we hate our current social media/news:"
+        }
+      ],
+      ":block/uid": "292ouEp8E",
+      ":block/order": 9,
+      ":block/string": "Information hierarchies"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/uid": "80H9rPHjL",
+              ":block/order": 2,
+              ":block/string": "**Using imagined labels multiplies the number of possible ways to organize the same members within a hierarchy, as well as the number of hierarchies themselves**. To illustrate this, let's jump to the next question: Why is [[Roam Research]] better than [[Evernote]]?"
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "Rax1kOt3_",
+                  ":block/order": 0,
+                  ":block/string": "The people we can work or be friends with, or the circle we can socialize with, is hugely expanded when it isn't drawn using blood."
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "MdE3iX0ge",
+                          ":block/order": 0,
+                          ":block/string": "{{[[video]]: https://www.youtube.com/watch?v=FjhyXam1Je0}}"
+                        }
+                      ],
+                      ":block/uid": "4dcSeVayi",
+                      ":block/order": 1,
+                      ":block/string": "His ensuing 5-minute monologue is worth watching in full:"
+                    },
+                    {
+                      ":block/uid": "8bXNw_RUK",
+                      ":block/order": 0,
+                      ":block/string": "[[Anton Ego]], an imperious food critic, has unsurmountable disregard for Chef Gusteau's idealistic belief that anyone can cook. So when he hears Gusteau's restaurant is rising in popularity, he sets out to put it back in its place. There, he is served a simple peasant dish: Ratatouille. But as he puts the food in his mouth, its brilliance literally stuns him. He requests to see the chef, at which point he is told it was cooked by a...rat. His very core beliefs having been proven wrong, he abruptly leaves the restaurant, and is left with a lot to think about."
+                    },
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "0nK3jVerc",
+                          ":block/order": 0,
+                          ":block/string": "> \"Not everyone can become a great artist, but a great artist CAN come from anywhere.\""
+                        }
+                      ],
+                      ":block/uid": "o0vJ--GmY",
+                      ":block/order": 2,
+                      ":block/string": "But the quote that stands out is:"
+                    }
+                  ],
+                  ":block/uid": "ZB3Ax5q57",
+                  ":block/order": 1,
+                  ":block/string": "We never fail to display this principle in our society, and perhaps it's most perfectly captured in [[Ratatouille]], arguably Pixar's best film: "
+                }
+              ],
+              ":block/uid": "AHrKUa64h",
+              ":block/order": 0,
+              ":block/string": "**They allow our groups to transcend immutable differences like race and kinship, increasing the size of our hierarchies**. "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "PDbqeUbrG",
+                  ":block/order": 0,
+                  ":block/string": "Ideas, myths and other imagined organization methods can be tested extremely quickly, which is why cultural evolution has surpassed biological evolution. Moreover, when an ideological group stops being efficient or doesn't look out for everyone, we can switch to another overnight, like when Einstein didn't fancy Nazi-Germany so he went to Switzerland."
+                }
+              ],
+              ":block/uid": "rGPMRNKFw",
+              ":block/order": 1,
+              ":block/string": "**As they're imagined, and therefore, completely malleable, they can rapidly be adopted or abandoned to test their efficiency**. "
+            }
+          ],
+          ":block/uid": "sOW_vMvji",
+          ":block/order": 3,
+          ":block/string": "To recap, [[Yuval Noah Harari]] says that we collaborate by inventing fictive labels and ideas.  Essentially, we expanded our repertoire of properties by inventing new ones, and then reorganized according to these properties. They enable progress on three levels:"
+        },
+        {
+          ":block/uid": "3z9aoOuOz",
+          ":block/order": 1,
+          ":block/string": "Seventy thousand years ago, there were six different human species roaming the earth, and each one's impact was just as insignificant on the planet as say, jellyfish, gorillas, or dragonflies. So how did homo sapiens not only survive, but proceed to thrive and take over the world?"
+        },
+        {
+          ":block/uid": "QoeQB3z2R",
+          ":block/order": 0,
+          ":block/string": "\"What makes us special?\" is a question that has haunted us for millennia. "
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "PXDk1dsx0",
+                  ":block/order": 0,
+                  ":block/string": "> We want to believe that there is something special about the human body or human brain that makes each individual human vastly superior to a dog, or a pig, or a chimpanzee. We look for the differences on the individual level.\n\nBut the fact is that one-on-one, humans are embarrassingly similar to chimpanzees. If you place me and a chimpanzee together on a lone island, to see who survives better, I would definitely place my bets on the chimp.\n\nThe real difference between us and other animals is on the collective level: **Homo sapiens has the special ability to unite millions of strangers around commons myths. **\n\nWe are the only animal that can cooperate flexibly in large numbers. Ants and bees can also work together in large numbers, but they do so in a very rigid way. If a beehive is facing a new threat or a new opportunity, the bees cannot reinvent their social system overnight in order to cope better. They cannot, for example, execute the queen and establish a republic. \n\nWolves and chimpanzees cooperate far more flexibly than ants, but they can do so only with small numbers of intimately known individuals. Among wolves and chimps, cooperation is based on personal acquaintance. If I am a chimp and I want to cooperate with you, I must know you personally: What kind of chimp are you? Are you a nice chimp? Are you an evil chimp? How can I cooperate with you if I don\u2019t know you?\n\nOne-on-one or ten-on-ten, chimpanzees may be better than us. But pit 1,000 Sapiens against 1,000 chimps, and the Sapiens will win easily, for the simple reason that 1,000 chimps can never cooperate effectively. Put 100,000 chimps in Wall Street or Yankee Stadium, and you\u2019ll get chaos. Put 100,000 humans there, and you\u2019ll get trade networks and sports contests.\n\nIdeas like freedom, human rights, gods, laws, and capitalism exist in our imaginations, yet they can bind us together and motivate us to cooperate on complex tasks. And this is why we control the world."
+                }
+              ],
+              ":block/uid": "06Pmssc8V",
+              ":block/order": 0,
+              ":block/string": "In [[Sapiens]], [[Yuval Noah Harari]] looks at multiple fields ((like history, biology, philosophy and economics))--both from a birds-eye view and from up close-- to [explain](https://www.gatesnotes.com/Books/Sapiens-A-Brief-History-of-Humankind):"
+            }
+          ],
+          ":block/uid": "BvZ_Sq4gI",
+          ":block/order": 2,
+          ":block/string": "One book's unique answer to this question made it the instant favorite of [[Bill Gates]], [[Barack Obama]], and [million others](https://en.wikipedia.org/wiki/Sapiens:_A_Brief_History_of_Humankind#Reception).  "
+        }
+      ],
+      ":block/uid": "AFg9RxLl3",
+      ":block/order": 3,
+      ":block/string": "The Chosen Ones"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "LwX28nMRp",
+                  ":block/order": 0,
+                  ":block/string": "> One tweet summary of @RoamResearch.\n\nType a sentence like:\n- Had #meeting with #JohnSmith about #defi\n"
+                },
+                {
+                  ":block/uid": "f7TQe6KSA",
+                  ":block/order": 1,
+                  ":block/string": ">\nYou get:\n- a page with all meetings (#meeting)\n- a page with all mentions of a person (#JohnSmith)\n- a page with all mentions of a concept (#defi)\n\nIt indexes your text."
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "vHLskSEql",
+                      ":block/order": 0,
+                      ":block/string": "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fholy-omniscience%2Fv3SLqxpbV5.jpg?alt=media&token=e4f5087f-2223-4444-bdb4-70fbd676914b)"
+                    },
+                    {
+                      ":block/uid": "QsR8vNtzY",
+                      ":block/order": 1,
+                      ":block/string": "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fholy-omniscience%2FwhzDBHeUzI.jpg?alt=media&token=70c2f6e8-5024-4cdc-9e96-8d24ee3d0b8a)"
+                    }
+                  ],
+                  ":block/uid": "aTCojQB3X",
+                  ":block/order": 2,
+                  ":block/string": "Some screenshots so it's easier to visualize:"
+                }
+              ],
+              ":block/uid": "QJGxHkOKD",
+              ":block/order": 0,
+              ":block/string": "Roam calls itself \"a note-taking tool for networked thought\". That's fancy but vague; so here's [[Balaji Srinivasan]]'s [tweet-sized explanation](https://twitter.com/balajis/status/1307318284010758145):"
+            }
+          ],
+          ":block/uid": "4RTpixHty",
+          ":block/order": 2,
+          ":block/string": "An intro to Roam"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "E3uVZ7WvB",
+              ":block/order": 0,
+              ":block/string": "Not long after its release, [many apps](((v2Mec4KbL))) like [[Obsidian]] tried to recreate Roam's success, while existing apps like Notion rushed to add backlinks so they could at least catch up."
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "hWiotHdE8",
+                      ":block/order": 0,
+                      ":block/string": "Roam brings the fundamental unit of information down to a \"block\", spanning  just a couple of words or paragraphs, instead of an article."
+                    },
+                    {
+                      ":block/uid": "xoBUyJIMF",
+                      ":block/order": 1,
+                      ":block/string": "What's more, you can link related topics and blocks inline; or at the end of each block. "
+                    },
+                    {
+                      ":block/uid": "nJ4_IPnJp",
+                      ":block/order": 2,
+                      ":block/string": "When a block tackles *one* thing at a time, it becomes more modular, and reusable"
+                    }
+                  ],
+                  ":block/uid": "vSE4RazRk",
+                  ":block/order": 0,
+                  ":block/string": "**Atomic blocks**"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "fwvGXGOOD",
+                      ":block/order": 0,
+                      ":block/string": "Any block or page in Roam can be __reused__ and edited from anywhere, as many times as you'd like, even inline, inside another block. "
+                    },
+                    {
+                      ":block/uid": "OoqpO6oOY",
+                      ":block/order": 1,
+                      ":block/string": "This eliminates redundancy, and allows perfect transclusion. "
+                    },
+                    {
+                      ":block/uid": "LUJjlozrW",
+                      ":block/order": 2,
+                      ":block/string": "If you're expecting a child, and decide suddenly that you'd rather name them Xorand than X \u00c6 A-12, well, you can update the name in your entire Roam journal __at once__ by editing the page."
+                    }
+                  ],
+                  ":block/uid": "Ud024Av3Z",
+                  ":block/order": 1,
+                  ":block/string": "**Write once, reuse (and edit) anywhere**"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "_C_xt9izy",
+                      ":block/order": 0,
+                      ":block/string": "Through backlinks, you can easily see where each block was tagged or referred"
+                    },
+                    {
+                      ":block/uid": "8CehLrQWK",
+                      ":block/order": 3,
+                      ":block/string": "Through the graph view, you can see how page relate to each other"
+                    },
+                    {
+                      ":block/uid": "3eQpyg6u0",
+                      ":block/order": 2,
+                      ":block/string": "This way, identifiers/backlinks let hierarchies rise organically"
+                    },
+                    {
+                      ":block/uid": "l4ZekALi3",
+                      ":block/order": 1,
+                      ":block/string": "When using block references, you can follow a thought/block back, and see all the places it was used."
+                    }
+                  ],
+                  ":block/uid": "UaX96ZUSU",
+                  ":block/order": 2,
+                  ":block/string": "**Seeing the connections. **"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "FLrx_lbNu",
+                      ":block/order": 0,
+                      ":block/string": "In Roam, you can indent a block under another one to show it's related to it, or expands upon the details to the parent block."
+                    },
+                    {
+                      ":block/uid": "2HpyE0F-w",
+                      ":block/order": 1,
+                      ":block/string": "This enables you to decide the depth at which you want to explore each idea, and get a bird's-eye view of a page very quickly."
+                    },
+                    {
+                      ":block/uid": "LidMjhZr4",
+                      ":block/order": 2,
+                      ":block/string": "This will only get easier and flexible over time. For instance, a recent update brought [[collapsible parentheticals]], where you can insert some text inline, and allow the user to expand it to get more details."
+                    },
+                    {
+                      ":block/uid": "aCC3Uf3JC",
+                      ":block/order": 3,
+                      ":block/string": "Roam allows knowledge graphs to become scale-free/fractal. See here."
+                    }
+                  ],
+                  ":block/uid": "vH6WbGy3j",
+                  ":block/order": 3,
+                  ":block/string": "**Identable & Expandable thought = Programmable Context**"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "WAnsmeVn_",
+                      ":block/order": 0,
+                      ":block/string": "Because of the graph view, atomicity, and self-containment, you don't have to think ahead about how to organize your ideas. You just write them, say how they relate to each other, and come back to organize later. "
+                    }
+                  ],
+                  ":block/uid": "mrmp43hIL",
+                  ":block/order": 4,
+                  ":block/string": "**Structure the way you want it**"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "X__KvgJTu",
+                      ":block/order": 3,
+                      ":block/string": "Now you could take your brain dump, and reorganize them across multiple pages, [[Article v1]], [[Article v2]], and [[Article v3]]; embedding your ideas, one block reference at a time. to see which one works best, without rewriting **a single word**."
+                    },
+                    {
+                      ":block/uid": "7YsbM5uM4",
+                      ":block/order": 0,
+                      ":block/string": "What's more, you can organize blocks in multiple hierarchies simultaneously. I"
+                    },
+                    {
+                      ":block/uid": "k7W971KLw",
+                      ":block/order": 1,
+                      ":block/string": "Say you're writing an article, and it doesn't really flow well. "
+                    },
+                    {
+                      ":block/uid": "xWD0Y0WBC",
+                      ":block/order": 2,
+                      ":block/string": "You could brain dump all your ideas in your daily notes page; putting one sentence (or as few as possible) about one idea in one block, and tagging them at block level."
+                    },
+                    {
+                      ":block/uid": "wBTNo-cS_",
+                      ":block/order": 4,
+                      ":block/string": "But you wanted to get crazy, you could even define block versions to change the wording of your sentence!"
+                    }
+                  ],
+                  ":block/uid": "vg-9hKFl4",
+                  ":block/order": 5,
+                  ":block/string": "**Simultaneous hierarchies **"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "s9nlqKKPM",
+                          ":block/order": 0,
+                          ":block/string": "All blocks tagged #censorship written between 1st of December 2020 to that of last year that mention Donald Trump and Twitter"
+                        }
+                      ],
+                      ":block/uid": "uARjOR-fe",
+                      ":block/order": 0,
+                      ":block/string": "Automatic: Through queries, you can pull in lists of blocks that cater to specific conditions, like "
+                    },
+                    {
+                      ":block/uid": "S7kD83FJ2",
+                      ":block/order": 1,
+                      ":block/string": "Manual: references too"
+                    }
+                  ],
+                  ":block/uid": "jD0165LLP",
+                  ":block/order": 6,
+                  ":block/string": "**Programmable Arrangements**"
+                }
+              ],
+              ":block/uid": "eQrB0LmZu",
+              ":block/order": 1,
+              ":block/string": "But most of them not only fail to understand that they're built from a fundamentally different tech stack (Roam uses a graph database, Neo4j), they also do not realize that the most important features *aren't* backlinks, not in isolation at least. Instead, those are:"
+            }
+          ],
+          ":block/uid": "Qlh3ac3w7",
+          ":block/order": 3,
+          ":block/string": "What makes Roam Roam?"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "KjNxAh-6s",
+                  ":block/order": 0,
+                  ":block/string": "The Zettelkasten owes its success to the social theorist [[Niklas Luhmann]], as does Niklas to Zettelkasten, for during his career, Niklas managed to write more than 70 books and 400 articles."
+                }
+              ],
+              ":block/uid": "Q1I-rEGcs",
+              ":block/order": 0,
+              ":block/string": "Roam decided upon the Zettelkasten method. "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "eS1uiULGj",
+                  ":block/order": 0,
+                  ":block/string": "You have a bunch of index cards, to which you assign unique references (e.g. created time; when you wrote them)"
+                },
+                {
+                  ":block/uid": "2SlajjUkJ",
+                  ":block/order": 3,
+                  ":block/string": "On the back of the card, you keep track of related ideas and topics by writing their references and tags."
+                },
+                {
+                  ":block/uid": "gdGLAMYIk",
+                  ":block/order": 1,
+                  ":block/string": "On each index card, you write *one*, atomic, self-contained idea that won't require much context to understand when you revisit them"
+                },
+                {
+                  ":block/uid": "q26ry7u0d",
+                  ":block/order": 2,
+                  ":block/string": "If this was an idea you read about, put it your own words. This is the best way to prove you truly understand. The reason, As we'll see latter, is because you're rearranging/rebuilding the hierarchy (idea) of words while preserving its purpose."
+                }
+              ],
+              ":block/uid": "zN4b1XLkg",
+              ":block/order": 1,
+              ":block/string": "This is how it works:"
+            },
+            {
+              ":block/uid": "4fivcQcuX",
+              ":block/order": 3,
+              ":block/string": "![Ideas organized by tags and interconnected by links.](https://miro.medium.com/max/4448/1*gxyKEtyW6Ms_1v7Sm4N2Rw.png)"
+            },
+            {
+              ":block/uid": "PZuP-_vSw",
+              ":block/order": 2,
+              ":block/string": "So your Zettelkasten's arrangement will look like this, where every circle/node represents an idea/card and every color region represents a topic/tag. [Credit](https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125) "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "cdBiOaI9e",
+                  ":block/order": 0,
+                  ":block/string": "Structure isn't hardcoded. The organization evolves organically over time. And one idea can be link to multiple tags and topics without ever being restrained."
+                },
+                {
+                  ":block/uid": "14XBaLlUt",
+                  ":block/order": 1,
+                  ":block/string": " And when you have a specific question to answer, you can rearrange your notes in such a way for an answer to arise, you can put them in one specific context. You see connections more easily among notes that seem unrelated on the surface."
+                },
+                {
+                  ":block/uid": "qc3xLEiYd",
+                  ":block/order": 2,
+                  ":block/string": "It only gets better over time. You don't delete any ideas, so if they remain unused, they simply fade away. "
+                }
+              ],
+              ":block/uid": "5CzohljE-",
+              ":block/order": 4,
+              ":block/string": "What advantages does this method provide?"
+            }
+          ],
+          ":block/uid": "Xr3Xrx2GD",
+          ":block/order": 1,
+          ":block/string": "So what is that better way of \"organizing the questions we are trying to answer\"? "
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "z2THCA9n_",
+                  ":block/order": 1,
+                  ":block/string": "> Our thoughts\u2014particularly the sort of thoughts we have when we're trying to work through complex problems, don't fit neatly (or at all) into those sorts of metaphors"
+                },
+                {
+                  ":block/uid": "FOAG2lytF",
+                  ":block/order": 2,
+                  ":block/string": "> For example\u2014 you're trying to answer a hard question\u2014an open question like \"Why did X happen?\" or \"What should I do to make Y more likely\". One thing you may want to do is generate a large number of sub-questions to pursue\u2014folders right? tags?"
+                },
+                {
+                  ":block/uid": "q5NxhOOfD",
+                  ":block/order": 3,
+                  ":block/string": "> You may want to collect a bunch of resources (build on other people's thoughts)\u2014like journal articles, essays, you may read a bunch of books... But then, you will quickly find that each paper may be relevant to many of the questions you're considering. "
+                },
+                {
+                  ":block/uid": "T79Rs8Vlg",
+                  ":block/order": 4,
+                  ":block/string": "> Well now you're in a bind\u2014the nice thing about folders (or a Workflowy Tree) is that it let you take a high level question and focus on smaller pieces\u2014but now each of those articles you read has claims that it makes that fit in different places in your hierarchy. "
+                },
+                {
+                  ":block/uid": "qDUSBTBnm",
+                  ":block/order": 5,
+                  ":block/string": "> The same article (or quote, or fact) might help you answer three different questions\u2014so do you put a copy of it in all three locations?\u2014if you do then any change you make to it later (anytime you refine or build on that idea, or invalidate it) will require 3x the work "
+                },
+                {
+                  ":block/uid": "lmqMII3lT",
+                  ":block/order": 6,
+                  ":block/string": "> If you rely on tags, you can group the same item into multiple collections, but you lose the ability to move from a higher \"strategic level\" down to the more granular question\u2014 and you end up trying to remember which of your 100 tags is useful to each concept. "
+                },
+                {
+                  ":block/uid": "cJ2groHiD",
+                  ":block/order": 7,
+                  ":block/string": "> **Folders are a good idea\u2014 because hierarchical organization is fundamental to human thinking\u2014 we like categorizing things. Folders are a bad idea because every actual thing fits into multiple categories. **"
+                },
+                {
+                  ":block/uid": "P0U0hmH48",
+                  ":block/order": 8,
+                  ":block/string": "> Tags are a good idea because they allow you to create those overlapping collections. They are great for browsing, and that is a genuine source of insight. They are bad because they are flat (and difficult to merge together) & require you to guess your structure ahead of time "
+                },
+                {
+                  ":block/uid": "i_7VY4qLO",
+                  ":block/order": 9,
+                  ":block/string": "> **What is missing in our existing systems is this\u2014 we need better way of organizing the questions we are trying to answer, and making explicit the lines of reasoning we hold. **"
+                },
+                {
+                  ":block/uid": "Za_fW5YxW",
+                  ":block/order": 10,
+                  ":block/string": "> When you can't do something as simple as say\u2014 \"I'm building ideas Y and Z off of idea X\" (where X is the combination of A, B, and C), and make that relationship explicit, you're bound to get lost."
+                },
+                {
+                  ":block/uid": "IU3K6CBSt",
+                  ":block/order": 0,
+                  ":block/string": "> The problem with existing notes systems is that they're locked into metaphors from when everything was analog. Files go in folders, and can get tags. At best, they add in the capacity for links to other files\u2014since links are now something everyone will be familiar with."
+                }
+              ],
+              ":block/uid": "1_xDALy61",
+              ":block/order": 0,
+              ":block/string": "Here Conor [explains](https://twitter.com/Conaw/status/1099181050045952006) the glaring inefficiencies of previous note-taking apps:"
+            }
+          ],
+          ":block/uid": "Ouy6fW_PL",
+          ":block/order": 0,
+          ":block/string": "Let's start at the beginning, focusing on why [[Conor White-Sullivan]] founded Roam."
+        }
+      ],
+      ":block/uid": "X4EAgnEVI",
+      ":block/order": 4,
+      ":block/string": "Accelerating Intellectual Progress by Building a Note-Taking App"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "x8JZpNK_p",
+                      ":block/order": 0,
+                      ":block/string": "Well, you'd be correct. Currently, most people refer to that limit as 'God', which many other equate with the universe itself. And guess what that bad boy does all day? It expands, all day, every day, at an __accelerating__ rate."
+                    }
+                  ],
+                  ":block/uid": "4rwAArEfl",
+                  ":block/order": 2,
+                  ":block/string": "\"But Kifah, you can't keep making hierarchies out of hierarchies! Surely there has to be a limit?\""
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "Rzsr68eWt",
+                          ":block/order": 0,
+                          ":block/string": "We do not fight because we\u2019re different; we fight because we are the same; and want (to be) the same things."
+                        }
+                      ],
+                      ":block/uid": "yrK1hrUtH",
+                      ":block/order": 0,
+                      ":block/string": "As [[Rene Girard]] ((the french historian whose Mimetic Theory greatly influenced Peter Thiel)) and [[Shakespeare]] noted, "
+                    }
+                  ],
+                  ":block/uid": "pGSu7Smuo",
+                  ":block/order": 1,
+                  ":block/string": "If this is not true, and redundancy increases, i.e. nodes keep multiplying despite there being no new roles to fulfill, violence inevitably will inevitably occur. **And this we call** '[cancer](https://twitter.com/maskys_/status/1339763293775282181?s=20)'. "
+                },
+                {
+                  ":block/uid": "Vl-XOtHG9",
+                  ":block/order": 0,
+                  ":block/string": "> ((fE1HqE3qL))"
+                }
+              ],
+              ":block/uid": "W45Qp34Gd",
+              ":block/order": 1,
+              ":block/string": "{{[[TODO]]}} b. To sustain the growth of a free hierarchy, it is critical that it has a mission bigger than itself; an endgame. "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "j85REp_yZ",
+                  ":block/order": 1,
+                  ":block/string": "Should I leave or should I stay? etc."
+                },
+                {
+                  ":block/uid": "DbhI_Go-G",
+                  ":block/order": 0,
+                  ":block/string": "Is this the most optimal arrangement/strategy? "
+                }
+              ],
+              ":block/uid": "CFnwNS_26",
+              ":block/order": 0,
+              ":block/string": "{{[[TODO]]}} a. Only if the hierarchy is playing a part in a bigger hierarchy (i.e. has a specific purpose), can nodes gauge performance, both their own and that of the leading node(s). "
+            },
+            {
+              ":block/uid": "yvegHbsK8",
+              ":block/order": 2,
+              ":block/string": "{{[[TODO]]}} mention that free hierarchies are scale-free, or fractal."
+            }
+          ],
+          ":block/uid": "WNtf_1bry",
+          ":block/order": 7,
+          ":block/string": "**The free hierarchy as a whole is a node in a larger free hierarchy.**"
+        },
+        {
+          ":block/uid": "d1cRmau-D",
+          ":block/order": 4,
+          ":block/string": "**In a free hierarchy, every node is free to leave if it so chooses.**"
+        },
+        {
+          ":block/uid": "XsTTNI6sn",
+          ":block/order": 0,
+          ":block/string": "We're now ready to formalize the principles of free hierarchies."
+        },
+        {
+          ":block/uid": "frQpVZFbm",
+          ":block/order": 1,
+          ":block/string": "**Any entity that occurs in numbers, can be said to consititute a node, and the overall arrangement of these nodes as a group can be said to consititute a hierarchy.**"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "8p3rT1El-",
+                  ":block/order": 2,
+                  ":block/string": "The node's meaning is comprehensible on its own, requiring minimal context."
+                },
+                {
+                  ":block/uid": "HrXYAJete",
+                  ":block/order": 1,
+                  ":block/string": "To fulfill this purpose, it requires minimal intervention from other nodes"
+                },
+                {
+                  ":block/uid": "QhMcEFyOU",
+                  ":block/order": 0,
+                  ":block/string": "Each node fulfills one specific, unique purpose"
+                }
+              ],
+              ":block/uid": "fEpm3kWX2",
+              ":block/order": 0,
+              ":block/string": "That is,"
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "tZyp-5DWC",
+                  ":block/order": 1,
+                  ":block/string": "((Szm-5uoQC))"
+                },
+                {
+                  ":block/uid": "PYRCQWRHp",
+                  ":block/order": 0,
+                  ":block/string": "An example for good code (a node) in programs (a hierarchy)"
+                }
+              ],
+              ":block/uid": "EU_8q-33M",
+              ":block/order": 1,
+              ":block/string": "This does not mean that a node cannot fulfill more than one purpose. Indeed, the best node fulfills its purpose in such a way that it is easily 'extensible'; to serve purposes not thought of originally. But it shall carry out this purpose in a __different__ hierarchy such that it benefits the parent hierarchy."
+            }
+          ],
+          ":block/uid": "UD5IqUqPk",
+          ":block/order": 2,
+          ":block/string": "**In a free hierarchy, each node strives to be atomic, autonomous, and self-contained. **"
+        },
+        {
+          ":block/uid": "fznD7ZoBM",
+          ":block/order": 5,
+          ":block/string": "**Free hierarchies are arranged so as to reduce redundancy. In the ideal hierarchy, no two nodes fulfills the same purpose (position).**"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "kwYeKVCh5",
+              ":block/order": 0,
+              ":block/string": "For example, a person can be a dad in the family hierarchy, a ceo in a company, a member of the church, and so on."
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "wujSokoxv",
+                  ":block/order": 0,
+                  ":block/string": "In this way, hierarchies constituting of the same members but fulfilling different purposes, can form part of other hierarchy"
+                },
+                {
+                  ":block/uid": "vc1szxhpe",
+                  ":block/order": 1,
+                  ":block/string": "Examples are startup teams, where a founder might handle marketing, outreach, AND design.  "
+                }
+              ],
+              ":block/uid": "rJrKWH4_E",
+              ":block/order": 1,
+              ":block/string": "A founder of a startup might be head of design, assistant marketer, etc."
+            }
+          ],
+          ":block/uid": "4DxiITzZV",
+          ":block/order": 6,
+          ":block/string": "**Nodes may, and indeed, strive to, simultaneously form part of multiple free hierarchies**"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "Fq4nmyg77",
+                  ":block/order": 0,
+                  ":block/string": "For example, lego pieces can be put together in a myriad of ways"
+                }
+              ],
+              ":block/uid": "avgOHTswt",
+              ":block/order": 0,
+              ":block/string": "It is in this freedom that free hierarchies draw their power from. ((Roam vs Evernote, humans vs other species, true democracy, OOP vs prototypal modelling,))"
+            }
+          ],
+          ":block/uid": "Mvd150ffA",
+          ":block/order": 3,
+          ":block/string": "**In a free hierarchy, the nodes may be rearranged in multiple (or infinite) configurations. **"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "5SU5_5aZG",
+                  ":block/order": 1,
+                  ":block/string": "what the arrangement\u2014and therefore, the strategy\u2014 of every other node within is own hierarchy to achieve the hierarchies overall purpose."
+                },
+                {
+                  ":block/uid": "MLIN9b4ja",
+                  ":block/order": 0,
+                  ":block/string": "which parent hierarch(ies) this one should act as a node for (the specific purpose of the group)"
+                }
+              ],
+              ":block/uid": "C5AQJ_zsf",
+              ":block/order": 0,
+              ":block/string": "The leading node(s) dictates:"
+            }
+          ],
+          ":block/uid": "_BaEq1fWx",
+          ":block/order": 8,
+          ":block/string": "**Free hierarchies may have one or more leading nodes that dictate i) the parent hierarchy ii) the arrangement of every other node in its hierarchy.**"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "kzbqjRrJd",
+              ":block/order": 0,
+              ":block/string": "The node itself"
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "iP6Kra9It",
+                  ":block/order": 0,
+                  ":block/string": "the whole group"
+                }
+              ],
+              ":block/uid": "sAplJ6NQk",
+              ":block/order": 1,
+              ":block/string": "The leading nodes (which makes decisions for other nodes), (or if it is one, its follower nodes), and in their absence,"
+            },
+            {
+              ":block/uid": "W9ySo-khP",
+              ":block/order": 2,
+              ":block/string": "The parent hierarchy, to which the node's hierarchy belongs"
+            }
+          ],
+          ":block/uid": "ZTx0CPJq5",
+          ":block/order": 9,
+          ":block/string": "**The performance of a node is gauged by every member in a network**"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "ahO86Iiey",
+              ":block/order": 0,
+              ":block/string": "Because, without knowing their relationship, we cannot decide which intrinsic characteristics are relevant within this specific context (or the hierarchy they belong to, and the purpose its striving for)"
+            }
+          ],
+          ":block/uid": "lhFZAjg4d",
+          ":block/order": 10,
+          ":block/string": "The theory of free hierarchy posits that at the core of progress-- human or otherwise-- lies the formation and expansion of free hierarchies. Like category theory, the emphasis here is on the relationships of entities rather than their intrinsic characteristics. "
+        }
+      ],
+      ":block/uid": "jlvgN7Tdg",
+      ":block/order": 7,
+      ":block/string": "**Abstract Thesis**"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "nTVHlG6-O",
+          ":block/order": 1,
+          ":block/string": "We said that humans have come this far because of our ability to create fictive stories and identities and use them to organize society. **But stories are nothing if they don't have a meaning or purpose**. And that's exactly why we're in such a mess today: **Our labels don't mean anything**."
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "d483bd_xr",
+                  ":block/order": 0,
+                  ":block/string": "> __Ethos__ is about establishing your authority to speak on the subject, __logos__ is your logical argument for your point and __pathos__ is your attempt to sway an audience emotionally."
+                }
+              ],
+              ":block/uid": "66BTpghTO",
+              ":block/order": 0,
+              ":block/string": "[[Aristotle]] defined three modes of persuasion: [[Ethos]] , [[Logos]], and [[Pathos]]. [[Farnam Street]] [summarizes](https://fs.blog/2016/11/ethos-logos-pathos/) them as:"
+            }
+          ],
+          ":block/uid": "grXjHf-5-",
+          ":block/order": 0,
+          ":block/string": "An unbalanced society: [[Pathos]] \u2b06 [[Logos]] \u23ec [[Ethos]] \ud83d\udcc9"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "g420EbwVC",
+                  ":block/order": 0,
+                  ":block/string": "Which image was stronger? So would you say Americans today have a more coherent identity than [[Benjamin Franklin]]'s time did? "
+                }
+              ],
+              ":block/uid": "sdZaop0rj",
+              ":block/order": 0,
+              ":block/string": "What sort of person comes to your mind when I say the word \"American\"? And when I say \"Californian\"? What about \"San Fransciscan\"? "
+            },
+            {
+              ":block/uid": "X7wUnnMFC",
+              ":block/order": 1,
+              ":block/string": "When you don't have a vision to build, Legos are just plastic that make you wish you didn't have legs. Today, Legos are plenty, [[Logos]] not so much. "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "wnUCR_sEh",
+                  ":block/order": 1,
+                  ":block/string": "They represent a regression because they limit the way people can organize themselves (just like biological tribes) mainly through archaic laws, like not being being able to enter Malaysia when you're Israeli ((or Github banning an entire company because one of their employees was in Iran))"
+                },
+                {
+                  ":block/uid": "sdNKytX5e",
+                  ":block/order": 0,
+                  ":block/string": "They mostly don't stand for anything due to being applied __by default__ across too broad a population. "
+                }
+              ],
+              ":block/uid": "gWKLJTdHu",
+              ":block/order": 2,
+              ":block/string": "So nationalities violate multiple principles of free hierarchies. "
+            }
+          ],
+          ":block/uid": "8ZhammBwP",
+          ":block/order": 2,
+          ":block/string": "A rant against Nationalism"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "jWyQ0mgjQ",
+              ":block/order": 4,
+              ":block/string": "Today things are different. It becomes increasingly possible to sustain free hierarchies, where everyone's allowed to make noise, including the loudest noise of them all: silence."
+            },
+            {
+              ":block/uid": "XQfq_iQGR",
+              ":block/order": 5,
+              ":block/string": "The ability to peacefully walk away is the most powerful method to keep the leaders and other members of the hierarchy accountable. As [[Balaji Srinivasan]] put it, ((Pq4C-K6fo))"
+            },
+            {
+              ":block/uid": "VcgJb-5yH",
+              ":block/order": 0,
+              ":block/string": "Lumping nodes that desire conflicting arrangements together stifles progress.  "
+            },
+            {
+              ":block/uid": "mCnZ_mA88",
+              ":block/order": 1,
+              ":block/string": "The moment there are 'two sides' to a story, and a power struggle arises, you actually have two __distinct__ stories. And we have to acknowledge them both if we are to see this till the end. "
+            },
+            {
+              ":block/uid": "vCDF9ly0e",
+              ":block/order": 2,
+              ":block/string": "The world is marching towards \"a diverse set of monopolies\"\u2014better democra__cies__, systems of government where __every individual__ agrees with decisions made 'on part of the people'."
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "zxCqQr22g",
+                  ":block/order": 1,
+                  ":block/string": "- even if you did, you couldn't __attempt__ to leave your monopoly without suffering significant [backlash](https://www.lexology.com/library/detail.aspx?g=d5ebd361-1d36-4405-bfa6-50441866ac41)."
+                },
+                {
+                  ":block/uid": "wUQkk3Juc",
+                  ":block/order": 2,
+                  ":block/string": "- you couldn't be part of multiple monopolies, or easily try them out, due to physical restrictions"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "YHmV0G9dA",
+                      ":block/order": 1,
+                      ":block/string": "we didn't have the internet back then"
+                    },
+                    {
+                      ":block/uid": "XhSa74fcv",
+                      ":block/order": 0,
+                      ":block/string": "of government censorship and because"
+                    }
+                  ],
+                  ":block/uid": "6aUAsxfM2",
+                  ":block/order": 0,
+                  ":block/string": "- you didn't know there were other choices, because "
+                }
+              ],
+              ":block/uid": "ZzhVjXq4y",
+              ":block/order": 3,
+              ":block/string": "If you wrinkled up your nose the moment you read 'monopol-', I get your reaction. But consider this: maybe monopolies so far have only failed because: "
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "XTmgtIdhd",
+                      ":block/order": 0,
+                      ":block/string": "((0cecusQuF))((X1ezZ2cw_))"
+                    }
+                  ],
+                  ":block/uid": "zqODb2K3B",
+                  ":block/order": 0,
+                  ":block/string": "[Balaji]([[Balaji Srinivasan]]) is a staunch advocate of 'Exit over Voice'. He explains its role in progress: "
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "sjLaIyfIf",
+                      ":block/order": 0,
+                      ":block/string": "https://twitter.com/balajis/status/1207010599324008448"
+                    }
+                  ],
+                  ":block/uid": "5nwUTYkjZ",
+                  ":block/order": 1,
+                  ":block/string": "The most striking example is that of tech workers. As Balaji predicted back in 2019:"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "umx9v_CGX",
+                          ":block/order": 0,
+                          ":block/string": "((PMVJFG1yz))"
+                        }
+                      ],
+                      ":block/uid": "ZWDEDYIO-",
+                      ":block/order": 1,
+                      ":block/string": "The result of this enabling of free hierarchies at a large scale is that we can now start saying goodbye to incompetent politicians and systems:"
+                    },
+                    {
+                      ":block/uid": "pQavHcnpU",
+                      ":block/order": 0,
+                      ":block/string": "((CVDGmGHd0))"
+                    },
+                    {
+                      ":block/uid": "bWMZ1ja8x",
+                      ":block/order": 2,
+                      ":block/string": "Does the word 'monopoly' make more sense now? Yes? No? Well, let's look at... "
+                    }
+                  ],
+                  ":block/uid": "gkkpV1HMb",
+                  ":block/order": 3,
+                  ":block/string": "Thus began the mass exodus and the unstoppable rise of the N-city system :"
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "zW4YWOROS",
+                      ":block/order": 0,
+                      ":block/string": "**knowledge workers can just as freely choose their geographical hierarchy as they can their work hierarchy, and they don't even have to be the same**."
+                    }
+                  ],
+                  ":block/uid": "vhN2WBEIJ",
+                  ":block/order": 2,
+                  ":block/string": "2020 happened, and every company was forced to work remote. THe unacknowledged truth that digital nomads have fighted for years became undeniable: "
+                }
+              ],
+              ":block/uid": "1z-O85rNW",
+              ":block/order": 6,
+              ":block/string": "Exit Over Voice"
+            }
+          ],
+          ":block/uid": "FrI8p5yXZ",
+          ":block/order": 3,
+          ":block/string": "Better Democracies"
+        }
+      ],
+      ":block/uid": "ulf8YqlBf",
+      ":block/order": 10,
+      ":block/string": "Democracy as it exists today is flawed."
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "TL1AIMukY",
+          ":block/order": 0,
+          ":block/string": "Humans do not detest hierarchies. Humans detest __rigid__ hierarchies. Hierarchies are an inevitable part of life. At the core of human nature is a desire to choose our own hierarchy. 'Decentralized' does not mean everyone gets to lead. It means everyone gets choose when, and who to follow."
+        }
+      ],
+      ":block/uid": "X51w1Up0O",
+      ":block/order": 8,
+      ":block/string": "Human Nature"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/uid": "a28JMyMB9",
+              ":block/order": 0,
+              ":block/string": "First, I'm still trying to fully articulate the axioms and explore all its applications."
+            },
+            {
+              ":block/uid": "6LFgqbSGu",
+              ":block/order": 1,
+              ":block/string": "Second, I'm having trouble to translate my __knowhow__, gained from thousands of hours of learning and browsing, into __knowledge__, especially in a way that can easily be absorbed by people who haven't had the same esoteric experiences as me."
+            }
+          ],
+          ":block/uid": "EH4exJhs0",
+          ":block/order": 0,
+          ":block/string": "This essay on the theory of free hierarchy is still very much in progress, for several reasons:"
+        },
+        {
+          ":block/uid": "tcraZaCuy",
+          ":block/order": 2,
+          ":block/string": "I hope that you, as one of the first readers, can understand my ramblings, and that these ideas will have as profound an impact as they did on me. If you don't understand but would like to, or have any feedback to share, please [reach out.](((nUop3RPuu)))"
+        },
+        {
+          ":block/uid": "0oZtyISAj",
+          ":block/order": 1,
+          ":block/string": "That being said, I cannot delay any longer, for this is the basis of [[The Information Platform of The Future]], despite being one of my later discoveries."
+        }
+      ],
+      ":block/uid": "3272-Rzt3",
+      ":block/order": 0,
+      ":block/string": "**IN PROGRESS**"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "hxYevVY9w",
+          ":block/order": 0,
+          ":block/string": "I think the most evident proof comes from Peter Thiel, who's famous for saying that \"((ElxVRA8WF))\""
+        },
+        {
+          ":block/uid": "D-IFhTYSO",
+          ":block/order": 1,
+          ":block/string": "Except, it's not just for business, but for every aspect of humanity and every entity that doesn't exist in a vacuum."
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "YD61MtxcL",
+              ":block/order": 0,
+              ":block/string": "> ((iaIyj2VOC))\n\n((fO0hV5hLz))"
+            }
+          ],
+          ":block/uid": "SQC1YUXO2",
+          ":block/order": 3,
+          ":block/string": "We see that Thiel also acknowledges the importance of eliminating redundancy. In his book [[Zero To One]], he shares this observation:"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "PfRtOOhJw",
+              ":block/order": 0,
+              ":block/string": "> When two people want the same scarce object, they fight. In response, as CEO of [[PayPal]], [Thiel]([[Peter Thiel]]) set up the company structure to eliminate competition between employees. **PayPal overhauled the organization chart every three months. By repositioning people, the company avoided most conflicts before they even started**. \n\n**Employees were evaluated on one single criterion, and no two employees had the same one.** They were responsible for one job, one metric, and one part of the business. "
+            }
+          ],
+          ":block/uid": "88F4MTcqg",
+          ":block/order": 2,
+          ":block/string": "Peter understands free hierarchies. Here [[David Perell]] [recounts](https://perell.com/essay/peter-thiel/)  how Thiel successfully leveraged the power of re-arranging nodes in a free hierarchy:"
+        }
+      ],
+      ":block/uid": "t__SkG5Cn",
+      ":block/order": 11,
+      ":block/string": "Free Hierarchies in Business."
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/uid": "xq2fqx_X9",
+              ":block/order": 3,
+              ":block/string": "Redundancy is actively avoided, like merging duplicate threads or deleting reposts"
+            },
+            {
+              ":block/uid": "xTXa-nT3b",
+              ":block/order": 0,
+              ":block/string": "You come together for one specific reason; "
+            },
+            {
+              ":block/uid": "Vel8zrZwo",
+              ":block/order": 1,
+              ":block/string": "Anyone can be a part of the group as long as they're interested and friendly;"
+            },
+            {
+              ":block/uid": "MgjkTWdHe",
+              ":block/order": 2,
+              ":block/string": "You can be part of simultaneously be part of multiple communities; and "
+            }
+          ],
+          ":block/uid": "FAr_72VQK",
+          ":block/order": 0,
+          ":block/string": "The reason topic-specific online communities are blowing up right now is that they get free hierarchies mostly right: "
+        }
+      ],
+      ":block/uid": "P2z7lAd0b",
+      ":block/order": 12,
+      ":block/string": "Free hierarchy in online scenes"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "Wi1oLrNDY",
+          ":block/order": 0,
+          ":block/string": "Let's get a little more dreamy, and allow me to embarrass myself if I haven't already."
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "9MMNEXkCQ",
+              ":block/order": 0,
+              ":block/string": "Maybe instead of using the story of the blind men and the elephant to illustrate context's importance, we should have used the story of the gamers and Minecraft instead. "
+            }
+          ],
+          ":block/uid": "wqZbJOhXw",
+          ":block/order": 1,
+          ":block/string": "Free hierarchies offer a fresh perspective of what context actually means"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "oyoH_gCPM",
+              ":block/order": 0,
+              ":block/string": "Could we define intelligence as the ability to construct the biggest free hierarchies, in terms of both entity count and configuration space (no of possible arrangements)?"
+            }
+          ],
+          ":block/uid": "j0hSxWz1l",
+          ":block/order": 3,
+          ":block/string": "Rethinking intelligence"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "Ss9GKLaYP",
+              ":block/order": 0,
+              ":block/string": "The one real \"property\" or \"identity\" that every entity in the universe shares is age. It is The Universal Label; Anything and everything has a precise timestamp of when it came to existence. However, will age remain unalterable, as anti-aging research progresses, reversing our biological clocks?"
+            }
+          ],
+          ":block/uid": "DylExR_9W",
+          ":block/order": 2,
+          ":block/string": "The Universal Label"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "8Srmdvxqv",
+                  ":block/order": 0,
+                  ":block/string": " \"If you want to find the secrets of the universe, think in terms of energy, frequency and vibration.\""
+                }
+              ],
+              ":block/uid": "ydi6ZX_lc",
+              ":block/order": 0,
+              ":block/string": "Let's end this by meditating on [[Nikola Tesla]]'s words:"
+            },
+            {
+              ":block/uid": "fq9atS8ST",
+              ":block/order": 1,
+              ":block/string": "Consider a wave. What is it? An __arrangement__ of particles that evolves across time. ((You could argue about particle-wave duality, but I'll argue that's just the way the universe ensures that you always have smaller, more fundamental entities, just like you keep building bigger free hierarchies. So my ignorant opinion is that either we don't possess the technology to figure out what that unit is, or there's some magical loophole to understand.))"
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/uid": "tJQtgycp2",
+                  ":block/order": 0,
+                  ":block/string": "- energy as the number of configuration changes you can perform "
+                },
+                {
+                  ":block/uid": "KS8W9xmvL",
+                  ":block/order": 1,
+                  ":block/string": "- frequency as the rate which you change config states "
+                },
+                {
+                  ":block/children": [
+                    {
+                      ":block/children": [
+                        {
+                          ":block/uid": "VHOSesZNZ",
+                          ":block/order": 0,
+                          ":block/string": "I believe this is [[Claude Shannon]]'s definition of information/entropy"
+                        }
+                      ],
+                      ":block/uid": "6YBDrAXud",
+                      ":block/order": 0,
+                      ":block/string": "I.e. the magnitude of your spectrum (how good and how bad does it get?) "
+                    }
+                  ],
+                  ":block/uid": "rYr7fGIde",
+                  ":block/order": 2,
+                  ":block/string": "- vibration as the maximum difference between your configurations? "
+                }
+              ],
+              ":block/uid": "CW-_BCGej",
+              ":block/order": 2,
+              ":block/string": "Now, Could we think of:"
+            }
+          ],
+          ":block/uid": "fwhviMqiN",
+          ":block/order": 4,
+          ":block/string": "Energy, Frequency and Vibration."
+        }
+      ],
+      ":block/uid": "-rkc2OHM4",
+      ":block/order": 15,
+      ":block/string": "Ponderings"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "9qah3-h2I",
+          ":block/order": 0,
+          ":block/string": "This is the power of atoms and electrons and whatever other fundamental particle we discover. ((Think about it. You and I and every other thing in the universe are made of the same things at our core. What makes us us, is their arrangement. The power of the particle lies in its ability to to arrange itself with others of its kind in whatever way it pleases.))"
+        },
+        {
+          ":block/uid": "bx6toLiVq",
+          ":block/order": 1,
+          ":block/string": "This is why people get addicted to Minecraft. This is the power of computers. This is the power of polymaths. This is the power of language. This is the power of programming."
+        }
+      ],
+      ":block/uid": "YmBEw2EaP",
+      ":block/order": 14,
+      ":block/string": "Other Illustrations of free hierarchies"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "q9Y6ljDxL",
+          ":block/order": 0,
+          ":block/string": "Where else do free hierarchies apply?"
+        },
+        {
+          ":block/uid": "8P5FnQdQn",
+          ":block/order": 1,
+          ":block/string": "Where **don't** free hierarchies apply?"
+        }
+      ],
+      ":block/uid": "IltNGz9rF",
+      ":block/order": 16,
+      ":block/string": "Post-Pondering Script"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "Ho1LX-phe",
+          ":block/order": 3,
+          ":block/string": "So let's get cracking."
+        },
+        {
+          ":block/uid": "H73C0wyuV",
+          ":block/order": 0,
+          ":block/string": "Why are humans more successful than other animals? What makes [[Roam Research]] better than [[Evernote]] or [[Notion]] ? Why is prototypal inheritance (object composition) better than class inheritance? "
+        },
+        {
+          ":block/uid": "_FA2qyg-x",
+          ":block/order": 2,
+          ":block/string": "Understanding it guarantees a major shift in your worldview, and will answer more questions than you can imagine."
+        },
+        {
+          ":block/uid": "D0Hj2soac",
+          ":block/order": 1,
+          ":block/string": "At the heart of the answers to these questions lies the concept of free hierarchies."
+        }
+      ],
+      ":block/uid": "KrcDmhmAP",
+      ":block/order": 2,
+      ":block/string": "Introduction"
+    },
+    {
+      ":block/uid": "RqGw-ckRz",
+      ":block/order": 5,
+      ":block/string": "Now, how does Roam/Zettelkasten and humans' use of imagination to organize society relate? They enable free hierarchies."
+    },
+    {
+      ":block/uid": "lynVIxWMW",
+      ":block/order": 6,
+      ":block/string": ""
+    },
+    {
+      ":block/children": [
+        {
+          ":block/children": [
+            {
+              ":block/uid": "ZloE14MA7",
+              ":block/order": 0,
+              ":block/string": "{{[[TODO]]}} 'a thought is just a thought' (a node); and if it doesn't help you {the self} then you can ignore it... "
+            }
+          ],
+          ":block/uid": "m6-cA3fX2",
+          ":block/order": 0,
+          ":block/string": "This is a major part of cognitive psychology  theory"
+        }
+      ],
+      ":block/uid": "TfRtaMaGk",
+      ":block/order": 13,
+      ":block/string": "Thought Patterns"
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "-D1xQfocb",
+          ":block/order": 0,
+          ":block/string": "Leading nodes may not reap all the rewards, and probably faces more risk of destruction than the others. This is [the cost of being a leader](((vIgJnhsEW)))."
+        },
+        {
+          ":block/children": [
+            {
+              ":block/children": [
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "fwi5Sit-w",
+                      ":block/order": 0,
+                      ":block/string": "> ((OIyhMbjgn))"
+                    }
+                  ],
+                  ":block/uid": "2vuCf3t9g",
+                  ":block/order": 0,
+                  ":block/string": "By nature of being scale-free, or fractal, they become antifragile! When a node leaves a free hierarchy, latter is minimally affected, and in many cases, exit produces better hierarchies! [See]([[Fractal Brains: Fractal Thoughts]]):"
+                }
+              ],
+              ":block/uid": "lkYUkGKpo",
+              ":block/order": 0,
+              ":block/string": "- ensure the network doesn't depend too much on a single node/suffer from a single point of error."
+            },
+            {
+              ":block/uid": "xLFp-NIoe",
+              ":block/order": 2,
+              ":block/string": "- what else?"
+            },
+            {
+              ":block/children": [
+                {
+                  ":block/children": [
+                    {
+                      ":block/uid": "Wkko-bwXh",
+                      ":block/order": 1,
+                      ":block/string": "> [Self-similarity of complex networks](https://arxiv.org/abs/cond-mat/0503078)"
+                    },
+                    {
+                      ":block/uid": "kGTveoyzy",
+                      ":block/order": 0,
+                      ":block/string": "> P(k) \u223c k\u2212\u03b3."
+                    }
+                  ],
+                  ":block/uid": "0yRLlq9dp",
+                  ":block/order": 0,
+                  ":block/string": "> A second fundamental property in the study of complex networks arises with the discovery that the probability distribution of the number of links per node, P(k) (also known as the degree distribution), can be represented by a power-law (scale-free) with a degree exponent \u03b3 usually in the range 2 < \u03b3 < 3 [6], "
+                }
+              ],
+              ":block/uid": "fdCbO2pbG",
+              ":block/order": 1,
+              ":block/string": "- ideal number of connections?"
+            }
+          ],
+          ":block/uid": "b7Y53LADM",
+          ":block/order": 1,
+          ":block/string": "{{[[TODO]]}} How will nodes optimize connections to other nodes?"
+        }
+      ],
+      ":block/uid": "SZhlFpK6E",
+      ":block/order": 18,
+      ":block/string": "Random Points "
+    },
+    {
+      ":block/uid": "f1jtV93P5",
+      ":block/order": 17,
+      ":block/string": ""
+    },
+    {
+      ":block/children": [
+        {
+          ":block/uid": "gEwq6sxPD",
+          ":block/order": 0,
+          ":block/string": "((KrcDmhmAP))"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "ovJNG3lI8",
+              ":block/order": 0,
+              ":block/string": "[Yuval's answer](((06Pmssc8V)))"
+            },
+            {
+              ":block/uid": "L0_kJQuWI",
+              ":block/order": 1,
+              ":block/string": "[Three-prong approach to enabling progress](((sOW_vMvji)))"
+            }
+          ],
+          ":block/uid": "iySMic5u_",
+          ":block/order": 1,
+          ":block/string": "((AFg9RxLl3))"
+        },
+        {
+          ":block/uid": "abxxPs1mK",
+          ":block/order": 3,
+          ":block/string": "((jlvgN7Tdg))"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "s-hJPDYtu",
+              ":block/order": 0,
+              ":block/string": "[Why Roam Was Created](((Ouy6fW_PL)))"
+            },
+            {
+              ":block/uid": "QNHpL3oa8",
+              ":block/order": 1,
+              ":block/string": "[The Zettelkasten](((Xr3Xrx2GD)))"
+            },
+            {
+              ":block/uid": "Cq-My0Oyv",
+              ":block/order": 2,
+              ":block/string": "((4RTpixHty))"
+            },
+            {
+              ":block/uid": "bCzZmnb0F",
+              ":block/order": 3,
+              ":block/string": "((Qlh3ac3w7))"
+            }
+          ],
+          ":block/uid": "OEyVzDUQR",
+          ":block/order": 2,
+          ":block/string": "((X4EAgnEVI))"
+        },
+        {
+          ":block/uid": "lCh3pyqhI",
+          ":block/order": 4,
+          ":block/string": "((X51w1Up0O))"
+        },
+        {
+          ":block/uid": "HaRdCIhkm",
+          ":block/order": 5,
+          ":block/string": "((292ouEp8E))"
+        },
+        {
+          ":block/children": [
+            {
+              ":block/uid": "UFGiuC3Dh",
+              ":block/order": 0,
+              ":block/string": "((grXjHf-5-))"
+            },
+            {
+              ":block/uid": "0HgLO9_RP",
+              ":block/order": 1,
+              ":block/string": "((8ZhammBwP))"
+            },
+            {
+              ":block/uid": "yPSoYgvIJ",
+              ":block/order": 2,
+              ":block/string": "((FrI8p5yXZ))"
+            },
+            {
+              ":block/uid": "Rpn8Bg3l2",
+              ":block/order": 3,
+              ":block/string": "((1z-O85rNW))"
+            }
+          ],
+          ":block/uid": "2HO7R-65e",
+          ":block/order": 6,
+          ":block/string": "((ulf8YqlBf))"
+        },
+        {
+          ":block/uid": "-YCaCR8wD",
+          ":block/order": 7,
+          ":block/string": "((t__SkG5Cn))"
+        },
+        {
+          ":block/uid": "h2K94Y2KY",
+          ":block/order": 8,
+          ":block/string": "((P2z7lAd0b))"
+        },
+        {
+          ":block/uid": "VrAG6s3x8",
+          ":block/order": 10,
+          ":block/string": "((-rkc2OHM4))"
+        },
+        {
+          ":block/uid": "AHkB9mNWg",
+          ":block/order": 11,
+          ":block/string": "((IltNGz9rF))"
+        },
+        {
+          ":block/uid": "45tawerNB",
+          ":block/order": 9,
+          ":block/string": "((YmBEw2EaP))"
+        }
+      ],
+      ":block/uid": "9WykxH9Ww",
+      ":block/order": 1,
+      ":block/string": "Table of Contents"
+    },
+    {
+      ":block/uid": "kJ4zY4hzM",
+      ":block/order": 19,
+      ":block/string": "{{[[TODO]]}} Current thesis does not mention properties and how they play into relationships and hierarchies/purpose. e.g. more properties = bigger configuration space."
+    }
+  ],
+  ":block/uid": "d5-M3x7wX"
+}
