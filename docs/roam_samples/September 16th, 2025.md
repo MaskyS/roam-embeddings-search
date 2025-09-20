@@ -1,0 +1,38 @@
+- 
+- [[Tasks for the Day]]
+    - {{[[DONE]]}} Check with [[Ali [[Urban House]]]] on Whatsapp - probably install on my USA number.
+    - Call [[[[Journalists]]/Rajmeela]] again if she hasn't blocked me lol - towards 9am
+    - {{[[DONE]]}} [[Showered]]
+    - Breakfast: egg, sausage?
+        - Had orange instead
+    - [[Project: SFG]]
+        - {{[[DONE]]}} Think carefully about what else I need to advance. 
+            - {{[[DONE]]}} Make all this work in a separate repo, deploy on vercel so Michael can test and use. 
+        - {{[[DONE]]}} Fix segments search not working (it's not separate from transcript search, gets triggered.)
+        - {{[[TODO]]}} Implement search across all meetings. 
+            - {{[[TODO]]}} In general, need to redesign the views
+            - {{[[TODO]]}} Homepage with search, schedule, & other stuff maybe
+            - {{[[TODO]]}} Add a top-level summaries, & maybe other stuff like Attendees/Speakers.
+                - {{[[TODO]]}} Make player either collapse into header or lock into place 
+                - {{[[TODO]]}} Turn segments view into a list again instead of multi column grid (it sucks)
+        - {{[[TODO]]}} Deduplicate segment generation
+        - {{[[DONE]]}} Finish flexsearch implementation 
+        - {{[[DONE]]}}  look into pgvector & decide which one to implement. 
+            - Looks like I should probably do pgvector + reranker from cohere or voyageai
+                - Leaning towards voyageai, cohere smells.
+        - {{[[TODO]]}} Re-add summary of segments #Maybe into the transcripts
+- - 10:05
+    - {{[[DONE]]}} Check with [[Ali [[Urban House]]]] on Whatsapp - probably install on my USA number.
+        - Asked him to get 
+            - [[Nicotinamide Riboside]]
+            - [[NMN]]
+            - [[D-Ribose]]
+            - [[sodium butyrate]]
+- - 12:00 #[[Project: SFG]]
+- - 14:00 cooking, lunch 
+- - 15:00 #youtube
+- - 17:00 #Nap
+- - 17:45 #youtube #.bg-yellow-50
+- 
+- 
+- 

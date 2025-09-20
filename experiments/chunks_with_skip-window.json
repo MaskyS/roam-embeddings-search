@@ -1,0 +1,1300 @@
+[
+  {
+    "text": "Free Hierarchy\n  **IN PROGRESS**\n    This essay on the theory of free hierarchy is still very much in progress, for several reasons:\n      First, I'm still trying to fully articulate the axioms and explore all its applications.\n",
+    "token_count": 47,
+    "start": 0,
+    "end": 228,
+    "source_uids": [
+      "3272-Rzt3",
+      "EH4exJhs0",
+      "a28JMyMB9",
+      "d5-M3x7wX"
+    ],
+    "primary_uid": "d5-M3x7wX"
+  },
+  {
+    "text": "      Second, I'm having trouble to translate my __knowhow__, gained from thousands of hours of learning and browsing, into __knowledge__, especially in a way that can easily be absorbed by people who haven't had the same esoteric experiences as me.\n",
+    "token_count": 59,
+    "start": 228,
+    "end": 478,
+    "source_uids": [
+      "6LFgqbSGu"
+    ],
+    "primary_uid": "6LFgqbSGu"
+  },
+  {
+    "text": "    That being said, I cannot delay any longer, for this is the basis of [[The Information Platform of The Future]], despite being one of my later discoveries.\n    I hope that you, as one of the first readers, can understand my ramblings, and that these ideas will have as profound an impact as they did on me. ",
+    "token_count": 70,
+    "start": 478,
+    "end": 789,
+    "source_uids": [
+      "tcraZaCuy",
+      "0oZtyISAj"
+    ],
+    "primary_uid": "0oZtyISAj"
+  },
+  {
+    "text": "If you don't understand but would like to, or have any feedback to share, please [reach out.](((nUop3RPuu)))\n",
+    "token_count": 36,
+    "start": 789,
+    "end": 898,
+    "source_uids": [
+      "tcraZaCuy"
+    ],
+    "primary_uid": "tcraZaCuy"
+  },
+  {
+    "text": "  Table of Contents\n    ((KrcDmhmAP))\n",
+    "token_count": 12,
+    "start": 898,
+    "end": 936,
+    "source_uids": [
+      "gEwq6sxPD",
+      "9WykxH9Ww"
+    ],
+    "primary_uid": "9WykxH9Ww"
+  },
+  {
+    "text": "    ((AFg9RxLl3))\n      [Yuval's answer](((06Pmssc8V)))\n",
+    "token_count": 30,
+    "start": 936,
+    "end": 992,
+    "source_uids": [
+      "ovJNG3lI8",
+      "iySMic5u_"
+    ],
+    "primary_uid": "iySMic5u_"
+  },
+  {
+    "text": "      [Three-prong approach to enabling progress](((sOW_vMvji)))\n",
+    "token_count": 23,
+    "start": 992,
+    "end": 1057,
+    "source_uids": [
+      "L0_kJQuWI"
+    ],
+    "primary_uid": "L0_kJQuWI"
+  },
+  {
+    "text": "    ((X4EAgnEVI))\n      [Why Roam Was Created](((Ouy6fW_PL)))\n      [The Zettelkasten](((Xr3Xrx2GD)))\n      ((4RTpixHty))\n      ((Qlh3ac3w7))\n    ((jlvgN7Tdg))\n    ((X51w1Up0O))\n    ((292ouEp8E))\n    ((ulf8YqlBf))\n      ((grXjHf-5-))\n      ((8ZhammBwP))\n      ((FrI8p5yXZ))\n      ((1z-O85rNW))\n    ((t__SkG5Cn))\n    ((P2z7lAd0b))\n    ((YmBEw2EaP))\n    ((-rkc2OHM4))\n    ((IltNGz9rF))\n  Introduction\n",
+    "token_count": 215,
+    "start": 1057,
+    "end": 1456,
+    "source_uids": [
+      "bCzZmnb0F",
+      "UFGiuC3Dh",
+      "abxxPs1mK",
+      "-YCaCR8wD",
+      "s-hJPDYtu",
+      "KrcDmhmAP",
+      "0HgLO9_RP",
+      "45tawerNB",
+      "OEyVzDUQR",
+      "VrAG6s3x8",
+      "Cq-My0Oyv",
+      "AHkB9mNWg",
+      "Rpn8Bg3l2",
+      "2HO7R-65e",
+      "yPSoYgvIJ",
+      "HaRdCIhkm",
+      "h2K94Y2KY",
+      "lCh3pyqhI",
+      "QNHpL3oa8"
+    ],
+    "primary_uid": "OEyVzDUQR"
+  },
+  {
+    "text": "    Why are humans more successful than other animals? ",
+    "token_count": 9,
+    "start": 1456,
+    "end": 1511,
+    "source_uids": [
+      "H73C0wyuV"
+    ],
+    "primary_uid": "H73C0wyuV"
+  },
+  {
+    "text": "What makes [[Roam Research]] better than [[Evernote]] or [[Notion]] ? Why is prototypal inheritance (object composition) better than class inheritance? \n    At the heart of the answers to these questions lies the concept of free hierarchies.\n",
+    "token_count": 57,
+    "start": 1511,
+    "end": 1753,
+    "source_uids": [
+      "D0Hj2soac",
+      "H73C0wyuV"
+    ],
+    "primary_uid": "H73C0wyuV"
+  },
+  {
+    "text": "    Understanding it guarantees a major shift in your worldview, and will answer more questions than you can imagine.\n",
+    "token_count": 21,
+    "start": 1753,
+    "end": 1871,
+    "source_uids": [
+      "_FA2qyg-x"
+    ],
+    "primary_uid": "_FA2qyg-x"
+  },
+  {
+    "text": "    So let's get cracking.\n",
+    "token_count": 7,
+    "start": 1871,
+    "end": 1898,
+    "source_uids": [
+      "Ho1LX-phe"
+    ],
+    "primary_uid": "Ho1LX-phe"
+  },
+  {
+    "text": "  The Chosen Ones\n    \"What makes us special?\" is a question that has haunted us for millennia. ",
+    "token_count": 20,
+    "start": 1898,
+    "end": 1994,
+    "source_uids": [
+      "QoeQB3z2R",
+      "AFg9RxLl3"
+    ],
+    "primary_uid": "AFg9RxLl3"
+  },
+  {
+    "text": "\n    Seventy thousand years ago, there were six different human species roaming the earth, and each one's impact was just as insignificant on the planet as say, jellyfish, gorillas, or dragonflies. So how did homo sapiens not only survive, but proceed to thrive and take over the world?\n    One book's unique answer to this question made it the instant favorite of [[Bill Gates]], [[Barack Obama]], and [million others](https://en.wikipedia.org/wiki/Sapiens:_A_Brief_History_of_Humankind#Reception).  \n      In [[Sapiens]], [[Yuval Noah Harari]] looks at multiple fields ((like history, biology, philosophy and economics))--both from a birds-eye view and from up close-- to [explain](https://www.gatesnotes.com/Books/Sapiens-A-Brief-History-of-Humankind):\n        > We want to believe that there is something special about the human body or human brain that makes each individual human vastly superior to a dog, or a pig, or a chimpanzee. We look for the differences on the individual level.\n\nBut the fact is that one-on-one, humans are embarrassingly similar to chimpanzees. If you place me and a chimpanzee together on a lone island, to see who survives better, I would definitely place my bets on the chimp.\n\nThe real difference between us and other animals is on the collective level: **Homo sapiens has the special ability to unite millions of strangers around commons myths. **\n\nWe are the only animal that can cooperate flexibly in large numbers. Ants and bees can also work together in large numbers, but they do so in a very rigid way. If a beehive is facing a new threat or a new opportunity, the bees cannot reinvent their social system overnight in order to cope better. They cannot, for example, execute the queen and establish a republic. \n\nWolves and chimpanzees cooperate far more flexibly than ants, but they can do so only with small numbers of intimately known individuals. Among wolves and chimps, cooperation is based on personal acquaintance. If I am a chimp and I want to cooperate with you, I must know you personally: What kind of chimp are you? Are you a nice chimp? Are you an evil chimp? How can I cooperate with you if I don\u2019t know you?\n\nOne-on-one or ten-on-ten, chimpanzees may be better than us. But pit 1,000 Sapiens against 1,000 chimps, and the Sapiens will win easily, for the simple reason that 1,000 chimps can never cooperate effectively. Put 100,000 chimps in Wall Street or Yankee Stadium, and you\u2019ll get chaos. Put 100,000 humans there, and you\u2019ll get trade networks and sports contests.\n",
+    "token_count": 622,
+    "start": 1994,
+    "end": 4524,
+    "source_uids": [
+      "06Pmssc8V",
+      "PXDk1dsx0",
+      "3z9aoOuOz",
+      "BvZ_Sq4gI"
+    ],
+    "primary_uid": "3z9aoOuOz"
+  },
+  {
+    "text": "\nIdeas like freedom, human rights, gods, laws, and capitalism exist in our imaginations, yet they can bind us together and motivate us to cooperate on complex tasks. And this is why we control the world.\n    To recap, [[Yuval Noah Harari]] says that we collaborate by inventing fictive labels and ideas.  Essentially, we expanded our repertoire of properties by inventing new ones, and then reorganized according to these properties. ",
+    "token_count": 93,
+    "start": 4524,
+    "end": 4958,
+    "source_uids": [
+      "sOW_vMvji",
+      "PXDk1dsx0"
+    ],
+    "primary_uid": "PXDk1dsx0"
+  },
+  {
+    "text": "They enable progress on three levels:\n      **They allow our groups to transcend immutable differences like race and kinship, increasing the size of our hierarchies**. \n        The people we can work or be friends with, or the circle we can socialize with, is hugely expanded when it isn't drawn using blood.\n",
+    "token_count": 68,
+    "start": 4958,
+    "end": 5267,
+    "source_uids": [
+      "sOW_vMvji",
+      "AHrKUa64h",
+      "Rax1kOt3_"
+    ],
+    "primary_uid": "sOW_vMvji"
+  },
+  {
+    "text": "        We never fail to display this principle in our society, and perhaps it's most perfectly captured in [[Ratatouille]], arguably Pixar's best film: \n",
+    "token_count": 38,
+    "start": 5267,
+    "end": 5421,
+    "source_uids": [
+      "ZB3Ax5q57"
+    ],
+    "primary_uid": "ZB3Ax5q57"
+  },
+  {
+    "text": "          [[Anton Ego]], an imperious food critic, has unsurmountable disregard for Chef Gusteau's idealistic belief that anyone can cook. So when he hears Gusteau's restaurant is rising in popularity, he sets out to put it back in its place. There, he is served a simple peasant dish: Ratatouille. But as he puts the food in his mouth, its brilliance literally stuns him. He requests to see the chef, at which point he is told it was cooked by a...rat. His very core beliefs having been proven wrong, he abruptly leaves the restaurant, and is left with a lot to think about.\n          His ensuing 5-minute monologue is worth watching in full:\n",
+    "token_count": 152,
+    "start": 5421,
+    "end": 6065,
+    "source_uids": [
+      "8bXNw_RUK",
+      "4dcSeVayi"
+    ],
+    "primary_uid": "8bXNw_RUK"
+  },
+  {
+    "text": "            {{[[video]]: https://www.youtube.com/watch?v=FjhyXam1Je0}}\n",
+    "token_count": 32,
+    "start": 6065,
+    "end": 6136,
+    "source_uids": [
+      "MdE3iX0ge"
+    ],
+    "primary_uid": "MdE3iX0ge"
+  },
+  {
+    "text": "          But the quote that stands out is:\n",
+    "token_count": 8,
+    "start": 6136,
+    "end": 6180,
+    "source_uids": [
+      "o0vJ--GmY"
+    ],
+    "primary_uid": "o0vJ--GmY"
+  },
+  {
+    "text": "            > \"Not everyone can become a great artist, but a great artist CAN come from anywhere.\"\n",
+    "token_count": 20,
+    "start": 6180,
+    "end": 6279,
+    "source_uids": [
+      "0nK3jVerc"
+    ],
+    "primary_uid": "0nK3jVerc"
+  },
+  {
+    "text": "      **As they're imagined, and therefore, completely malleable, they can rapidly be adopted or abandoned to test their efficiency**. ",
+    "token_count": 30,
+    "start": 6279,
+    "end": 6414,
+    "source_uids": [
+      "rGPMRNKFw"
+    ],
+    "primary_uid": "rGPMRNKFw"
+  },
+  {
+    "text": "\n        Ideas, myths and other imagined organization methods can be tested extremely quickly, which is why cultural evolution has surpassed biological evolution. Moreover, when an ideological group stops being efficient or doesn't look out for everyone, we can switch to another overnight, like when Einstein didn't fancy Nazi-Germany so he went to Switzerland.\n      **Using imagined labels multiplies the number of possible ways to organize the same members within a hierarchy, as well as the number of hierarchies themselves**. ",
+    "token_count": 101,
+    "start": 6414,
+    "end": 6946,
+    "source_uids": [
+      "80H9rPHjL",
+      "PDbqeUbrG"
+    ],
+    "primary_uid": "PDbqeUbrG"
+  },
+  {
+    "text": "To illustrate this, let's jump to the next question: Why is [[Roam Research]] better than [[Evernote]]?\n",
+    "token_count": 30,
+    "start": 6946,
+    "end": 7050,
+    "source_uids": [
+      "80H9rPHjL"
+    ],
+    "primary_uid": "80H9rPHjL"
+  },
+  {
+    "text": "  Accelerating Intellectual Progress by Building a Note-Taking App\n    Let's start at the beginning, focusing on why [[Conor White-Sullivan]] founded Roam.\n      Here Conor [explains](https://twitter.com/Conaw/status/1099181050045952006) the glaring inefficiencies of previous note-taking apps:\n        > The problem with existing notes systems is that they're locked into metaphors from when everything was analog. ",
+    "token_count": 98,
+    "start": 7050,
+    "end": 7466,
+    "source_uids": [
+      "1_xDALy61",
+      "IU3K6CBSt",
+      "Ouy6fW_PL",
+      "X4EAgnEVI"
+    ],
+    "primary_uid": "X4EAgnEVI"
+  },
+  {
+    "text": "Files go in folders, and can get tags. At best, they add in the capacity for links to other files\u2014since links are now something everyone will be familiar with.\n        > Our thoughts\u2014particularly the sort of thoughts we have when we're trying to work through complex problems, don't fit neatly (or at all) into those sorts of metaphors\n",
+    "token_count": 74,
+    "start": 7466,
+    "end": 7802,
+    "source_uids": [
+      "IU3K6CBSt",
+      "z2THCA9n_"
+    ],
+    "primary_uid": "IU3K6CBSt"
+  },
+  {
+    "text": "        > For example\u2014 you're trying to answer a hard question\u2014an open question like \"Why did X happen?\" or \"What should I do to make Y more likely\". ",
+    "token_count": 38,
+    "start": 7802,
+    "end": 7952,
+    "source_uids": [
+      "FOAG2lytF"
+    ],
+    "primary_uid": "FOAG2lytF"
+  },
+  {
+    "text": "One thing you may want to do is generate a large number of sub-questions to pursue\u2014folders right? tags?\n        > You may want to collect a bunch of resources (build on other people's thoughts)\u2014like journal articles, essays, you may read a bunch of books... But then, you will quickly find that each paper may be relevant to many of the questions you're considering. \n        > Well now you're in a bind\u2014the nice thing about folders (or a Workflowy Tree) is that it let you take a high level question and focus on smaller pieces\u2014but now each of those articles you read has claims that it makes that fit in different places in your hierarchy. \n        > The same article (or quote, or fact) might help you answer three different questions\u2014so do you put a copy of it in all three locations?\u2014if you do then any change you make to it later (anytime you refine or build on that idea, or invalidate it) will require 3x the work \n        > If you rely on tags, you can group the same item into multiple collections, but you lose the ability to move from a higher \"strategic level\" down to the more granular question\u2014 and you end up trying to remember which of your 100 tags is useful to each concept. \n        > **Folders are a good idea\u2014 because hierarchical organization is fundamental to human thinking\u2014 we like categorizing things. Folders are a bad idea because every actual thing fits into multiple categories. **\n        > Tags are a good idea because they allow you to create those overlapping collections. ",
+    "token_count": 329,
+    "start": 7952,
+    "end": 9460,
+    "source_uids": [
+      "cJ2groHiD",
+      "T79Rs8Vlg",
+      "P0U0hmH48",
+      "q5NxhOOfD",
+      "lmqMII3lT",
+      "FOAG2lytF",
+      "qDUSBTBnm"
+    ],
+    "primary_uid": "FOAG2lytF"
+  },
+  {
+    "text": "They are great for browsing, and that is a genuine source of insight. They are bad because they are flat (and difficult to merge together) & require you to guess your structure ahead of time \n",
+    "token_count": 40,
+    "start": 9460,
+    "end": 9652,
+    "source_uids": [
+      "P0U0hmH48"
+    ],
+    "primary_uid": "P0U0hmH48"
+  },
+  {
+    "text": "        > **What is missing in our existing systems is this\u2014 we need better way of organizing the questions we are trying to answer, and making explicit the lines of reasoning we hold. **\n        > When you can't do something as simple as say\u2014 \"I'm building ideas Y and Z off of idea X\" (where X is the combination of A, B, and C), and make that relationship explicit, you're bound to get lost.\n    So what is that better way of \"organizing the questions we are trying to answer\"? \n      Roam decided upon the Zettelkasten method. \n        The Zettelkasten owes its success to the social theorist [[Niklas Luhmann]], as does Niklas to Zettelkasten, for during his career, Niklas managed to write more than 70 books and 400 articles.\n",
+    "token_count": 173,
+    "start": 9652,
+    "end": 10385,
+    "source_uids": [
+      "Q1I-rEGcs",
+      "KjNxAh-6s",
+      "Za_fW5YxW",
+      "i_7VY4qLO",
+      "Xr3Xrx2GD"
+    ],
+    "primary_uid": "i_7VY4qLO"
+  },
+  {
+    "text": "      This is how it works:\n",
+    "token_count": 6,
+    "start": 10385,
+    "end": 10413,
+    "source_uids": [
+      "zN4b1XLkg"
+    ],
+    "primary_uid": "zN4b1XLkg"
+  },
+  {
+    "text": "        You have a bunch of index cards, to which you assign unique references (e.g. created time; when you wrote them)\n        On each index card, you write *one*, atomic, self-contained idea that won't require much context to understand when you revisit them\n        If this was an idea you read about, put it your own words. ",
+    "token_count": 74,
+    "start": 10413,
+    "end": 10741,
+    "source_uids": [
+      "gdGLAMYIk",
+      "eS1uiULGj",
+      "q26ry7u0d"
+    ],
+    "primary_uid": "eS1uiULGj"
+  },
+  {
+    "text": "This is the best way to prove you truly understand. ",
+    "token_count": 11,
+    "start": 10741,
+    "end": 10793,
+    "source_uids": [
+      "q26ry7u0d"
+    ],
+    "primary_uid": "q26ry7u0d"
+  },
+  {
+    "text": "The reason, As we'll see latter, is because you're rearranging/rebuilding the hierarchy (idea) of words while preserving its purpose.\n        On the back of the card, you keep track of related ideas and topics by writing their references and tags.\n      So your Zettelkasten's arrangement will look like this, where every circle/node represents an idea/card and every color region represents a topic/tag. [Credit](https://writingcooperative.com/zettelkasten-how-one-german-scholar-was-so-freakishly-productive-997e4e0ca125) \n      ![Ideas organized by tags and interconnected by links.](https://miro.medium.com/max/4448/1*gxyKEtyW6Ms_1v7Sm4N2Rw.png)\n",
+    "token_count": 188,
+    "start": 10793,
+    "end": 11443,
+    "source_uids": [
+      "4fivcQcuX",
+      "PZuP-_vSw",
+      "2SlajjUkJ",
+      "q26ry7u0d"
+    ],
+    "primary_uid": "q26ry7u0d"
+  },
+  {
+    "text": "      What advantages does this method provide?\n",
+    "token_count": 7,
+    "start": 11443,
+    "end": 11491,
+    "source_uids": [
+      "5CzohljE-"
+    ],
+    "primary_uid": "5CzohljE-"
+  },
+  {
+    "text": "        Structure isn't hardcoded. The organization evolves organically over time. ",
+    "token_count": 17,
+    "start": 11491,
+    "end": 11574,
+    "source_uids": [
+      "cdBiOaI9e"
+    ],
+    "primary_uid": "cdBiOaI9e"
+  },
+  {
+    "text": "And one idea can be link to multiple tags and topics without ever being restrained.\n         And when you have a specific question to answer, you can rearrange your notes in such a way for an answer to arise, you can put them in one specific context. You see connections more easily among notes that seem unrelated on the surface.\n",
+    "token_count": 66,
+    "start": 11574,
+    "end": 11905,
+    "source_uids": [
+      "14XBaLlUt",
+      "cdBiOaI9e"
+    ],
+    "primary_uid": "cdBiOaI9e"
+  },
+  {
+    "text": "        It only gets better over time. You don't delete any ideas, so if they remain unused, they simply fade away. \n    An intro to Roam\n      Roam calls itself \"a note-taking tool for networked thought\". That's fancy but vague; so here's [[Balaji Srinivasan]]'s [tweet-sized explanation](https://twitter.com/balajis/status/1307318284010758145):\n        > One tweet summary of @RoamResearch.\n",
+    "token_count": 118,
+    "start": 11905,
+    "end": 12298,
+    "source_uids": [
+      "QJGxHkOKD",
+      "4RTpixHty",
+      "LwX28nMRp",
+      "qc3xLEiYd"
+    ],
+    "primary_uid": "qc3xLEiYd"
+  },
+  {
+    "text": "\nType a sentence like:\n- Had #meeting with #JohnSmith about #defi\n\n        >\nYou get:\n- a page with all meetings (#meeting)\n- a page with all mentions of a person (#JohnSmith)\n- a page with all mentions of a concept (#defi)\n\nIt indexes your text.\n        Some screenshots so it's easier to visualize:\n          ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fholy-omniscience%2Fv3SLqxpbV5.jpg?alt=media&token=e4f5087f-2223-4444-bdb4-70fbd676914b)\n          ![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fholy-omniscience%2FwhzDBHeUzI.jpg?alt=media&token=70c2f6e8-5024-4cdc-9e96-8d24ee3d0b8a)\n    What makes Roam Roam?\n      Not long after its release, [many apps](((v2Mec4KbL))) like [[Obsidian]] tried to recreate Roam's success, while existing apps like Notion rushed to add backlinks so they could at least catch up.\n      But most of them not only fail to understand that they're built from a fundamentally different tech stack (Roam uses a graph database, Neo4j), they also do not realize that the most important features *aren't* backlinks, not in isolation at least. ",
+    "token_count": 406,
+    "start": 12298,
+    "end": 13461,
+    "source_uids": [
+      "aTCojQB3X",
+      "QsR8vNtzY",
+      "LwX28nMRp",
+      "E3uVZ7WvB",
+      "Qlh3ac3w7",
+      "eQrB0LmZu",
+      "vHLskSEql",
+      "f7TQe6KSA"
+    ],
+    "primary_uid": "LwX28nMRp"
+  },
+  {
+    "text": "Instead, those are:\n        **Atomic blocks**\n          Roam brings the fundamental unit of information down to a \"block\", spanning  just a couple of words or paragraphs, instead of an article.\n          What's more, you can link related topics and blocks inline; or at the end of each block. \n          When a block tackles *one* thing at a time, it becomes more modular, and reusable\n        **Write once, reuse (and edit) anywhere**\n          Any block or page in Roam can be __reused__ and edited from anywhere, as many times as you'd like, even inline, inside another block. \n          This eliminates redundancy, and allows perfect transclusion. \n          If you're expecting a child, and decide suddenly that you'd rather name them Xorand than X \u00c6 A-12, well, you can update the name in your entire Roam journal __at once__ by editing the page.\n",
+    "token_count": 196,
+    "start": 13461,
+    "end": 14314,
+    "source_uids": [
+      "hWiotHdE8",
+      "OoqpO6oOY",
+      "fwvGXGOOD",
+      "eQrB0LmZu",
+      "Ud024Av3Z",
+      "vSE4RazRk",
+      "xoBUyJIMF",
+      "nJ4_IPnJp",
+      "LUJjlozrW"
+    ],
+    "primary_uid": "eQrB0LmZu"
+  },
+  {
+    "text": "        **Seeing the connections. **\n          Through backlinks, you can easily see where each block was tagged or referred\n          When using block references, you can follow a thought/block back, and see all the places it was used.\n          This way, identifiers/backlinks let hierarchies rise organically\n          Through the graph view, you can see how page relate to each other\n",
+    "token_count": 79,
+    "start": 14314,
+    "end": 14702,
+    "source_uids": [
+      "l4ZekALi3",
+      "8CehLrQWK",
+      "UaX96ZUSU",
+      "_C_xt9izy",
+      "3eQpyg6u0"
+    ],
+    "primary_uid": "UaX96ZUSU"
+  },
+  {
+    "text": "        **Identable & Expandable thought = Programmable Context**\n",
+    "token_count": 15,
+    "start": 14702,
+    "end": 14768,
+    "source_uids": [
+      "vH6WbGy3j"
+    ],
+    "primary_uid": "vH6WbGy3j"
+  },
+  {
+    "text": "          In Roam, you can indent a block under another one to show it's related to it, or expands upon the details to the parent block.\n          This enables you to decide the depth at which you want to explore each idea, and get a bird's-eye view of a page very quickly.\n          This will only get easier and flexible over time. For instance, a recent update brought [[collapsible parentheticals]], where you can insert some text inline, and allow the user to expand it to get more details.\n",
+    "token_count": 111,
+    "start": 14768,
+    "end": 15264,
+    "source_uids": [
+      "FLrx_lbNu",
+      "LidMjhZr4",
+      "2HpyE0F-w"
+    ],
+    "primary_uid": "FLrx_lbNu"
+  },
+  {
+    "text": "          Roam allows knowledge graphs to become scale-free/fractal. ",
+    "token_count": 14,
+    "start": 15264,
+    "end": 15333,
+    "source_uids": [
+      "aCC3Uf3JC"
+    ],
+    "primary_uid": "aCC3Uf3JC"
+  },
+  {
+    "text": "See here.\n        **Structure the way you want it**\n          Because of the graph view, atomicity, and self-containment, you don't have to think ahead about how to organize your ideas. ",
+    "token_count": 42,
+    "start": 15333,
+    "end": 15519,
+    "source_uids": [
+      "aCC3Uf3JC",
+      "WAnsmeVn_",
+      "mrmp43hIL"
+    ],
+    "primary_uid": "aCC3Uf3JC"
+  },
+  {
+    "text": "You just write them, say how they relate to each other, and come back to organize later. \n        **Simultaneous hierarchies **\n          What's more, you can organize blocks in multiple hierarchies simultaneously. ",
+    "token_count": 46,
+    "start": 15519,
+    "end": 15734,
+    "source_uids": [
+      "WAnsmeVn_",
+      "vg-9hKFl4",
+      "7YsbM5uM4"
+    ],
+    "primary_uid": "WAnsmeVn_"
+  },
+  {
+    "text": "I\n          Say you're writing an article, and it doesn't really flow well. \n          You could brain dump all your ideas in your daily notes page; putting one sentence (or as few as possible) about one idea in one block, and tagging them at block level.\n          Now you could take your brain dump, and reorganize them across multiple pages, [[Article v1]], [[Article v2]], and [[Article v3]]; embedding your ideas, one block reference at a time. to see which one works best, without rewriting **a single word**.\n          But you wanted to get crazy, you could even define block versions to change the wording of your sentence!\n        **Programmable Arrangements**\n          Automatic: Through queries, you can pull in lists of blocks that cater to specific conditions, like \n            All blocks tagged #censorship written between 1st of December 2020 to that of last year that mention Donald Trump and Twitter\n",
+    "token_count": 201,
+    "start": 15734,
+    "end": 16653,
+    "source_uids": [
+      "s9nlqKKPM",
+      "wBTNo-cS_",
+      "k7W971KLw",
+      "uARjOR-fe",
+      "jD0165LLP",
+      "X__KvgJTu",
+      "7YsbM5uM4",
+      "xWD0Y0WBC"
+    ],
+    "primary_uid": "7YsbM5uM4"
+  },
+  {
+    "text": "          Manual: references too\n",
+    "token_count": 4,
+    "start": 16653,
+    "end": 16686,
+    "source_uids": [
+      "S7kD83FJ2"
+    ],
+    "primary_uid": "S7kD83FJ2"
+  },
+  {
+    "text": "  Now, how does Roam/Zettelkasten and humans' use of imagination to organize society relate? They enable free hierarchies.\n  **Abstract Thesis**\n    We're now ready to formalize the principles of free hierarchies.\n    **Any entity that occurs in numbers, can be said to consititute a node, and the overall arrangement of these nodes as a group can be said to consititute a hierarchy.**\n    **In a free hierarchy, each node strives to be atomic, autonomous, and self-contained. **\n      That is,\n        Each node fulfills one specific, unique purpose\n        To fulfill this purpose, it requires minimal intervention from other nodes\n        The node's meaning is comprehensible on its own, requiring minimal context.\n      This does not mean that a node cannot fulfill more than one purpose. Indeed, the best node fulfills its purpose in such a way that it is easily 'extensible'; to serve purposes not thought of originally. But it shall carry out this purpose in a __different__ hierarchy such that it benefits the parent hierarchy.\n        An example for good code (a node) in programs (a hierarchy)\n        ((Szm-5uoQC))\n    **In a free hierarchy, the nodes may be rearranged in multiple (or infinite) configurations. **\n      It is in this freedom that free hierarchies draw their power from. ",
+    "token_count": 296,
+    "start": 16686,
+    "end": 17985,
+    "source_uids": [
+      "8p3rT1El-",
+      "PYRCQWRHp",
+      "RqGw-ckRz",
+      "EU_8q-33M",
+      "HrXYAJete",
+      "frQpVZFbm",
+      "XsTTNI6sn",
+      "fEpm3kWX2",
+      "Mvd150ffA",
+      "UD5IqUqPk",
+      "avgOHTswt",
+      "QhMcEFyOU",
+      "jlvgN7Tdg",
+      "tZyp-5DWC"
+    ],
+    "primary_uid": "RqGw-ckRz"
+  },
+  {
+    "text": "((Roam vs Evernote, humans vs other species, true democracy, OOP vs prototypal modelling,))\n",
+    "token_count": 25,
+    "start": 17985,
+    "end": 18077,
+    "source_uids": [
+      "avgOHTswt"
+    ],
+    "primary_uid": "avgOHTswt"
+  },
+  {
+    "text": "        For example, lego pieces can be put together in a myriad of ways\n    **In a free hierarchy, every node is free to leave if it so chooses.**\n    **Free hierarchies are arranged so as to reduce redundancy. In the ideal hierarchy, no two nodes fulfills the same purpose (position).**\n    **Nodes may, and indeed, strive to, simultaneously form part of multiple free hierarchies**\n      For example, a person can be a dad in the family hierarchy, a ceo in a company, a member of the church, and so on.\n",
+    "token_count": 123,
+    "start": 18077,
+    "end": 18583,
+    "source_uids": [
+      "4DxiITzZV",
+      "Fq4nmyg77",
+      "d1cRmau-D",
+      "fznD7ZoBM",
+      "kwYeKVCh5"
+    ],
+    "primary_uid": "Fq4nmyg77"
+  },
+  {
+    "text": "      A founder of a startup might be head of design, assistant marketer, etc.\n        In this way, hierarchies constituting of the same members but fulfilling different purposes, can form part of other hierarchy\n        Examples are startup teams, where a founder might handle marketing, outreach, AND design. ",
+    "token_count": 59,
+    "start": 18583,
+    "end": 18894,
+    "source_uids": [
+      "rJrKWH4_E",
+      "vc1szxhpe",
+      "wujSokoxv"
+    ],
+    "primary_uid": "rJrKWH4_E"
+  },
+  {
+    "text": " \n    **The free hierarchy as a whole is a node in a larger free hierarchy.**\n      {{[[TODO]]}} a. Only if the hierarchy is playing a part in a bigger hierarchy (i.e. has a specific purpose), can nodes gauge performance, both their own and that of the leading node(s). ",
+    "token_count": 72,
+    "start": 18894,
+    "end": 19164,
+    "source_uids": [
+      "vc1szxhpe",
+      "CFnwNS_26",
+      "WNtf_1bry"
+    ],
+    "primary_uid": "vc1szxhpe"
+  },
+  {
+    "text": "\n        Is this the most optimal arrangement/strategy? ",
+    "token_count": 9,
+    "start": 19164,
+    "end": 19220,
+    "source_uids": [
+      "DbhI_Go-G"
+    ],
+    "primary_uid": "DbhI_Go-G"
+  },
+  {
+    "text": "\n        Should I leave or should I stay? ",
+    "token_count": 8,
+    "start": 19220,
+    "end": 19262,
+    "source_uids": [
+      "j85REp_yZ"
+    ],
+    "primary_uid": "j85REp_yZ"
+  },
+  {
+    "text": "etc.\n      {{[[TODO]]}} b. ",
+    "token_count": 14,
+    "start": 19262,
+    "end": 19289,
+    "source_uids": [
+      "j85REp_yZ",
+      "W45Qp34Gd"
+    ],
+    "primary_uid": "j85REp_yZ"
+  },
+  {
+    "text": "To sustain the growth of a free hierarchy, it is critical that it has a mission bigger than itself; an endgame. ",
+    "token_count": 25,
+    "start": 19289,
+    "end": 19401,
+    "source_uids": [
+      "W45Qp34Gd"
+    ],
+    "primary_uid": "W45Qp34Gd"
+  },
+  {
+    "text": "\n        > ((fE1HqE3qL))\n        If this is not true, and redundancy increases, i.e. nodes keep multiplying despite there being no new roles to fulfill, violence inevitably will inevitably occur. ",
+    "token_count": 49,
+    "start": 19401,
+    "end": 19597,
+    "source_uids": [
+      "Vl-XOtHG9",
+      "pGSu7Smuo"
+    ],
+    "primary_uid": "Vl-XOtHG9"
+  },
+  {
+    "text": "**And this we call** '[cancer](https://twitter.com/maskys_/status/1339763293775282181?s=20)'. ",
+    "token_count": 46,
+    "start": 19597,
+    "end": 19691,
+    "source_uids": [
+      "pGSu7Smuo"
+    ],
+    "primary_uid": "pGSu7Smuo"
+  },
+  {
+    "text": "\n          As [[Rene Girard]] ((the french historian whose Mimetic Theory greatly influenced Peter Thiel)) and [[Shakespeare]] noted, \n            We do not fight because we\u2019re different; we fight because we are the same; and want (to be) the same things.\n        \"But Kifah, you can't keep making hierarchies out of hierarchies! ",
+    "token_count": 84,
+    "start": 19691,
+    "end": 20021,
+    "source_uids": [
+      "4rwAArEfl",
+      "yrK1hrUtH",
+      "Rzsr68eWt"
+    ],
+    "primary_uid": "yrK1hrUtH"
+  },
+  {
+    "text": "Surely there has to be a limit?\"\n          Well, you'd be correct. Currently, most people refer to that limit as 'God', which many other equate with the universe itself. And guess what that bad boy does all day? ",
+    "token_count": 51,
+    "start": 20021,
+    "end": 20233,
+    "source_uids": [
+      "x8JZpNK_p",
+      "4rwAArEfl"
+    ],
+    "primary_uid": "4rwAArEfl"
+  },
+  {
+    "text": "It expands, all day, every day, at an __accelerating__ rate.\n      {{[[TODO]]}} mention that free hierarchies are scale-free, or fractal.\n    **Free hierarchies may have one or more leading nodes that dictate i) the parent hierarchy ii) the arrangement of every other node in its hierarchy.**\n      The leading node(s) dictates:\n        which parent hierarch(ies) this one should act as a node for (the specific purpose of the group)\n        what the arrangement\u2014and therefore, the strategy\u2014 of every other node within is own hierarchy to achieve the hierarchies overall purpose.\n    **The performance of a node is gauged by every member in a network**\n      The node itself\n      The leading nodes (which makes decisions for other nodes), (or if it is one, its follower nodes), and in their absence,\n",
+    "token_count": 195,
+    "start": 20233,
+    "end": 21034,
+    "source_uids": [
+      "C5AQJ_zsf",
+      "yvegHbsK8",
+      "kzbqjRrJd",
+      "ZTx0CPJq5",
+      "sAplJ6NQk",
+      "x8JZpNK_p",
+      "MLIN9b4ja",
+      "5SU5_5aZG",
+      "_BaEq1fWx"
+    ],
+    "primary_uid": "x8JZpNK_p"
+  },
+  {
+    "text": "        the whole group\n      The parent hierarchy, to which the node's hierarchy belongs\n    The theory of free hierarchy posits that at the core of progress-- human or otherwise-- lies the formation and expansion of free hierarchies. Like category theory, the emphasis here is on the relationships of entities rather than their intrinsic characteristics. \n      Because, without knowing their relationship, we cannot decide which intrinsic characteristics are relevant within this specific context (or the hierarchy they belong to, and the purpose its striving for)\n  Human Nature\n    Humans do not detest hierarchies. Humans detest __rigid__ hierarchies. Hierarchies are an inevitable part of life. At the core of human nature is a desire to choose our own hierarchy. ",
+    "token_count": 154,
+    "start": 21034,
+    "end": 21805,
+    "source_uids": [
+      "lhFZAjg4d",
+      "ahO86Iiey",
+      "W9ySo-khP",
+      "TL1AIMukY",
+      "iP6Kra9It",
+      "X51w1Up0O"
+    ],
+    "primary_uid": "iP6Kra9It"
+  },
+  {
+    "text": "'Decentralized' does not mean everyone gets to lead. It means everyone gets choose when, and who to follow.\n",
+    "token_count": 25,
+    "start": 21805,
+    "end": 21913,
+    "source_uids": [
+      "TL1AIMukY"
+    ],
+    "primary_uid": "TL1AIMukY"
+  },
+  {
+    "text": "  Information hierarchies\n    At the time of writing, there are huge uproars against social media companies. Using free hierarchies, we can predict why we hate our current social media/news:\n",
+    "token_count": 42,
+    "start": 21913,
+    "end": 22104,
+    "source_uids": [
+      "292ouEp8E",
+      "3IYegDh5Y"
+    ],
+    "primary_uid": "292ouEp8E"
+  },
+  {
+    "text": "      Nodes are not free to leave\u2014 you're locked in by network effects and your data. When you cannot take **all** your data with you, information cannot flow freely.\n      You do not have complete freedom over the information you consume\n        The company's terms of ~~censorship~~ service limit your information sources (i.e. ",
+    "token_count": 70,
+    "start": 22104,
+    "end": 22434,
+    "source_uids": [
+      "oFAJ8OyKW",
+      "_5w2OAmMm",
+      "V1zmXSqoC"
+    ],
+    "primary_uid": "V1zmXSqoC"
+  },
+  {
+    "text": "nodes at source level), while the algorithm selects the content in your feed (i.e. ",
+    "token_count": 20,
+    "start": 22434,
+    "end": 22517,
+    "source_uids": [
+      "_5w2OAmMm"
+    ],
+    "primary_uid": "_5w2OAmMm"
+  },
+  {
+    "text": "nodes at post level), when **__you__** should be in charge.\n        The designers of the company lock you in to only a handful of hierarchies of those nodes, and these are almost always of linear and ephemereal nature.\n        The mechanism to filter out redundant nodes is pitiful\n    You can actually expand this to pretty much every information database client at present. ",
+    "token_count": 81,
+    "start": 22517,
+    "end": 22893,
+    "source_uids": [
+      "87YvUr8AE",
+      "CtRxJnMYB",
+      "WZNzTK9lE",
+      "_5w2OAmMm"
+    ],
+    "primary_uid": "_5w2OAmMm"
+  },
+  {
+    "text": "We just don't get to rearrange the pieces of information freely.\n",
+    "token_count": 16,
+    "start": 22893,
+    "end": 22958,
+    "source_uids": [
+      "WZNzTK9lE"
+    ],
+    "primary_uid": "WZNzTK9lE"
+  },
+  {
+    "text": "  Democracy as it exists today is flawed.\n    An unbalanced society: [[Pathos]] \u2b06 [[Logos]] \u23ec [[Ethos]] \ud83d\udcc9\n      [[Aristotle]] defined three modes of persuasion: [[Ethos]] , [[Logos]], and [[Pathos]]. [[Farnam Street]] [summarizes](https://fs.blog/2016/11/ethos-logos-pathos/) them as:\n        > __Ethos__ is about establishing your authority to speak on the subject, __logos__ is your logical argument for your point and __pathos__ is your attempt to sway an audience emotionally.\n    We said that humans have come this far because of our ability to create fictive stories and identities and use them to organize society. **But stories are nothing if they don't have a meaning or purpose**. And that's exactly why we're in such a mess today: **Our labels don't mean anything**.\n",
+    "token_count": 222,
+    "start": 22958,
+    "end": 23736,
+    "source_uids": [
+      "d483bd_xr",
+      "ulf8YqlBf",
+      "grXjHf-5-",
+      "nTVHlG6-O",
+      "66BTpghTO"
+    ],
+    "primary_uid": "ulf8YqlBf"
+  },
+  {
+    "text": "    A rant against Nationalism\n",
+    "token_count": 5,
+    "start": 23736,
+    "end": 23767,
+    "source_uids": [
+      "8ZhammBwP"
+    ],
+    "primary_uid": "8ZhammBwP"
+  },
+  {
+    "text": "      What sort of person comes to your mind when I say the word \"American\"? And when I say \"Californian\"? What about \"San Fransciscan\"? ",
+    "token_count": 36,
+    "start": 23767,
+    "end": 23904,
+    "source_uids": [
+      "sdZaop0rj"
+    ],
+    "primary_uid": "sdZaop0rj"
+  },
+  {
+    "text": "\n        Which image was stronger? ",
+    "token_count": 5,
+    "start": 23904,
+    "end": 23939,
+    "source_uids": [
+      "g420EbwVC"
+    ],
+    "primary_uid": "g420EbwVC"
+  },
+  {
+    "text": "So would you say Americans today have a more coherent identity than [[Benjamin Franklin]]'s time did? \n      When you don't have a vision to build, Legos are just plastic that make you wish you didn't have legs. Today, Legos are plenty, [[Logos]] not so much. \n      So nationalities violate multiple principles of free hierarchies. ",
+    "token_count": 78,
+    "start": 23939,
+    "end": 24272,
+    "source_uids": [
+      "g420EbwVC",
+      "X7wUnnMFC",
+      "gWKLJTdHu"
+    ],
+    "primary_uid": "g420EbwVC"
+  },
+  {
+    "text": "\n        They mostly don't stand for anything due to being applied __by default__ across too broad a population. \n        They represent a regression because they limit the way people can organize themselves (just like biological tribes) mainly through archaic laws, like not being being able to enter Malaysia when you're Israeli ((or Github banning an entire company because one of their employees was in Iran))\n    Better Democracies\n      Lumping nodes that desire conflicting arrangements together stifles progress. ",
+    "token_count": 98,
+    "start": 24272,
+    "end": 24793,
+    "source_uids": [
+      "VcgJb-5yH",
+      "wnUCR_sEh",
+      "sdNKytX5e",
+      "FrI8p5yXZ"
+    ],
+    "primary_uid": "sdNKytX5e"
+  },
+  {
+    "text": " \n      The moment there are 'two sides' to a story, and a power struggle arises, you actually have two __distinct__ stories. And we have to acknowledge them both if we are to see this till the end. \n      The world is marching towards \"a diverse set of monopolies\"\u2014better democra__cies__, systems of government where __every individual__ agrees with decisions made 'on part of the people'.\n      If you wrinkled up your nose the moment you read 'monopol-', I get your reaction. But consider this: maybe monopolies so far have only failed because: \n        - you didn't know there were other choices, because \n",
+    "token_count": 142,
+    "start": 24793,
+    "end": 25403,
+    "source_uids": [
+      "VcgJb-5yH",
+      "mCnZ_mA88",
+      "vCDF9ly0e",
+      "6aUAsxfM2",
+      "ZzhVjXq4y"
+    ],
+    "primary_uid": "VcgJb-5yH"
+  },
+  {
+    "text": "          of government censorship and because\n",
+    "token_count": 5,
+    "start": 25403,
+    "end": 25450,
+    "source_uids": [
+      "XhSa74fcv"
+    ],
+    "primary_uid": "XhSa74fcv"
+  },
+  {
+    "text": "          we didn't have the internet back then\n        - even if you did, you couldn't __attempt__ to leave your monopoly without suffering significant [backlash](https://www.lexology.com/library/detail.aspx?g=d5ebd361-1d36-4405-bfa6-50441866ac41).\n        - you couldn't be part of multiple monopolies, or easily try them out, due to physical restrictions\n      Today things are different. ",
+    "token_count": 110,
+    "start": 25450,
+    "end": 25842,
+    "source_uids": [
+      "zxCqQr22g",
+      "jWyQ0mgjQ",
+      "YHmV0G9dA",
+      "wUQkk3Juc"
+    ],
+    "primary_uid": "YHmV0G9dA"
+  },
+  {
+    "text": "It becomes increasingly possible to sustain free hierarchies, where everyone's allowed to make noise, including the loudest noise of them all: silence.\n",
+    "token_count": 32,
+    "start": 25842,
+    "end": 25994,
+    "source_uids": [
+      "jWyQ0mgjQ"
+    ],
+    "primary_uid": "jWyQ0mgjQ"
+  },
+  {
+    "text": "      The ability to peacefully walk away is the most powerful method to keep the leaders and other members of the hierarchy accountable. ",
+    "token_count": 23,
+    "start": 25994,
+    "end": 26132,
+    "source_uids": [
+      "XQfq_iQGR"
+    ],
+    "primary_uid": "XQfq_iQGR"
+  },
+  {
+    "text": "As [[Balaji Srinivasan]] put it, ((Pq4C-K6fo))\n      Exit Over Voice\n        [Balaji]([[Balaji Srinivasan]]) is a staunch advocate of 'Exit over Voice'. He explains its role in progress: \n",
+    "token_count": 63,
+    "start": 26132,
+    "end": 26320,
+    "source_uids": [
+      "XQfq_iQGR",
+      "zqODb2K3B",
+      "1z-O85rNW"
+    ],
+    "primary_uid": "XQfq_iQGR"
+  },
+  {
+    "text": "          ((0cecusQuF))((X1ezZ2cw_))\n",
+    "token_count": 21,
+    "start": 26320,
+    "end": 26357,
+    "source_uids": [
+      "XTmgtIdhd"
+    ],
+    "primary_uid": "XTmgtIdhd"
+  },
+  {
+    "text": "        The most striking example is that of tech workers. ",
+    "token_count": 10,
+    "start": 26357,
+    "end": 26416,
+    "source_uids": [
+      "5nwUTYkjZ"
+    ],
+    "primary_uid": "5nwUTYkjZ"
+  },
+  {
+    "text": "As Balaji predicted back in 2019:\n          https://twitter.com/balajis/status/1207010599324008448\n        2020 happened, and every company was forced to work remote. THe unacknowledged truth that digital nomads have fighted for years became undeniable: \n          **knowledge workers can just as freely choose their geographical hierarchy as they can their work hierarchy, and they don't even have to be the same**.\n        Thus began the mass exodus and the unstoppable rise of the N-city system :\n          ((CVDGmGHd0))\n          The result of this enabling of free hierarchies at a large scale is that we can now start saying goodbye to incompetent politicians and systems:\n            ((PMVJFG1yz))\n",
+    "token_count": 172,
+    "start": 26416,
+    "end": 27121,
+    "source_uids": [
+      "pQavHcnpU",
+      "ZWDEDYIO-",
+      "sjLaIyfIf",
+      "vhN2WBEIJ",
+      "gkkpV1HMb",
+      "5nwUTYkjZ",
+      "umx9v_CGX",
+      "zW4YWOROS"
+    ],
+    "primary_uid": "5nwUTYkjZ"
+  },
+  {
+    "text": "          Does the word 'monopoly' make more sense now? Yes? No? Well, let's look at... ",
+    "token_count": 25,
+    "start": 27121,
+    "end": 27209,
+    "source_uids": [
+      "bWMZ1ja8x"
+    ],
+    "primary_uid": "bWMZ1ja8x"
+  },
+  {
+    "text": "\n  Free Hierarchies in Business.\n",
+    "token_count": 8,
+    "start": 27209,
+    "end": 27242,
+    "source_uids": [
+      "t__SkG5Cn"
+    ],
+    "primary_uid": "t__SkG5Cn"
+  },
+  {
+    "text": "    I think the most evident proof comes from Peter Thiel, who's famous for saying that \"((ElxVRA8WF))\"\n    Except, it's not just for business, but for every aspect of humanity and every entity that doesn't exist in a vacuum.\n    Peter understands free hierarchies. Here [[David Perell]] [recounts](https://perell.com/essay/peter-thiel/)  how Thiel successfully leveraged the power of re-arranging nodes in a free hierarchy:\n",
+    "token_count": 115,
+    "start": 27242,
+    "end": 27667,
+    "source_uids": [
+      "88F4MTcqg",
+      "D-IFhTYSO",
+      "hxYevVY9w"
+    ],
+    "primary_uid": "hxYevVY9w"
+  },
+  {
+    "text": "      > When two people want the same scarce object, they fight. In response, as CEO of [[PayPal]], [Thiel]([[Peter Thiel]]) set up the company structure to eliminate competition between employees. **PayPal overhauled the organization chart every three months. By repositioning people, the company avoided most conflicts before they even started**. \n\n**Employees were evaluated on one single criterion, and no two employees had the same one.** They were responsible for one job, one metric, and one part of the business. \n    We see that Thiel also acknowledges the importance of eliminating redundancy. ",
+    "token_count": 134,
+    "start": 27667,
+    "end": 28271,
+    "source_uids": [
+      "PfRtOOhJw",
+      "SQC1YUXO2"
+    ],
+    "primary_uid": "PfRtOOhJw"
+  },
+  {
+    "text": "In his book [[Zero To One]], he shares this observation:\n",
+    "token_count": 16,
+    "start": 28271,
+    "end": 28328,
+    "source_uids": [
+      "SQC1YUXO2"
+    ],
+    "primary_uid": "SQC1YUXO2"
+  },
+  {
+    "text": "      > ((iaIyj2VOC))\n\n((fO0hV5hLz))\n",
+    "token_count": 23,
+    "start": 28328,
+    "end": 28365,
+    "source_uids": [
+      "YD61MtxcL"
+    ],
+    "primary_uid": "YD61MtxcL"
+  },
+  {
+    "text": "  Free hierarchy in online scenes\n    The reason topic-specific online communities are blowing up right now is that they get free hierarchies mostly right: \n",
+    "token_count": 29,
+    "start": 28365,
+    "end": 28522,
+    "source_uids": [
+      "P2z7lAd0b",
+      "FAr_72VQK"
+    ],
+    "primary_uid": "P2z7lAd0b"
+  },
+  {
+    "text": "      You come together for one specific reason; \n      Anyone can be a part of the group as long as they're interested and friendly;\n      You can be part of simultaneously be part of multiple communities; and \n      Redundancy is actively avoided, like merging duplicate threads or deleting reposts\n",
+    "token_count": 57,
+    "start": 28522,
+    "end": 28823,
+    "source_uids": [
+      "xTXa-nT3b",
+      "Vel8zrZwo",
+      "MgjkTWdHe",
+      "xq2fqx_X9"
+    ],
+    "primary_uid": "xTXa-nT3b"
+  },
+  {
+    "text": "  Thought Patterns\n    This is a major part of cognitive psychology  theory\n      {{[[TODO]]}} 'a thought is just a thought' (a node); and if it doesn't help you {the self} then you can ignore it... ",
+    "token_count": 54,
+    "start": 28823,
+    "end": 29022,
+    "source_uids": [
+      "m6-cA3fX2",
+      "TfRtaMaGk",
+      "ZloE14MA7"
+    ],
+    "primary_uid": "TfRtaMaGk"
+  },
+  {
+    "text": "\n  Other Illustrations of free hierarchies\n",
+    "token_count": 8,
+    "start": 29022,
+    "end": 29065,
+    "source_uids": [
+      "YmBEw2EaP"
+    ],
+    "primary_uid": "YmBEw2EaP"
+  },
+  {
+    "text": "    This is the power of atoms and electrons and whatever other fundamental particle we discover. ((Think about it. You and I and every other thing in the universe are made of the same things at our core. What makes us us, is their arrangement. The power of the particle lies in its ability to to arrange itself with others of its kind in whatever way it pleases.))\n",
+    "token_count": 78,
+    "start": 29065,
+    "end": 29431,
+    "source_uids": [
+      "9qah3-h2I"
+    ],
+    "primary_uid": "9qah3-h2I"
+  },
+  {
+    "text": "    This is why people get addicted to Minecraft. This is the power of computers. This is the power of polymaths. This is the power of language. This is the power of programming.\n  Ponderings\n    Let's get a little more dreamy, and allow me to embarrass myself if I haven't already.\n",
+    "token_count": 68,
+    "start": 29431,
+    "end": 29714,
+    "source_uids": [
+      "-rkc2OHM4",
+      "Wi1oLrNDY",
+      "bx6toLiVq"
+    ],
+    "primary_uid": "bx6toLiVq"
+  },
+  {
+    "text": "    Free hierarchies offer a fresh perspective of what context actually means\n      Maybe instead of using the story of the blind men and the elephant to illustrate context's importance, we should have used the story of the gamers and Minecraft instead. ",
+    "token_count": 49,
+    "start": 29714,
+    "end": 29968,
+    "source_uids": [
+      "wqZbJOhXw",
+      "9MMNEXkCQ"
+    ],
+    "primary_uid": "wqZbJOhXw"
+  },
+  {
+    "text": "\n    The Universal Label\n",
+    "token_count": 3,
+    "start": 29968,
+    "end": 29993,
+    "source_uids": [
+      "DylExR_9W"
+    ],
+    "primary_uid": "DylExR_9W"
+  },
+  {
+    "text": "      The one real \"property\" or \"identity\" that every entity in the universe shares is age. It is The Universal Label; Anything and everything has a precise timestamp of when it came to existence. However, will age remain unalterable, as anti-aging research progresses, reversing our biological clocks?\n    Rethinking intelligence\n",
+    "token_count": 70,
+    "start": 29993,
+    "end": 30325,
+    "source_uids": [
+      "Ss9GKLaYP",
+      "j0hSxWz1l"
+    ],
+    "primary_uid": "Ss9GKLaYP"
+  },
+  {
+    "text": "      Could we define intelligence as the ability to construct the biggest free hierarchies, in terms of both entity count and configuration space (no of possible arrangements)?\n",
+    "token_count": 33,
+    "start": 30325,
+    "end": 30503,
+    "source_uids": [
+      "oyoH_gCPM"
+    ],
+    "primary_uid": "oyoH_gCPM"
+  },
+  {
+    "text": "    Energy, Frequency and Vibration.\n",
+    "token_count": 6,
+    "start": 30503,
+    "end": 30540,
+    "source_uids": [
+      "fwhviMqiN"
+    ],
+    "primary_uid": "fwhviMqiN"
+  },
+  {
+    "text": "      Let's end this by meditating on [[Nikola Tesla]]'s words:\n         \"If you want to find the secrets of the universe, think in terms of energy, frequency and vibration.\"\n      Consider a wave. What is it? An __arrangement__ of particles that evolves across time. ((You could argue about particle-wave duality, but I'll argue that's just the way the universe ensures that you always have smaller, more fundamental entities, just like you keep building bigger free hierarchies. So my ignorant opinion is that either we don't possess the technology to figure out what that unit is, or there's some magical loophole to understand.))\n",
+    "token_count": 147,
+    "start": 30540,
+    "end": 31174,
+    "source_uids": [
+      "fq9atS8ST",
+      "8Srmdvxqv",
+      "ydi6ZX_lc"
+    ],
+    "primary_uid": "ydi6ZX_lc"
+  },
+  {
+    "text": "      Now, Could we think of:\n",
+    "token_count": 7,
+    "start": 31174,
+    "end": 31204,
+    "source_uids": [
+      "CW-_BCGej"
+    ],
+    "primary_uid": "CW-_BCGej"
+  },
+  {
+    "text": "        - energy as the number of configuration changes you can perform \n        - frequency as the rate which you change config states \n        - vibration as the maximum difference between your configurations? \n          I.e. the magnitude of your spectrum (how good and how bad does it get?) \n",
+    "token_count": 53,
+    "start": 31204,
+    "end": 31500,
+    "source_uids": [
+      "6YBDrAXud",
+      "KS8W9xmvL",
+      "rYr7fGIde",
+      "tJQtgycp2"
+    ],
+    "primary_uid": "tJQtgycp2"
+  },
+  {
+    "text": "            I believe this is [[Claude Shannon]]'s definition of information/entropy\n",
+    "token_count": 17,
+    "start": 31500,
+    "end": 31585,
+    "source_uids": [
+      "VHOSesZNZ"
+    ],
+    "primary_uid": "VHOSesZNZ"
+  },
+  {
+    "text": "  Post-Pondering Script\n    Where else do free hierarchies apply?\n    Where **don't** free hierarchies apply?\n  Random Points \n    Leading nodes may not reap all the rewards, and probably faces more risk of destruction than the others. ",
+    "token_count": 53,
+    "start": 31585,
+    "end": 31821,
+    "source_uids": [
+      "8P5FnQdQn",
+      "IltNGz9rF",
+      "-D1xQfocb",
+      "q9Y6ljDxL",
+      "SZhlFpK6E"
+    ],
+    "primary_uid": "IltNGz9rF"
+  },
+  {
+    "text": "This is [the cost of being a leader](((vIgJnhsEW))).\n    {{[[TODO]]}} How will nodes optimize connections to other nodes?\n      - ensure the network doesn't depend too much on a single node/suffer from a single point of error.\n",
+    "token_count": 66,
+    "start": 31821,
+    "end": 32048,
+    "source_uids": [
+      "lkYUkGKpo",
+      "b7Y53LADM",
+      "-D1xQfocb"
+    ],
+    "primary_uid": "-D1xQfocb"
+  },
+  {
+    "text": "        By nature of being scale-free, or fractal, they become antifragile! When a node leaves a free hierarchy, latter is minimally affected, and in many cases, exit produces better hierarchies! [See]([[Fractal Brains: Fractal Thoughts]]):\n",
+    "token_count": 66,
+    "start": 32048,
+    "end": 32289,
+    "source_uids": [
+      "2vuCf3t9g"
+    ],
+    "primary_uid": "2vuCf3t9g"
+  },
+  {
+    "text": "          > ((OIyhMbjgn))\n",
+    "token_count": 11,
+    "start": 32289,
+    "end": 32315,
+    "source_uids": [
+      "fwi5Sit-w"
+    ],
+    "primary_uid": "fwi5Sit-w"
+  },
+  {
+    "text": "      - ideal number of connections?\n        > A second fundamental property in the study of complex networks arises with the discovery that the probability distribution of the number of links per node, P(k) (also known as the degree distribution), can be represented by a power-law (scale-free) with a degree exponent \u03b3 usually in the range 2 < \u03b3 < 3 [6], \n          > P(k) \u223c k\u2212\u03b3.\n          > [Self-similarity of complex networks](https://arxiv.org/abs/cond-mat/0503078)\n      - what else?\n  {{[[TODO]]}} Current thesis does not mention properties and how they play into relationships and hierarchies/purpose. ",
+    "token_count": 154,
+    "start": 32315,
+    "end": 32926,
+    "source_uids": [
+      "xLFp-NIoe",
+      "fdCbO2pbG",
+      "0yRLlq9dp",
+      "kJ4zY4hzM",
+      "Wkko-bwXh",
+      "kGTveoyzy"
+    ],
+    "primary_uid": "fdCbO2pbG"
+  },
+  {
+    "text": "e.g. more properties = bigger configuration space.",
+    "token_count": 11,
+    "start": 32926,
+    "end": 32976,
+    "source_uids": [
+      "kJ4zY4hzM"
+    ],
+    "primary_uid": "kJ4zY4hzM"
+  }
+]

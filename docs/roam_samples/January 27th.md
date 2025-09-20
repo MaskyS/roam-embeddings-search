@@ -1,0 +1,21 @@
+- **Watching movies/shows/YT videos**
+    - Pros:: Low energy requirement 
+    - Cons::
+        - Need to coordinate hours at a time - rubs against [constraint 2](((mnGg4Vtzw))). 
+        - [[Assumptions]]: For you, this fails [constraint 1](((I6bnlFZ6c))). I believe you don't prefer the video format?
+            - Counterpoint:: You share a Netflix subscription and got a projector recently. Maybe you just are averse to __external__ recommendations? Maybe you just haven't talked about what you like to throw on for fun/when alone? And we did watch the bear together... 
+                - {{[[TODO]]}} [[Kifah]] and [[Dilnaz]] both share a list of favorite movies/shows
+                    - [[Dilnaz]]
+                        - [[[[Movie]]/Leon the Professional]]
+                        - Squid Game
+                    - [[Kifah]]
+                        - {{embed: [[[[TV Shows]] [[Favorites]]]]}}
+                        - {{embed:[[[[Movie]] [[Favorites]]]]}}
+                        - {{embed: [[[[Anime]] [[Favorites]]]]}}
+        - Need to find something we both __really__ like __and__ haven't watched
+- **Playing games together**
+    - Cons::
+        - Of no real-world use. High addiction potential. We're both Mac users (🥲)
+- **Nerding out together**
+    - I have a few things of interest to me
+- Anything else you've ruled out?
