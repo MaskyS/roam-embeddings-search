@@ -641,7 +641,7 @@ function createSettingsPanel() {
             try {
               const data = await searchAPI.checkConnection();
               window.roamAlphaAPI.ui.showToast({
-                message: `✅ Connected! Graph: ${data.roam_graph_name}, Documents: ${data.chroma_collection_count}`,
+                message: `✅ Connected! Graph: ${data.roam_graph_name}, Documents: ${data.collection_count}`,
                 intent: "success",
               });
             } catch (error) {
@@ -700,7 +700,7 @@ export default {
         try {
           const data = await searchAPI.checkConnection();
           alert(
-            `✅ Connected to backend!\n\nGraph: ${data.roam_graph_name}\nDocuments: ${data.chroma_collection_count}`,
+            `✅ Connected to backend!\n\nGraph: ${data.roam_graph_name}\nDocuments: ${data.collection_count}`,
           );
         } catch (error) {
           alert(

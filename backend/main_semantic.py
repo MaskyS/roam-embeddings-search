@@ -3,20 +3,20 @@ main_semantic.py
 
 FastAPI application for the new semantic search strategy.
 This service is completely independent of main.py and interacts only with
-the 'roam_semantic_chunks' collection in ChromaDB.
+the 'RoamSemanticChunks' collection in Weaviate.
 """
 print("[main_semantic] Starting imports...")
-import chromadb
+import weaviate
+import voyageai
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings
-from chromadb.utils import embedding_functions
-from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 from typing import Optional, List, Dict
 import httpx
 import re
 import time
 import json
+from contextlib import asynccontextmanager
 
 # Add backend to path to allow local imports
 import sys
@@ -25,106 +25,77 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from roam import query_roam
 
-# --- Settings & ChromaDB Client ---
+# --- Settings & Weaviate Client ---
 
 class Settings(BaseSettings):
     roam_graph_name: str
     roam_api_token: str
-    google_api_key: str
+    google_api_key: str # Kept for potential future use
     voyageai_api_key: str
-    embedding_provider: str = "voyageai"  # Options: "ollama", "google", or "voyageai"
-    ollama_url: str = "http://ollama:11434"  # Default Ollama URL in Docker
-    ollama_model: str = "embeddinggemma"  # Default Ollama embedding model
-    voyageai_model: str = "voyage-3.5-lite"  # Default VoyageAI model
+    embedding_provider: str = "voyage_context"  # New default
+    ollama_url: str = "http://ollama:11434"
+    ollama_model: str = "embeddinggemma"
+    voyageai_context_model: str = "voyage-context-3" # Contextual model for both queries and documents
 
 settings = Settings()
+voyageai.api_key = settings.voyageai_api_key
+voyage_client = voyageai.Client()
 
-_collections: Dict[str, chromadb.Collection] = {}
-_chroma_client = None
-COLLECTION_NAME = "roam_semantic_chunks" # Default for this service
+# --- Weaviate Client Initialization ---
 
-def get_collection(name: str) -> chromadb.Collection:
-    """Get or create a ChromaDB collection by name. Uses lazy initialization."""
-    global _collections, _chroma_client
-    if name not in _collections:
-        print(f"[ChromaDB] Initializing connection for collection: {name}...")
+weaviate_client: Optional[weaviate.WeaviateAsyncClient] = None
+COLLECTION_NAME = "RoamSemanticChunks" # Weaviate class names are capitalized
 
-        if _chroma_client is None:
-            _chroma_client = chromadb.HttpClient(host='chromadb', port=8000)
-            try:
-                _chroma_client.heartbeat()
-            except Exception as e:
-                print(f"[ChromaDB] Failed to connect: {e}")
-                _chroma_client = None # Reset on failure
-                raise
-
-        # Choose embedding function based on provider setting
-        if settings.embedding_provider == "google":
-            embedding_function = embedding_functions.GoogleGenerativeAiEmbeddingFunction(
-                api_key=settings.google_api_key,
-                model_name="gemini-embedding-001"
-            )
-            print(f"[ChromaDB] Using Google Gemini embeddings")
-        elif settings.embedding_provider == "ollama":
-            embedding_function = OllamaEmbeddingFunction(
-                url=settings.ollama_url,
-                model_name=settings.ollama_model
-            )
-            print(f"[ChromaDB] Using Ollama embeddings: {settings.ollama_model} at {settings.ollama_url}")
-        else:  # Default to VoyageAI
-            embedding_function = embedding_functions.VoyageAIEmbeddingFunction(
-                api_key=settings.voyageai_api_key,
-                model_name=settings.voyageai_model
-            )
-            print(f"[ChromaDB] Using VoyageAI embeddings: {settings.voyageai_model}")
-
-        _collections[name] = _chroma_client.get_or_create_collection(
-            name=name,
-            embedding_function=embedding_function
-        )
-        print(f"[ChromaDB] Collection '{name}' initialized with {_collections[name].count()} documents")
-    return _collections[name]
-
-def delete_collection(name: str) -> None:
-    """Delete a ChromaDB collection and remove it from cache."""
-    global _collections, _chroma_client
-
-    # Ensure client is initialized
-    if _chroma_client is None:
-        _chroma_client = chromadb.HttpClient(host='chromadb', port=8000)
-        try:
-            _chroma_client.heartbeat()
-        except Exception as e:
-            print(f"[ChromaDB] Failed to connect: {e}")
-            _chroma_client = None
-            raise
-
-    # Delete the collection from ChromaDB
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle Weaviate client startup and shutdown."""
+    global weaviate_client
+    print("[Weaviate] Initializing connection...")
+    # In a docker-compose setup, the service name is the hostname
+    weaviate_client = weaviate.use_async_with_custom(
+        http_host="weaviate",
+        http_port=8080,
+        http_secure=False,
+        grpc_host="weaviate",
+        grpc_port=50051,
+        grpc_secure=False,
+    )
     try:
-        _chroma_client.delete_collection(name)
-        print(f"[ChromaDB] Deleted collection '{name}'")
-    except Exception as e:
-        print(f"[ChromaDB] Error deleting collection '{name}': {e}")
-        # Don't re-raise if collection doesn't exist
-        if "does not exist" not in str(e).lower():
-            raise
+        await weaviate_client.connect()
+        print("[Weaviate] Connection successful.")
+        yield
+    finally:
+        if weaviate_client and weaviate_client.is_connected():
+            await weaviate_client.close()
+            print("[Weaviate] Connection closed.")
 
-    # Remove from cache
-    if name in _collections:
-        del _collections[name]
-        print(f"[ChromaDB] Removed collection '{name}' from cache")
+async def delete_collection(name: str) -> None:
+    """Delete a Weaviate collection."""
+    # This function is intended to be called from the sync script, which will have its own client.
+    # This avoids issues with async event loops if called from a sync context.
+    client = weaviate.connect_to_local(port=8080, grpc_port=50051)
+    try:
+        if client.collections.exists(name):
+            client.collections.delete(name)
+            print(f"[Weaviate] Deleted collection '{name}'")
+    except Exception as e:
+        print(f"[Weaviate] Error deleting collection '{name}': {e}")
+        raise
+    finally:
+        client.close()
+
 
 # --- FastAPI Application ---
 
 app = FastAPI(
     title="Roam Semantic Search - Semantic Strategy",
-    description="A separate service for handling the Chonkie-based semantic search strategy."
+    description="A separate service for handling the Chonkie-based semantic search strategy with Weaviate.",
+    lifespan=lifespan
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://roamresearch.com", "https://*.roamresearch.com", "http://localhost:*", "http://127.0.0.1:*"]
-,
+    allow_origins=["https://roamresearch.com", "https://*.roamresearch.com", "http://localhost:*", "http://127.0.0.1:*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -166,7 +137,6 @@ def highlight_matches(text: str, query: str) -> str:
     """
     if not text or not query:
         return text
-
     try:
         # We escape the query to handle special regex characters.
         # The parentheses create a capturing group.
@@ -185,58 +155,75 @@ def highlight_matches(text: str, query: str) -> str:
 # --- API Endpoints ---
 
 @app.get("/")
-def read_root():
+async def read_root():
+    if not weaviate_client or not weaviate_client.is_ready():
+         raise HTTPException(status_code=503, detail="Weaviate is not ready")
+    collection = weaviate_client.collections.get(COLLECTION_NAME)
+    count = await collection.aggregate.over_all(total_count=True)
     return {
-        "message": "Roam Semantic Search (Semantic Strategy) Backend is running.",
+        "message": "Roam Semantic Search (Semantic Strategy) Backend is running with Weaviate.",
+        "roam_graph_name": settings.roam_graph_name,
         "collection_name": COLLECTION_NAME,
-        "collection_count": get_collection(COLLECTION_NAME).count()
+        "collection_count": count.total_count
     }
 
 @app.get("/search")
 async def search(
     q: str = Query(..., description="Search query"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return"),
+    alpha: float = Query(0.5, ge=0, le=1, description="Balance between keyword and vector search. 0 for pure keyword, 1 for pure vector."),
     exclude_pages: bool = Query(False, description="Exclude page results, only show chunks")
 ):
     """
-    Performs semantic search on the pre-chunked documents.
+    Performs hybrid search on the pre-chunked documents using Weaviate.
     """
     start_time = time.time()
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
+    if not weaviate_client or not weaviate_client.is_ready():
+        raise HTTPException(status_code=503, detail="Weaviate is not ready")
 
-    collection = get_collection(COLLECTION_NAME)
+    try:
+        # For queries, use contextualized_embed with single-element list
+        query_result = voyage_client.contextualized_embed([[q]], model=settings.voyageai_context_model, input_type="query")
+        query_vector = query_result.results[0].embeddings[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to embed query with VoyageAI: {e}")
 
-    # Build where filter for ChromaDB based on exclude_pages
-    where_filter = None
+    collection = weaviate_client.collections.get(COLLECTION_NAME)
+
+    # Build filter for Weaviate based on exclude_pages
+    filters = None
     if exclude_pages:
         # Only return chunks, not pages
-        where_filter = {"document_type": {"$eq": "chunk"}}
+        from weaviate.classes.query import Filter
+        filters = Filter.by_property("document_type").equal("chunk")
 
-    results = collection.query(
-        query_texts=[q],
-        n_results=limit,
-        where=where_filter,
-        include=["metadatas", "documents", "distances"]  # Ensure distances are included
-    )
+    try:
+        results = await collection.query.hybrid(
+            query=q,
+            vector=query_vector,
+            alpha=alpha,
+            limit=limit,
+            filters=filters,
+            return_metadata=["score"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Weaviate search failed: {e}")
 
-    if not results['ids'] or not results['ids'][0]:
+
+    if not results.objects:
         return {"query": q, "results": [], "count": 0}
 
     # Extract primary UIDs to fetch their context
-    primary_uids = [meta['primary_uid'] for meta in results['metadatas'][0]]
+    primary_uids = [obj.properties.get('primary_uid') for obj in results.objects]
     block_data_list = await pull_many_blocks_for_context(primary_uids)
     block_data_map = {b.get(':block/uid'): b for b in block_data_list if b}
 
     formatted_results = []
-    for i, chunk_id in enumerate(results['ids'][0]):
-        metadata = results['metadatas'][0][i]
-        chunk_text = results['documents'][0][i]
-        distance = results['distances'][0][i]
+    for obj in results.objects:
+        metadata = obj.properties
         primary_uid = metadata.get("primary_uid")
-
-        # Calculate similarity from distance (assuming L2 distance, where 0 is identical)
-        similarity = 1 - (distance / 2)
 
         block_data = block_data_map.get(primary_uid)
         parent_text = ""
@@ -245,12 +232,12 @@ async def search(
             parent_text = parent_data.get(':node/title') or parent_data.get(':block/string', '')
 
         formatted_results.append({
-            "uid": primary_uid, # The UID to navigate to
-            "similarity": round(similarity, 4),
+            "uid": primary_uid,
+            "similarity": round(obj.metadata.score, 4) if obj.metadata and obj.metadata.score is not None else 0.0,
             "page_title": metadata.get("page_title", ""),
             "parent_text": parent_text,
-            "chunk_text_preview": highlight_matches(chunk_text, q),
-            "document_type": metadata.get("document_type", "chunk"),  # "page" or "chunk"
+            "chunk_text_preview": highlight_matches(metadata.get("chunk_text_preview", ""), q),
+            "document_type": metadata.get("document_type", "chunk"),
         })
 
     return {

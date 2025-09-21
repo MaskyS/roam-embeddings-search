@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-chromadb-client
 google-generativeai
 httpx
 python-dotenv
@@ -9,3 +8,4 @@ chonkie[semantic]
 sentence-transformers
 ollama
 voyageai
+weaviate-client

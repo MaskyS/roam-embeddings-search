@@ -4,3 +4,4 @@
 */.venv/
 roam-extension-calendar/
 backend/last_sync.json
+experiments/chunk-viz/node_modules

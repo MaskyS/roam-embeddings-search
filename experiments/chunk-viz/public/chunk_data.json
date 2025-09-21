@@ -1,0 +1,1288 @@
+{
+  "generated_at": "2025-09-21T13:53:19.188737",
+  "configs": {
+    "default": {
+      "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+      "threshold": 0.6,
+      "skip_window": 1,
+      "min_chunk_size": 50
+    },
+    "roam_optimized": {
+      "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+      "threshold": 0.6,
+      "chunk_size": 800,
+      "skip_window": 2,
+      "min_chunk_size": 50,
+      "similarity_window": 7,
+      "min_sentences_per_chunk": 2
+    }
+  },
+  "pages": [
+    {
+      "uid": "rM4LbVvd7",
+      "title": "My Eccentricities",
+      "linearized_text": "# My Eccentricities\n- Food\n    - I either eat one meal a day or in an 8-hour window or do 1-2 day fasts.\n    - More salt > less salt. What is problematic is all the sodium contained in modern junk.\n    - Sugar is poison\n    - Fat is not evil\n    - Absolutely enjoy eating all kinds of nuts & berries\n    - I avoid processed foods/ refined carbs / vegetable oils (especially soya)\n    - I eat wholegrain stuff (to ensure above, and also because it's just much more delicious and filling)\n    - I chew my food many more than the average person to ensure proper absorption and dental health.\n    - I eat a way larger proportion of meat/greens compared to rice/carbs\n- Sleep\n    - My sleep schedule is usually biphasic. I take a nap between 4-7, then sleep at 2ish in the morn.\n    - I sleep without a pillow.\n    - I intend to start sleeping on the floor with a futon, and get rid of my bedframe.\n- Grooming\n    - I take alternating showers to build my immunity and resistance to cold. I feel rarely cold since, and the number of times I fall sick has drastically fallen.\n    - I haven't used shampoo in nearly a year (curly, dry hair means #nopoo is [fortunately] obligatory)\n    - I don't think you should brush your teeth more than once a day, unless if you have sugar/acidic stuff (in which case, you brush your teeth right after)\n- Education\n    - I learn through podcasts, blogs, books, [[Youtube]] videos\n    - I think school shouldn't exist, because it is utterly inefficient at education. In fact, that is not even its primary aim- that would be babysitting, since we can't even take the time to teach our kids how to be self-sufficient.\n    - I think polymathy should be a requirement instead of being looked down upon\n    - Learn to understand, not to impress.\n- Breathing\n    - Breathe through your stomach, your shoulders shouldn't rise\n    - Adopt the Wim Hoff method\n- Digital Minimalism\n    - I am inactive on FB and IG. I only log in when I have something of value to say/post (or to reach out to someone unavailable on other platforms). This was not the case in the past, as my vanity was quite high.\n    - I use Whatsapp only for calls and group messages.\n    - Other platforms I regularly check into: [[Telegram]] (once/day), LinkedIn (1-2/wk), Reddit (1-2)\n    - See below for more.\n- [Getting My Life Together: An Adventure in Adapting to Remote Work, Adopting Digital Minimalism and Regaining Peace of Mind During Quarantine.](https://www.notion.so/Getting-My-Life-Together-An-Adventure-in-Adapting-to-Remote-Work-Adopting-Digital-Minimalism-and-R-e64f1f82a37044658fba7534c5f5dc5f)\n- Socialisation\n    - I believe that we are currently overstimulated. Humans don't really need to talk to each other to this extent.\n    - I try to add value and fun for both sides in all my interactions with others\n    - When doing business with someone, one must first and foremost consider their character, whenever possible\n    - I try not to socialize with people outside my physical proximity everyday. Just 2-3 times a day should be enough\n    - I find it very hard to tune into the feelings of other people if I get interrupted during my work, or right after. There's something about leaning into my thinking side that messes me up, and my interactions end up feeling robotic.\n- Music\n    - 99% of my music artists are non-mainstream\n    - I listen to music pretty much daily. Have put in thousands of hours of listening at this point.\n    - I think good music can be found anywhere, regardless of genre\n    - The best tracks have both strong rhythm and marvelous prose.\n    - I try not to listen to music with strong vocals while working, as it tends to shut down my inner voice. I can easily start using it as a distraction.\n    - I don't listen to music while waiting/travelling. Basically, don't use it to run away from the world.\n    - I think music is best used for mindless tasks that can be quite physically demanding, like exercise, running, cleaning the house, cooking, etc.\n    - The words we listen to affect us subconsciously. Those thrashy lyrics about sex and drugs will eventually influence your thoughts and actions. On a similar note, check out [[Moran Cerf]]'s work experiments for curbing nicotine addiction.\n- Sound\n    - I think our hearing should be protected. We can close our eyes, stop breathing/smelling/eating/touching, but we have little control over our hearing.\n    - Silence is one of the reasons I really like the night.\n    - Silence is essential for remarkable thinking\n- Natural Selection\n    - I think the weak shouldn't be protected. They should be offered the chance to improve their situation, but never should you do the work for them. That only creates complacency and prevents nature from doing its job. Overtime, making people soft only worsens your situation.\n    - Some traits are simply incompatible with our current world, and that will cause people possessing them to suffer. Let's not elongate it or spread it through generations.\n- Fitness\n    - Personally, I find working out in a gym to be the most unnatural and boring method of building muscle. It's like taking Soylent for nutrition.\n    - Better methods: sports, dance. These improve more than just your fitness, and provide some remarkable social advantages.\n- Wealth\n    - I believe in being able to do what you want without any (stupid) restrictions. For this reason, it is important to get your money to make money for you, instead of you renting out your time.\n    - Refuse to be bound by your consumptive habits. The true cost of anything is the amount of life you exchange for it.\n    - I would much rather work on what I love and live a somewhat humble life (until I reach the point of financial independence) than take on a soul-crushing job just so that I can be more indulgent.\n- [[[[Book]]/Elephant in the Brain]]\n    - There are many psychological happenings that both your own brain and that of those around you will try to conceal. You must learn the rules of the game, and the true reasons that drive seemingly irrational behavior. Why we laugh, why we cross our arms, why we engage in art, why schools exist, etc etc.\n- Mind, Body & Soul\n    - [[The Body is A Vessel]]  Like a car, it is simply something that allows our soul to travel through this universe. For this reason, it is important to keep it in top condition, but never to obsess over your default options. The entity that you consider \"You\" should be the same regardless of the body you inhabit- whether it's the 5-year-old body, a 50-year-old one, or that of someone else. Of course, if you have a bicycle you'll have to go through the biking lanes, and the driving experience differs by machine.\n- Housing\n    - I don't think one should buy houses. They're liabilities that pin you down. You should definitely buy land- that finite resource will continue to rise in value- but not build houses that are too extravagant. I believe it's best to have something you can build back again just as fast as you can break it down.\n    - On this note, I don't think you should live in one place. Would be much better if you established \"bases\" throughout the world, and then rotated between them.\n- Media Consumption\n    - If it doesn't make you think or feel in such a way that you're a better person tomorrow, it's not worth it.\n    - The above means I don't watch any television, most mainstream shows, Snapchat, etc. I do watch movies and animes, but only if they're highly entertaining and rich in ideas.\n    - Twitter = Reddit > [[Youtube]] > Facebook > Instagram > Snapchat > Tiktok\n- Information Density\n    - I curate my feeds all the time. I truly believe in information density, so I look for people and platforms that pack the most punch per unit of attention consumed.\n    - Print has so far been superior to all other mediums in terms of information density. I believe however that transmission is most __efficient__, i.e. the lesson, no matter how small or large, is learned best through video. I wonder if one day we'll come up with a better medium, but until then...\n- The Expert Myth\n    - Most experts really aren't experts. There are a lot of frauds out there, and they're increasingly able to get away with it as people get more and more specialized. Just throw in some jargon, arbitrary awards, and titles, and bam, you can start fooling people.\n    - When someone's speech is more concise than their writing, you know you're looking at a charlatan.\n- Work Hard to Succeed\n    - You should only work hard after finding something worth working on and determining that there's no more efficient way to accomplish the task at hand\n    - Therefore, do not aim to be the best, aim to be the only. Be the person who is __known__ for the stuff you do. One very specific problem- you're the only person they'll come to ask for advice from. You will attract incredible amounts of luck this way.\n- Stimulants\n    - The modern devil is cheap dopamine - @naval\n    - Anything that brings you up fast sets you up for a tumultuous crash.\n    - As such, I avoid regular consumption of caffeine (who am I kidding :)\n    - No alcohol, no tobacco\n    - However, I truly think there are some nice cognitive enhancers out there. I will try anything once :)\n- Worldwide Progress\n    - Most of us are focusing on the wrong thing. \"The best minds of my generation are thinking about how to make people click ads\". Too much consumption, shallow production has become easy, and most people's attention span and focus have been reduced to smithereens.\n    - There is immense potential in what's to come, but very few will truly grok them. Most will engage in ultra-specific improvements that really won't move the needle by much. I know that we have hammers everywhere these days, but most things just aren't nails. Heck, at some point you run out of things to nail!\n    - Many are limiting their ideas to the virtual world, more specifically, in terms of mobile apps and websites. But there's so much more we can do than build another todo list app!\n- Meaning\n    - I think this world is a simulation, and I theorize that every one of us exist simply to gather different experiences of the world for a higher being. A mark of an intelligent person is trying to derive different answers to a solved problem. To think, \"why is this answer correct?\" and \"How else can this problem be solved?\". Hence, we are simply methods for this being to experience the world in every subjective way possible. The tree, the ant, the cat, the blind man- all feed into a single system.\n- Mental Difference\n    - [[I Have ADHD]]",
+      "text_length": 10593,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 19,
+          "uid": "rM4LbVvd7"
+        },
+        {
+          "start": 20,
+          "end": 26,
+          "uid": "53OAZVoHo"
+        },
+        {
+          "start": 27,
+          "end": 104,
+          "uid": "arOz_Rf5o"
+        },
+        {
+          "start": 105,
+          "end": 197,
+          "uid": "-e6tcvYtg"
+        },
+        {
+          "start": 198,
+          "end": 219,
+          "uid": "JSptf4Lgu"
+        },
+        {
+          "start": 220,
+          "end": 241,
+          "uid": "rUkwqPLq9"
+        },
+        {
+          "start": 242,
+          "end": 299,
+          "uid": "lS2dltEgZ"
+        },
+        {
+          "start": 300,
+          "end": 379,
+          "uid": "oqTy9lno5"
+        },
+        {
+          "start": 380,
+          "end": 486,
+          "uid": "xPcLOCCV8"
+        },
+        {
+          "start": 487,
+          "end": 588,
+          "uid": "lj9SF6ifu"
+        },
+        {
+          "start": 589,
+          "end": 662,
+          "uid": "GNdxPuJlo"
+        },
+        {
+          "start": 663,
+          "end": 670,
+          "uid": "cb35v1slV"
+        },
+        {
+          "start": 671,
+          "end": 773,
+          "uid": "S6Z15d8k4"
+        },
+        {
+          "start": 774,
+          "end": 805,
+          "uid": "24TT430Yd"
+        },
+        {
+          "start": 806,
+          "end": 893,
+          "uid": "6DULvicTO"
+        },
+        {
+          "start": 894,
+          "end": 904,
+          "uid": "QkECf9YdN"
+        },
+        {
+          "start": 905,
+          "end": 1068,
+          "uid": "NmQ0Z2GRH"
+        },
+        {
+          "start": 1069,
+          "end": 1173,
+          "uid": "mpM61dpsq"
+        },
+        {
+          "start": 1174,
+          "end": 1331,
+          "uid": "UC3SByFfI"
+        },
+        {
+          "start": 1332,
+          "end": 1343,
+          "uid": "PTB12_FUq"
+        },
+        {
+          "start": 1344,
+          "end": 1408,
+          "uid": "PnEuKV7kx"
+        },
+        {
+          "start": 1409,
+          "end": 1643,
+          "uid": "f39vW1alt"
+        },
+        {
+          "start": 1644,
+          "end": 1725,
+          "uid": "MOCepgt2c"
+        },
+        {
+          "start": 1726,
+          "end": 1768,
+          "uid": "WnmZ8WBVh"
+        },
+        {
+          "start": 1769,
+          "end": 1780,
+          "uid": "f2Z8aUP-v"
+        },
+        {
+          "start": 1781,
+          "end": 1846,
+          "uid": "gjCTnVr7-"
+        },
+        {
+          "start": 1847,
+          "end": 1878,
+          "uid": "b4YL-8yVo"
+        },
+        {
+          "start": 1879,
+          "end": 1899,
+          "uid": "VRNGyMOoo"
+        },
+        {
+          "start": 1900,
+          "end": 2115,
+          "uid": "Ju9XjVXFf"
+        },
+        {
+          "start": 2116,
+          "end": 2171,
+          "uid": "AnlhIBifb"
+        },
+        {
+          "start": 2172,
+          "end": 2274,
+          "uid": "EALaepESq"
+        },
+        {
+          "start": 2275,
+          "end": 2300,
+          "uid": "gPYdglVSl"
+        },
+        {
+          "start": 2301,
+          "end": 2601,
+          "uid": "1RBhQnYmg"
+        },
+        {
+          "start": 2602,
+          "end": 2617,
+          "uid": "GKCgbfVdE"
+        },
+        {
+          "start": 2618,
+          "end": 2734,
+          "uid": "EG7xG7bL-"
+        },
+        {
+          "start": 2735,
+          "end": 2817,
+          "uid": "iftHluDVk"
+        },
+        {
+          "start": 2818,
+          "end": 2929,
+          "uid": "_5CAvwdLm"
+        },
+        {
+          "start": 2930,
+          "end": 3048,
+          "uid": "dFKrxi6JF"
+        },
+        {
+          "start": 3049,
+          "end": 3286,
+          "uid": "-DMY6b_oM"
+        },
+        {
+          "start": 3287,
+          "end": 3294,
+          "uid": "ko015mJ2I"
+        },
+        {
+          "start": 3295,
+          "end": 3343,
+          "uid": "-XI0TWmJ4"
+        },
+        {
+          "start": 3344,
+          "end": 3445,
+          "uid": "OdzcEBUwm"
+        },
+        {
+          "start": 3446,
+          "end": 3513,
+          "uid": "u5MKp45D5"
+        },
+        {
+          "start": 3514,
+          "end": 3580,
+          "uid": "qc_Wdkv5e"
+        },
+        {
+          "start": 3581,
+          "end": 3736,
+          "uid": "x483rL3d9"
+        },
+        {
+          "start": 3737,
+          "end": 3844,
+          "uid": "0foEiOwqx"
+        },
+        {
+          "start": 3845,
+          "end": 3994,
+          "uid": "Buk6wgZkU"
+        },
+        {
+          "start": 3995,
+          "end": 4238,
+          "uid": "Y5gaLD93j"
+        },
+        {
+          "start": 4239,
+          "end": 4246,
+          "uid": "SMenFgFTB"
+        },
+        {
+          "start": 4247,
+          "end": 4402,
+          "uid": "GTlcBVoI3"
+        },
+        {
+          "start": 4403,
+          "end": 4463,
+          "uid": "-xeZvqSmC"
+        },
+        {
+          "start": 4464,
+          "end": 4514,
+          "uid": "PFnCCX7N6"
+        },
+        {
+          "start": 4515,
+          "end": 4534,
+          "uid": "a2n5CedR-"
+        },
+        {
+          "start": 4535,
+          "end": 4814,
+          "uid": "e0pXvGzBA"
+        },
+        {
+          "start": 4815,
+          "end": 4990,
+          "uid": "AxP1QNpVJ"
+        },
+        {
+          "start": 4991,
+          "end": 5000,
+          "uid": "EPknudGNl"
+        },
+        {
+          "start": 5001,
+          "end": 5149,
+          "uid": "nN8g-hMGd"
+        },
+        {
+          "start": 5150,
+          "end": 5276,
+          "uid": "8kskwAvl7"
+        },
+        {
+          "start": 5277,
+          "end": 5285,
+          "uid": "eFG_Bz-Hw"
+        },
+        {
+          "start": 5286,
+          "end": 5482,
+          "uid": "lAAM69H4N"
+        },
+        {
+          "start": 5483,
+          "end": 5604,
+          "uid": "RbiNZpOXb"
+        },
+        {
+          "start": 5605,
+          "end": 5805,
+          "uid": "CU29TxHAA"
+        },
+        {
+          "start": 5806,
+          "end": 5842,
+          "uid": "c7ug48mib"
+        },
+        {
+          "start": 5843,
+          "end": 6151,
+          "uid": "jApdN-xbS"
+        },
+        {
+          "start": 6152,
+          "end": 6171,
+          "uid": "06it1inCV"
+        },
+        {
+          "start": 6172,
+          "end": 6693,
+          "uid": "dcu5utUqC"
+        },
+        {
+          "start": 6694,
+          "end": 6703,
+          "uid": "jV1Jwox0C"
+        },
+        {
+          "start": 6704,
+          "end": 7019,
+          "uid": "NTY0AosYT"
+        },
+        {
+          "start": 7020,
+          "end": 7184,
+          "uid": "OKwudl0m3"
+        },
+        {
+          "start": 7185,
+          "end": 7204,
+          "uid": "9ZDGU_2LO"
+        },
+        {
+          "start": 7205,
+          "end": 7318,
+          "uid": "CTsYDCwkD"
+        },
+        {
+          "start": 7319,
+          "end": 7497,
+          "uid": "f5ZXeP55Q"
+        },
+        {
+          "start": 7498,
+          "end": 7577,
+          "uid": "grCRsldWI"
+        },
+        {
+          "start": 7578,
+          "end": 7599,
+          "uid": "IsSaGN-F8"
+        },
+        {
+          "start": 7600,
+          "end": 7769,
+          "uid": "w6j9KUsFL"
+        },
+        {
+          "start": 7770,
+          "end": 8071,
+          "uid": "pyGbxeEcD"
+        },
+        {
+          "start": 8072,
+          "end": 8089,
+          "uid": "lHoYbs7dy"
+        },
+        {
+          "start": 8090,
+          "end": 8355,
+          "uid": "d3txvosZB"
+        },
+        {
+          "start": 8356,
+          "end": 8459,
+          "uid": "2vrJWWeh0"
+        },
+        {
+          "start": 8460,
+          "end": 8482,
+          "uid": "U3u2yqiGW"
+        },
+        {
+          "start": 8483,
+          "end": 8637,
+          "uid": "iNWVPPMqg"
+        },
+        {
+          "start": 8638,
+          "end": 8895,
+          "uid": "pme20Oq2w"
+        },
+        {
+          "start": 8896,
+          "end": 8908,
+          "uid": "PD7WTtYSc"
+        },
+        {
+          "start": 8909,
+          "end": 8958,
+          "uid": "3e9fCeK4k"
+        },
+        {
+          "start": 8959,
+          "end": 9033,
+          "uid": "WlTBbw7Hs"
+        },
+        {
+          "start": 9034,
+          "end": 9109,
+          "uid": "UrMzcWYyn"
+        },
+        {
+          "start": 9110,
+          "end": 9138,
+          "uid": "Ra-3ASWOy"
+        },
+        {
+          "start": 9139,
+          "end": 9246,
+          "uid": "MK6Mw2Zsr"
+        },
+        {
+          "start": 9247,
+          "end": 9267,
+          "uid": "sD6oBsBBY"
+        },
+        {
+          "start": 9268,
+          "end": 9535,
+          "uid": "oAYWMqXa3"
+        },
+        {
+          "start": 9536,
+          "end": 9850,
+          "uid": "NtQW0zD_I"
+        },
+        {
+          "start": 9851,
+          "end": 10034,
+          "uid": "uYzis6Ipw"
+        },
+        {
+          "start": 10035,
+          "end": 10044,
+          "uid": "zoNz47V3M"
+        },
+        {
+          "start": 10045,
+          "end": 10551,
+          "uid": "jp4fTOxw5"
+        },
+        {
+          "start": 10552,
+          "end": 10571,
+          "uid": "Q8wwQDyeM"
+        },
+        {
+          "start": 10572,
+          "end": 10593,
+          "uid": "7-M_r-LaA"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# My Eccentricities\n- Food\n    - I either eat one meal a day or in an 8-hour window or do 1-2 day fasts.\n    - More salt > less salt. What is problematic is all the sodium contained in modern junk.\n    - Sugar is poison\n    - Fat is not evil\n    - Absolutely enjoy eating all kinds of nuts & berries\n    - I avoid processed foods/ refined carbs / vegetable oils (especially soya)\n    - I eat wholegrain stuff (to ensure above, and also because it's just much more delicious and filling)\n    - I chew my food many more than the average person to ensure proper absorption and dental health.\n    - I eat a way larger proportion of meat/greens compared to rice/carbs\n",
+              "start_index": 0,
+              "end_index": 663,
+              "token_count": 171,
+              "length": 663
+            },
+            {
+              "id": 2,
+              "text": "- Sleep\n    - My sleep schedule is usually biphasic. I take a nap between 4-7, then sleep at 2ish in the morn.\n    - I sleep without a pillow.\n    - I intend to start sleeping on the floor with a futon, and get rid of my bedframe.\n- Grooming\n    - I take alternating showers to build my immunity and resistance to cold. I feel rarely cold since, and the number of times I fall sick has drastically fallen.\n    - I haven't used shampoo in nearly a year (curly, dry hair means #nopoo is [fortunately] obligatory)\n    - I don't think you should brush your teeth more than once a day, unless if you have sugar/acidic stuff (in which case, you brush your teeth right after)\n- Education\n    - I learn through podcasts, blogs, books, [[Youtube]] videos\n    - I think school shouldn't exist, because it is utterly inefficient at education. In fact, that is not even its primary aim- that would be babysitting, since we can't even take the time to teach our kids how to be self-sufficient.\n    - I think polymathy should be a requirement instead of being looked down upon\n    - Learn to understand, not to impress.\n",
+              "start_index": 663,
+              "end_index": 1769,
+              "token_count": 283,
+              "length": 1106
+            },
+            {
+              "id": 3,
+              "text": "- Breathing\n    - Breathe through your stomach, your shoulders shouldn't rise\n    - Adopt the Wim Hoff method\n- Digital Minimalism\n    - I am inactive on FB and IG. I only log in when I have something of value to say/post (or to reach out to someone unavailable on other platforms). ",
+              "start_index": 1769,
+              "end_index": 2052,
+              "token_count": 73,
+              "length": 283
+            },
+            {
+              "id": 4,
+              "text": "This was not the case in the past, as my vanity was quite high.\n    - I use Whatsapp only for calls and group messages.\n    - Other platforms I regularly check into: [[Telegram]] (once/day), LinkedIn (1-2/wk), Reddit (1-2)\n    - See below for more.\n- [Getting My Life Together: An Adventure in Adapting to Remote Work, Adopting Digital Minimalism and Regaining Peace of Mind During Quarantine.](https://www.notion.so/Getting-My-Life-Together-An-Adventure-in-Adapting-to-Remote-Work-Adopting-Digital-Minimalism-and-R-e64f1f82a37044658fba7534c5f5dc5f)\n- Socialisation\n    - I believe that we are currently overstimulated. Humans don't really need to talk to each other to this extent.\n    - I try to add value and fun for both sides in all my interactions with others\n    - When doing business with someone, one must first and foremost consider their character, whenever possible\n    - I try not to socialize with people outside my physical proximity everyday. Just 2-3 times a day should be enough\n    - I find it very hard to tune into the feelings of other people if I get interrupted during my work, or right after. There's something about leaning into my thinking side that messes me up, and my interactions end up feeling robotic.\n",
+              "start_index": 2052,
+              "end_index": 3287,
+              "token_count": 330,
+              "length": 1235
+            },
+            {
+              "id": 5,
+              "text": "- Music\n    - 99% of my music artists are non-mainstream\n    - I listen to music pretty much daily. Have put in thousands of hours of listening at this point.\n    - I think good music can be found anywhere, regardless of genre\n    - The best tracks have both strong rhythm and marvelous prose.\n    - I try not to listen to music with strong vocals while working, as it tends to shut down my inner voice. I can easily start using it as a distraction.\n    - I don't listen to music while waiting/travelling. Basically, don't use it to run away from the world.\n    - I think music is best used for mindless tasks that can be quite physically demanding, like exercise, running, cleaning the house, cooking, etc.\n    - The words we listen to affect us subconsciously. Those thrashy lyrics about sex and drugs will eventually influence your thoughts and actions. ",
+              "start_index": 3287,
+              "end_index": 4144,
+              "token_count": 203,
+              "length": 857
+            },
+            {
+              "id": 6,
+              "text": "On a similar note, check out [[Moran Cerf]]'s work experiments for curbing nicotine addiction.\n- Sound\n    - I think our hearing should be protected. We can close our eyes, stop breathing/smelling/eating/touching, but we have little control over our hearing.\n    - Silence is one of the reasons I really like the night.\n    - Silence is essential for remarkable thinking\n- Natural Selection\n    - I think the weak shouldn't be protected. They should be offered the chance to improve their situation, but never should you do the work for them. That only creates complacency and prevents nature from doing its job. Overtime, making people soft only worsens your situation.\n",
+              "start_index": 4144,
+              "end_index": 4815,
+              "token_count": 159,
+              "length": 671
+            },
+            {
+              "id": 7,
+              "text": "    - Some traits are simply incompatible with our current world, and that will cause people possessing them to suffer. Let's not elongate it or spread it through generations.\n- Fitness\n    - Personally, I find working out in a gym to be the most unnatural and boring method of building muscle. It's like taking Soylent for nutrition.\n    - Better methods: sports, dance. These improve more than just your fitness, and provide some remarkable social advantages.\n- Wealth\n    - I believe in being able to do what you want without any (stupid) restrictions. ",
+              "start_index": 4815,
+              "end_index": 5371,
+              "token_count": 126,
+              "length": 556
+            },
+            {
+              "id": 8,
+              "text": "For this reason, it is important to get your money to make money for you, instead of you renting out your time.\n    - Refuse to be bound by your consumptive habits. The true cost of anything is the amount of life you exchange for it.\n    - I would much rather work on what I love and live a somewhat humble life (until I reach the point of financial independence) than take on a soul-crushing job just so that I can be more indulgent.\n- [[[[Book]]/Elephant in the Brain]]\n    - There are many psychological happenings that both your own brain and that of those around you will try to conceal. You must learn the rules of the game, and the true reasons that drive seemingly irrational behavior. Why we laugh, why we cross our arms, why we engage in art, why schools exist, etc etc.\n- Mind, Body & Soul\n    - [[The Body is A Vessel]]  Like a car, it is simply something that allows our soul to travel through this universe. ",
+              "start_index": 5371,
+              "end_index": 6293,
+              "token_count": 223,
+              "length": 922
+            },
+            {
+              "id": 9,
+              "text": "For this reason, it is important to keep it in top condition, but never to obsess over your default options. The entity that you consider \"You\" should be the same regardless of the body you inhabit- whether it's the 5-year-old body, a 50-year-old one, or that of someone else. Of course, if you have a bicycle you'll have to go through the biking lanes, and the driving experience differs by machine.\n- Housing\n    - I don't think one should buy houses. They're liabilities that pin you down. You should definitely buy land- that finite resource will continue to rise in value- but not build houses that are too extravagant. I believe it's best to have something you can build back again just as fast as you can break it down.\n    - On this note, I don't think you should live in one place. ",
+              "start_index": 6293,
+              "end_index": 7084,
+              "token_count": 190,
+              "length": 791
+            },
+            {
+              "id": 10,
+              "text": "Would be much better if you established \"bases\" throughout the world, and then rotated between them.\n- Media Consumption\n    - If it doesn't make you think or feel in such a way that you're a better person tomorrow, it's not worth it.\n    - The above means I don't watch any television, most mainstream shows, Snapchat, etc. I do watch movies and animes, but only if they're highly entertaining and rich in ideas.\n    - Twitter = Reddit > [[Youtube]] > Facebook > Instagram > Snapchat > Tiktok\n",
+              "start_index": 7084,
+              "end_index": 7578,
+              "token_count": 122,
+              "length": 494
+            },
+            {
+              "id": 11,
+              "text": "- Information Density\n    - I curate my feeds all the time. I truly believe in information density, so I look for people and platforms that pack the most punch per unit of attention consumed.\n    - Print has so far been superior to all other mediums in terms of information density. I believe however that transmission is most __efficient__, i.e. the lesson, no matter how small or large, is learned best through video. I wonder if one day we'll come up with a better medium, but until then...\n",
+              "start_index": 7578,
+              "end_index": 8072,
+              "token_count": 114,
+              "length": 494
+            },
+            {
+              "id": 12,
+              "text": "- The Expert Myth\n    - Most experts really aren't experts. There are a lot of frauds out there, and they're increasingly able to get away with it as people get more and more specialized. Just throw in some jargon, arbitrary awards, and titles, and bam, you can start fooling people.\n    - When someone's speech is more concise than their writing, you know you're looking at a charlatan.\n",
+              "start_index": 8072,
+              "end_index": 8460,
+              "token_count": 95,
+              "length": 388
+            },
+            {
+              "id": 13,
+              "text": "- Work Hard to Succeed\n    - You should only work hard after finding something worth working on and determining that there's no more efficient way to accomplish the task at hand\n    - Therefore, do not aim to be the best, aim to be the only. Be the person who is __known__ for the stuff you do. One very specific problem- you're the only person they'll come to ask for advice from. ",
+              "start_index": 8460,
+              "end_index": 8842,
+              "token_count": 91,
+              "length": 382
+            },
+            {
+              "id": 14,
+              "text": "You will attract incredible amounts of luck this way.\n- Stimulants\n    - The modern devil is cheap dopamine - @naval\n",
+              "start_index": 8842,
+              "end_index": 8959,
+              "token_count": 29,
+              "length": 117
+            },
+            {
+              "id": 15,
+              "text": "    - Anything that brings you up fast sets you up for a tumultuous crash.\n    - As such, I avoid regular consumption of caffeine (who am I kidding :)\n    - No alcohol, no tobacco\n    - However, I truly think there are some nice cognitive enhancers out there. I will try anything once :)\n",
+              "start_index": 8959,
+              "end_index": 9247,
+              "token_count": 70,
+              "length": 288
+            },
+            {
+              "id": 16,
+              "text": "- Worldwide Progress\n    - Most of us are focusing on the wrong thing. \"The best minds of my generation are thinking about how to make people click ads\". Too much consumption, shallow production has become easy, and most people's attention span and focus have been reduced to smithereens.\n    - There is immense potential in what's to come, but very few will truly grok them. Most will engage in ultra-specific improvements that really won't move the needle by much. I know that we have hammers everywhere these days, but most things just aren't nails. Heck, at some point you run out of things to nail!\n    - Many are limiting their ideas to the virtual world, more specifically, in terms of mobile apps and websites. But there's so much more we can do than build another todo list app!\n- Meaning\n    - I think this world is a simulation, and I theorize that every one of us exist simply to gather different experiences of the world for a higher being. A mark of an intelligent person is trying to derive different answers to a solved problem. To think, \"why is this answer correct?\" and \"How else can this problem be solved?\". Hence, we are simply methods for this being to experience the world in every subjective way possible. The tree, the ant, the cat, the blind man- all feed into a single system.\n",
+              "start_index": 9247,
+              "end_index": 10552,
+              "token_count": 299,
+              "length": 1305
+            },
+            {
+              "id": 17,
+              "text": "- Mental Difference\n    - [[I Have ADHD]]",
+              "start_index": 10552,
+              "end_index": 10593,
+              "token_count": 12,
+              "length": 41
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 17,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# My Eccentricities\n- Food\n    - I either eat one meal a day or in an 8-hour window or do 1-2 day fasts.\n    - More salt > less salt. What is problematic is all the sodium contained in modern junk.\n    - Sugar is poison\n    - Fat is not evil\n    - Absolutely enjoy eating all kinds of nuts & berries\n    - I avoid processed foods/ refined carbs / vegetable oils (especially soya)\n    - I eat wholegrain stuff (to ensure above, and also because it's just much more delicious and filling)\n    - I chew my food many more than the average person to ensure proper absorption and dental health.\n    - I eat a way larger proportion of meat/greens compared to rice/carbs\n- Sleep\n    - My sleep schedule is usually biphasic. I take a nap between 4-7, then sleep at 2ish in the morn.\n    - I sleep without a pillow.\n    - I intend to start sleeping on the floor with a futon, and get rid of my bedframe.\n- Grooming\n    - I take alternating showers to build my immunity and resistance to cold. I feel rarely cold since, and the number of times I fall sick has drastically fallen.\n    - I haven't used shampoo in nearly a year (curly, dry hair means #nopoo is [fortunately] obligatory)\n    - I don't think you should brush your teeth more than once a day, unless if you have sugar/acidic stuff (in which case, you brush your teeth right after)\n",
+              "start_index": 0,
+              "end_index": 1332,
+              "token_count": 348,
+              "length": 1332
+            },
+            {
+              "id": 2,
+              "text": "- Education\n    - I learn through podcasts, blogs, books, [[Youtube]] videos\n    - I think school shouldn't exist, because it is utterly inefficient at education. In fact, that is not even its primary aim- that would be babysitting, since we can't even take the time to teach our kids how to be self-sufficient.\n    - I think polymathy should be a requirement instead of being looked down upon\n    - Learn to understand, not to impress.\n- Breathing\n    - Breathe through your stomach, your shoulders shouldn't rise\n    - Adopt the Wim Hoff method\n- Digital Minimalism\n    - I am inactive on FB and IG. I only log in when I have something of value to say/post (or to reach out to someone unavailable on other platforms). This was not the case in the past, as my vanity was quite high.\n    - I use Whatsapp only for calls and group messages.\n    - Other platforms I regularly check into: [[Telegram]] (once/day), LinkedIn (1-2/wk), Reddit (1-2)\n    - See below for more.\n- [Getting My Life Together: An Adventure in Adapting to Remote Work, Adopting Digital Minimalism and Regaining Peace of Mind During Quarantine.](https://www.notion.so/Getting-My-Life-Together-An-Adventure-in-Adapting-to-Remote-Work-Adopting-Digital-Minimalism-and-R-e64f1f82a37044658fba7534c5f5dc5f)\n- Socialisation\n    - I believe that we are currently overstimulated. Humans don't really need to talk to each other to this extent.\n    - I try to add value and fun for both sides in all my interactions with others\n    - When doing business with someone, one must first and foremost consider their character, whenever possible\n    - I try not to socialize with people outside my physical proximity everyday. Just 2-3 times a day should be enough\n    - I find it very hard to tune into the feelings of other people if I get interrupted during my work, or right after. There's something about leaning into my thinking side that messes me up, and my interactions end up feeling robotic.\n",
+              "start_index": 1332,
+              "end_index": 3287,
+              "token_count": 509,
+              "length": 1955
+            },
+            {
+              "id": 3,
+              "text": "- Music\n    - 99% of my music artists are non-mainstream\n    - I listen to music pretty much daily. Have put in thousands of hours of listening at this point.\n    - I think good music can be found anywhere, regardless of genre\n    - The best tracks have both strong rhythm and marvelous prose.\n    - I try not to listen to music with strong vocals while working, as it tends to shut down my inner voice. I can easily start using it as a distraction.\n    - I don't listen to music while waiting/travelling. Basically, don't use it to run away from the world.\n    - I think music is best used for mindless tasks that can be quite physically demanding, like exercise, running, cleaning the house, cooking, etc.\n    - The words we listen to affect us subconsciously. Those thrashy lyrics about sex and drugs will eventually influence your thoughts and actions. On a similar note, check out [[Moran Cerf]]'s work experiments for curbing nicotine addiction.\n- Sound\n    - I think our hearing should be protected. We can close our eyes, stop breathing/smelling/eating/touching, but we have little control over our hearing.\n    - Silence is one of the reasons I really like the night.\n    - Silence is essential for remarkable thinking\n- Natural Selection\n    - I think the weak shouldn't be protected. They should be offered the chance to improve their situation, but never should you do the work for them. That only creates complacency and prevents nature from doing its job. Overtime, making people soft only worsens your situation.\n    - Some traits are simply incompatible with our current world, and that will cause people possessing them to suffer. Let's not elongate it or spread it through generations.\n- Fitness\n    - Personally, I find working out in a gym to be the most unnatural and boring method of building muscle. It's like taking Soylent for nutrition.\n    - Better methods: sports, dance. These improve more than just your fitness, and provide some remarkable social advantages.\n",
+              "start_index": 3287,
+              "end_index": 5277,
+              "token_count": 463,
+              "length": 1990
+            },
+            {
+              "id": 4,
+              "text": "- Wealth\n    - I believe in being able to do what you want without any (stupid) restrictions. For this reason, it is important to get your money to make money for you, instead of you renting out your time.\n    - Refuse to be bound by your consumptive habits. The true cost of anything is the amount of life you exchange for it.\n    - I would much rather work on what I love and live a somewhat humble life (until I reach the point of financial independence) than take on a soul-crushing job just so that I can be more indulgent.\n- [[[[Book]]/Elephant in the Brain]]\n    - There are many psychological happenings that both your own brain and that of those around you will try to conceal. You must learn the rules of the game, and the true reasons that drive seemingly irrational behavior. Why we laugh, why we cross our arms, why we engage in art, why schools exist, etc etc.\n- Mind, Body & Soul\n    - [[The Body is A Vessel]]  Like a car, it is simply something that allows our soul to travel through this universe. ",
+              "start_index": 5277,
+              "end_index": 6293,
+              "token_count": 248,
+              "length": 1016
+            },
+            {
+              "id": 5,
+              "text": "For this reason, it is important to keep it in top condition, but never to obsess over your default options. The entity that you consider \"You\" should be the same regardless of the body you inhabit- whether it's the 5-year-old body, a 50-year-old one, or that of someone else. Of course, if you have a bicycle you'll have to go through the biking lanes, and the driving experience differs by machine.\n- Housing\n    - I don't think one should buy houses. They're liabilities that pin you down. ",
+              "start_index": 6293,
+              "end_index": 6786,
+              "token_count": 121,
+              "length": 493
+            },
+            {
+              "id": 6,
+              "text": "You should definitely buy land- that finite resource will continue to rise in value- but not build houses that are too extravagant. I believe it's best to have something you can build back again just as fast as you can break it down.\n    - On this note, I don't think you should live in one place. Would be much better if you established \"bases\" throughout the world, and then rotated between them.\n- Media Consumption\n    - If it doesn't make you think or feel in such a way that you're a better person tomorrow, it's not worth it.\n    - The above means I don't watch any television, most mainstream shows, Snapchat, etc. ",
+              "start_index": 6786,
+              "end_index": 7409,
+              "token_count": 148,
+              "length": 623
+            },
+            {
+              "id": 7,
+              "text": "I do watch movies and animes, but only if they're highly entertaining and rich in ideas.\n    - Twitter = Reddit > [[Youtube]] > Facebook > Instagram > Snapchat > Tiktok\n- Information Density\n    - I curate my feeds all the time. I truly believe in information density, so I look for people and platforms that pack the most punch per unit of attention consumed.\n    - Print has so far been superior to all other mediums in terms of information density. I believe however that transmission is most __efficient__, i.e. the lesson, no matter how small or large, is learned best through video. I wonder if one day we'll come up with a better medium, but until then...\n",
+              "start_index": 7409,
+              "end_index": 8072,
+              "token_count": 157,
+              "length": 663
+            },
+            {
+              "id": 8,
+              "text": "- The Expert Myth\n    - Most experts really aren't experts. There are a lot of frauds out there, and they're increasingly able to get away with it as people get more and more specialized. Just throw in some jargon, arbitrary awards, and titles, and bam, you can start fooling people.\n    - When someone's speech is more concise than their writing, you know you're looking at a charlatan.\n- Work Hard to Succeed\n    - You should only work hard after finding something worth working on and determining that there's no more efficient way to accomplish the task at hand\n    - Therefore, do not aim to be the best, aim to be the only. Be the person who is __known__ for the stuff you do. One very specific problem- you're the only person they'll come to ask for advice from. You will attract incredible amounts of luck this way.\n- Stimulants\n    - The modern devil is cheap dopamine - @naval\n    - Anything that brings you up fast sets you up for a tumultuous crash.\n    - As such, I avoid regular consumption of caffeine (who am I kidding :)\n    - No alcohol, no tobacco\n    - However, I truly think there are some nice cognitive enhancers out there. I will try anything once :)\n- Worldwide Progress\n    - Most of us are focusing on the wrong thing. \"The best minds of my generation are thinking about how to make people click ads\". Too much consumption, shallow production has become easy, and most people's attention span and focus have been reduced to smithereens.\n    - There is immense potential in what's to come, but very few will truly grok them. Most will engage in ultra-specific improvements that really won't move the needle by much. ",
+              "start_index": 8072,
+              "end_index": 9714,
+              "token_count": 390,
+              "length": 1642
+            },
+            {
+              "id": 9,
+              "text": "I know that we have hammers everywhere these days, but most things just aren't nails. Heck, at some point you run out of things to nail!\n    - Many are limiting their ideas to the virtual world, more specifically, in terms of mobile apps and websites. But there's so much more we can do than build another todo list app!\n- Meaning\n    - I think this world is a simulation, and I theorize that every one of us exist simply to gather different experiences of the world for a higher being. A mark of an intelligent person is trying to derive different answers to a solved problem. To think, \"why is this answer correct?\" and \"How else can this problem be solved?\". Hence, we are simply methods for this being to experience the world in every subjective way possible. The tree, the ant, the cat, the blind man- all feed into a single system.\n- Mental Difference\n    - [[I Have ADHD]]",
+              "start_index": 9714,
+              "end_index": 10593,
+              "token_count": 206,
+              "length": 879
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 9,
+          "has_gaps": false
+        }
+      }
+    },
+    {
+      "uid": "OMcsjwL2u",
+      "title": "cervotonus",
+      "linearized_text": "# cervotonus\n- Composition\n    - [[Gingko Biloba]] 300mg (unknown concentration of stuff)\n    - [[Siberian Ginseng]] 300mg\n    - [[Vitamin B5]] 6mg \n    - [[Vitamin B6]] 1.4mg ",
+      "text_length": 176,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 12,
+          "uid": "OMcsjwL2u"
+        },
+        {
+          "start": 13,
+          "end": 26,
+          "uid": "Erf9xFG5f"
+        },
+        {
+          "start": 27,
+          "end": 89,
+          "uid": "QfCidCo7b"
+        },
+        {
+          "start": 90,
+          "end": 122,
+          "uid": "a1hjWpkhe"
+        },
+        {
+          "start": 123,
+          "end": 148,
+          "uid": "jitzIvbvw"
+        },
+        {
+          "start": 149,
+          "end": 176,
+          "uid": "MUu262W0n"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# cervotonus\n- Composition\n    - [[Gingko Biloba]] 300mg (unknown concentration of stuff)\n    - [[Siberian Ginseng]] 300mg\n    - [[Vitamin B5]] 6mg \n    - [[Vitamin B6]] 1.4mg ",
+              "start_index": 0,
+              "end_index": 176,
+              "token_count": 66,
+              "length": 176
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# cervotonus\n- Composition\n    - [[Gingko Biloba]] 300mg (unknown concentration of stuff)\n    - [[Siberian Ginseng]] 300mg\n    - [[Vitamin B5]] 6mg \n    - [[Vitamin B6]] 1.4mg ",
+              "start_index": 0,
+              "end_index": 176,
+              "token_count": 66,
+              "length": 176
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        }
+      }
+    },
+    {
+      "uid": "vehMko73Y",
+      "title": "Being in Touch with the Masses",
+      "linearized_text": "# Being in Touch with the Masses\n- I have to be careful to not lose sight of how others lead their lives. I sometimes start doing things over a long time/pick up eccentric habits, and assume that what's now natural for me must be so for others as well, that people change at the same time and pace that I do- that couldn't be further from the truth. Is there an efficient way to not lose sight of the path trodden by others while walking your own? #questions\n- If you lose touch with how those around you live, you will not know their problems. While you might think this keeps your mind unworried, it also means that when it's time to figure out which problems are worth fixing and will make you a billionaire, you'll be stumped. You don't know the struggles of others. You don't know their desires. You don't know how they think. You don't know how to communicate with them. You don't know how they perceive you. Ignorance is not always bliss.",
+      "text_length": 945,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 32,
+          "uid": "vehMko73Y"
+        },
+        {
+          "start": 33,
+          "end": 458,
+          "uid": "Sq-C0XZJr"
+        },
+        {
+          "start": 459,
+          "end": 945,
+          "uid": "BvoWbzNn0"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# Being in Touch with the Masses\n- I have to be careful to not lose sight of how others lead their lives. I sometimes start doing things over a long time/pick up eccentric habits, and assume that what's now natural for me must be so for others as well, that people change at the same time and pace that I do- that couldn't be further from the truth. Is there an efficient way to not lose sight of the path trodden by others while walking your own? #questions\n- If you lose touch with how those around you live, you will not know their problems. While you might think this keeps your mind unworried, it also means that when it's time to figure out which problems are worth fixing and will make you a billionaire, you'll be stumped. You don't know the struggles of others. You don't know their desires. You don't know how they think. You don't know how to communicate with them. You don't know how they perceive you. Ignorance is not always bliss.",
+              "start_index": 0,
+              "end_index": 945,
+              "token_count": 225,
+              "length": 945
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# Being in Touch with the Masses\n- I have to be careful to not lose sight of how others lead their lives. I sometimes start doing things over a long time/pick up eccentric habits, and assume that what's now natural for me must be so for others as well, that people change at the same time and pace that I do- that couldn't be further from the truth. Is there an efficient way to not lose sight of the path trodden by others while walking your own? #questions\n- If you lose touch with how those around you live, you will not know their problems. While you might think this keeps your mind unworried, it also means that when it's time to figure out which problems are worth fixing and will make you a billionaire, you'll be stumped. You don't know the struggles of others. You don't know their desires. You don't know how they think. You don't know how to communicate with them. You don't know how they perceive you. Ignorance is not always bliss.",
+              "start_index": 0,
+              "end_index": 945,
+              "token_count": 225,
+              "length": 945
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        }
+      }
+    },
+    {
+      "uid": "9V7RA-gjH",
+      "title": "The Sin That Is Empathy",
+      "linearized_text": "# The Sin That Is Empathy\n- Probably one of the most common and gravest sins of humanity is our obsession with empathy.\n- While you might have the best of intentions, \"try(ing) to put yourself in someone else's shoes\" is terrible advice.\n- Sure, you can somewhat grasp the feeling of wearing a pair that's a couple sizes bigger: walking will be uncomfortable, and maybe they'll come off sometimes. Overall, the looser pair will manage to do its job.\n- Now imagine fitting your hobbit feet into safety boots that were two- or three- sizes smaller.\n- The change in magnitude is the same as before-- a couple sizes-- but would they still serve their intended purpose? Would they be protecting your feet? \n- Now imagine if the person you're trying to empathize with had a couple of extra toes, or no feet at all!\n- Acknowledge that the reality of the world the other person lives in can operate on fundamentally different first principles.\n- Learn what they are, build upon them, *then* draw your conclusions.\n- And it's okay if you don't understand; at least the other person will feel heard.\n- Don't try to fit yourself in someone else's shoes. Take a good hard look at their feet instead.",
+      "text_length": 1187,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 25,
+          "uid": "9V7RA-gjH"
+        },
+        {
+          "start": 26,
+          "end": 119,
+          "uid": "ktngQAoWz"
+        },
+        {
+          "start": 120,
+          "end": 237,
+          "uid": "kXZQ5E182"
+        },
+        {
+          "start": 238,
+          "end": 449,
+          "uid": "OZib-FJCc"
+        },
+        {
+          "start": 450,
+          "end": 546,
+          "uid": "whzxLlu9c"
+        },
+        {
+          "start": 547,
+          "end": 701,
+          "uid": "HdJkrQtQk"
+        },
+        {
+          "start": 702,
+          "end": 808,
+          "uid": "EALnt4QLg"
+        },
+        {
+          "start": 809,
+          "end": 935,
+          "uid": "fUC2bllA-"
+        },
+        {
+          "start": 936,
+          "end": 1005,
+          "uid": "cPbFPVchI"
+        },
+        {
+          "start": 1006,
+          "end": 1089,
+          "uid": "ESKI1xwWa"
+        },
+        {
+          "start": 1090,
+          "end": 1187,
+          "uid": "K_SFNhyY7"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# The Sin That Is Empathy\n- Probably one of the most common and gravest sins of humanity is our obsession with empathy.\n- While you might have the best of intentions, \"try(ing) to put yourself in someone else's shoes\" is terrible advice.\n- Sure, you can somewhat grasp the feeling of wearing a pair that's a couple sizes bigger: walking will be uncomfortable, and maybe they'll come off sometimes. ",
+              "start_index": 0,
+              "end_index": 398,
+              "token_count": 91,
+              "length": 398
+            },
+            {
+              "id": 2,
+              "text": "Overall, the looser pair will manage to do its job.\n- Now imagine fitting your hobbit feet into safety boots that were two- or three- sizes smaller.\n- The change in magnitude is the same as before-- a couple sizes-- but would they still serve their intended purpose? Would they be protecting your feet? \n- Now imagine if the person you're trying to empathize with had a couple of extra toes, or no feet at all!\n- Acknowledge that the reality of the world the other person lives in can operate on fundamentally different first principles.\n- Learn what they are, build upon them, *then* draw your conclusions.\n- And it's okay if you don't understand; at least the other person will feel heard.\n- Don't try to fit yourself in someone else's shoes. Take a good hard look at their feet instead.",
+              "start_index": 398,
+              "end_index": 1187,
+              "token_count": 185,
+              "length": 789
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 2,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# The Sin That Is Empathy\n- Probably one of the most common and gravest sins of humanity is our obsession with empathy.\n- While you might have the best of intentions, \"try(ing) to put yourself in someone else's shoes\" is terrible advice.\n- Sure, you can somewhat grasp the feeling of wearing a pair that's a couple sizes bigger: walking will be uncomfortable, and maybe they'll come off sometimes. Overall, the looser pair will manage to do its job.\n- Now imagine fitting your hobbit feet into safety boots that were two- or three- sizes smaller.\n- The change in magnitude is the same as before-- a couple sizes-- but would they still serve their intended purpose? Would they be protecting your feet? \n- Now imagine if the person you're trying to empathize with had a couple of extra toes, or no feet at all!\n- Acknowledge that the reality of the world the other person lives in can operate on fundamentally different first principles.\n- Learn what they are, build upon them, *then* draw your conclusions.\n- And it's okay if you don't understand; at least the other person will feel heard.\n- Don't try to fit yourself in someone else's shoes. Take a good hard look at their feet instead.",
+              "start_index": 0,
+              "end_index": 1187,
+              "token_count": 276,
+              "length": 1187
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        }
+      }
+    },
+    {
+      "uid": "05-19-2021",
+      "title": "May 19th, 2021",
+      "linearized_text": "# May 19th, 2021\n- There are visual thinkers, spatial thinkers, and then there are smellers.\n    - No matter how expensive the perfume bottle, I'm not going to go near it if it's in a garbage dump\n    - or I might be especially averse to Durians\n- The explorer follows his nose, the finder leads it\n    - {{[[drawing]]}}\n- Idea of separating your previous blocks and assigning them to a distinct entity- \"20-year-old\" me\n    - Then comparing systems, thoughts, judgements\n        - Similar to Billie Eillish interviews with the same questions every year\n- Metadata, especially in filtering\n- Block carousel for inline references\n    - main advantage is that you're separating the location (or the type, as we'll later see :)) of the reference \n        - This also could make UI more intuitive for nested inline references\n        - and possibly for the change we're making with block refs\n            - at which point you might no want to open all the block refs at once, and make it switchable instad\n        - And then for comments, you can separate that out as well\n            - {{[[drawing]]}}\n    - [[Breakthrough]] It doesn't have to be clickable\n        - It can be like those scrollable table of contents\n- Introverted feeling means I don't know what I want\n    - But I know when I see it",
+      "text_length": 1297,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 16,
+          "uid": "05-19-2021"
+        },
+        {
+          "start": 17,
+          "end": 92,
+          "uid": "LanknQD9c"
+        },
+        {
+          "start": 93,
+          "end": 196,
+          "uid": "Ojye0VWVb"
+        },
+        {
+          "start": 197,
+          "end": 245,
+          "uid": "xwomuo1OB"
+        },
+        {
+          "start": 246,
+          "end": 298,
+          "uid": "a6KFQ_zB-"
+        },
+        {
+          "start": 299,
+          "end": 320,
+          "uid": "YEvbeDGWl"
+        },
+        {
+          "start": 321,
+          "end": 420,
+          "uid": "mb9sBC4QJ"
+        },
+        {
+          "start": 421,
+          "end": 471,
+          "uid": "0BOZbHAEH"
+        },
+        {
+          "start": 472,
+          "end": 553,
+          "uid": "XOQArlJej"
+        },
+        {
+          "start": 554,
+          "end": 589,
+          "uid": "FeIYfUuy5"
+        },
+        {
+          "start": 590,
+          "end": 628,
+          "uid": "drl_an7m7"
+        },
+        {
+          "start": 629,
+          "end": 743,
+          "uid": "oGdc63QCA"
+        },
+        {
+          "start": 744,
+          "end": 821,
+          "uid": "oMeD9RDWK"
+        },
+        {
+          "start": 822,
+          "end": 888,
+          "uid": "wlhorpjas"
+        },
+        {
+          "start": 889,
+          "end": 1001,
+          "uid": "ygFb26L2E"
+        },
+        {
+          "start": 1002,
+          "end": 1068,
+          "uid": "Rczn-9axz"
+        },
+        {
+          "start": 1069,
+          "end": 1098,
+          "uid": "S-2erZkWu"
+        },
+        {
+          "start": 1099,
+          "end": 1153,
+          "uid": "fQhGrLjwy"
+        },
+        {
+          "start": 1154,
+          "end": 1213,
+          "uid": "dk-8GQ1_-"
+        },
+        {
+          "start": 1214,
+          "end": 1266,
+          "uid": "4rsBt5b8z"
+        },
+        {
+          "start": 1267,
+          "end": 1297,
+          "uid": "ooQGZjwcG"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# May 19th, 2021\n- There are visual thinkers, spatial thinkers, and then there are smellers.\n    - No matter how expensive the perfume bottle, I'm not going to go near it if it's in a garbage dump\n    - or I might be especially averse to Durians\n- The explorer follows his nose, the finder leads it\n    - {{[[drawing]]}}\n- Idea of separating your previous blocks and assigning them to a distinct entity- \"20-year-old\" me\n    - Then comparing systems, thoughts, judgements\n        - Similar to Billie Eillish interviews with the same questions every year\n- Metadata, especially in filtering\n",
+              "start_index": 0,
+              "end_index": 590,
+              "token_count": 145,
+              "length": 590
+            },
+            {
+              "id": 2,
+              "text": "- Block carousel for inline references\n    - main advantage is that you're separating the location (or the type, as we'll later see :)) of the reference \n        - This also could make UI more intuitive for nested inline references\n        - and possibly for the change we're making with block refs\n            - at which point you might no want to open all the block refs at once, and make it switchable instad\n        - And then for comments, you can separate that out as well\n            - {{[[drawing]]}}\n    - [[Breakthrough]] It doesn't have to be clickable\n        - It can be like those scrollable table of contents\n",
+              "start_index": 590,
+              "end_index": 1214,
+              "token_count": 143,
+              "length": 624
+            },
+            {
+              "id": 3,
+              "text": "- Introverted feeling means I don't know what I want\n    - But I know when I see it",
+              "start_index": 1214,
+              "end_index": 1297,
+              "token_count": 23,
+              "length": 83
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 3,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# May 19th, 2021\n- There are visual thinkers, spatial thinkers, and then there are smellers.\n    - No matter how expensive the perfume bottle, I'm not going to go near it if it's in a garbage dump\n    - or I might be especially averse to Durians\n- The explorer follows his nose, the finder leads it\n    - {{[[drawing]]}}\n- Idea of separating your previous blocks and assigning them to a distinct entity- \"20-year-old\" me\n    - Then comparing systems, thoughts, judgements\n        - Similar to Billie Eillish interviews with the same questions every year\n- Metadata, especially in filtering\n- Block carousel for inline references\n    - main advantage is that you're separating the location (or the type, as we'll later see :)) of the reference \n        - This also could make UI more intuitive for nested inline references\n        - and possibly for the change we're making with block refs\n            - at which point you might no want to open all the block refs at once, and make it switchable instad\n        - And then for comments, you can separate that out as well\n            - {{[[drawing]]}}\n    - [[Breakthrough]] It doesn't have to be clickable\n        - It can be like those scrollable table of contents\n- Introverted feeling means I don't know what I want\n    - But I know when I see it",
+              "start_index": 0,
+              "end_index": 1297,
+              "token_count": 311,
+              "length": 1297
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        }
+      }
+    },
+    {
+      "uid": "10-17-2024",
+      "title": "October 17th, 2024",
+      "linearized_text": "# October 17th, 2024\n- Arrived in [[Bangalore]]\n- Was awake from \n- 12:10 \n    - [[Things to Do]]\n        - Relax, rewind, take a shower. Take a look at the shower, take a look at the money I have, how much more I need from [[Dbs]]. \n        - Hard deadlines:",
+      "text_length": 259,
+      "uid_map": [
+        {
+          "start": 0,
+          "end": 20,
+          "uid": "10-17-2024"
+        },
+        {
+          "start": 21,
+          "end": 47,
+          "uid": "OKxtt6Ti_"
+        },
+        {
+          "start": 48,
+          "end": 65,
+          "uid": "90OpYS_GM"
+        },
+        {
+          "start": 66,
+          "end": 74,
+          "uid": "eKpdbHPuG"
+        },
+        {
+          "start": 75,
+          "end": 97,
+          "uid": "fBLdq1ZbN"
+        },
+        {
+          "start": 98,
+          "end": 233,
+          "uid": "xqTC2VdT4"
+        },
+        {
+          "start": 234,
+          "end": 259,
+          "uid": "P1vmXQ--Q"
+        }
+      ],
+      "configs": {
+        "default": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "skip_window": 1,
+            "min_chunk_size": 50
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# October 17th, 2024\n- Arrived in [[Bangalore]]\n- Was awake from \n- 12:10 \n    - [[Things to Do]]\n        - Relax, rewind, take a shower. Take a look at the shower, take a look at the money I have, how much more I need from [[Dbs]]. \n        - Hard deadlines:",
+              "start_index": 0,
+              "end_index": 259,
+              "token_count": 84,
+              "length": 259
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        },
+        "roam_optimized": {
+          "params": {
+            "embedding_model": "ibm-granite/granite-embedding-small-english-r2",
+            "threshold": 0.6,
+            "chunk_size": 800,
+            "skip_window": 2,
+            "min_chunk_size": 50,
+            "similarity_window": 7,
+            "min_sentences_per_chunk": 2
+          },
+          "chunks": [
+            {
+              "id": 1,
+              "text": "# October 17th, 2024\n- Arrived in [[Bangalore]]\n- Was awake from \n- 12:10 \n    - [[Things to Do]]\n        - Relax, rewind, take a shower. Take a look at the shower, take a look at the money I have, how much more I need from [[Dbs]]. \n        - Hard deadlines:",
+              "start_index": 0,
+              "end_index": 259,
+              "token_count": 84,
+              "length": 259
+            }
+          ],
+          "gaps": [],
+          "total_chunks": 1,
+          "has_gaps": false
+        }
+      }
+    }
+  ]
+}
