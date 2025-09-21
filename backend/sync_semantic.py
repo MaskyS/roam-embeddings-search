@@ -46,7 +46,7 @@ voyageai.api_key = settings.voyageai_api_key
 voyage_client = voyageai.Client()
 
 # --- Constants ---
-BATCH_SIZE = 10 # Pages per Roam pull-many request
+BATCH_SIZE = 20 # Pages per Roam pull-many request
 COLLECTION_NAME = "RoamSemanticChunks" # Weaviate class names are capitalized
 CHUNKER_SERVICE_URL = "http://chunker:8003"  # Docker service name
 CHUNKER_RETRY_ATTEMPTS = 3
@@ -113,18 +113,23 @@ async def pull_many_pages(uids: List[str]) -> List[Optional[Dict]]:
 
 # --- Weaviate Schema ---
 
-def ensure_weaviate_schema(client: weaviate.Client):
+def ensure_weaviate_schema(client: weaviate.Client, recreate: bool = False):
     """Ensure the Weaviate collection exists and has the correct schema."""
     print(f"[Weaviate] Ensuring collection '{COLLECTION_NAME}' exists...")
     if client.collections.exists(COLLECTION_NAME):
-        print(f"[Weaviate] Collection '{COLLECTION_NAME}' already exists.")
-        return
+        if recreate:
+            print(f"[Weaviate] Recreating collection '{COLLECTION_NAME}' with updated configuration...")
+            client.collections.delete(COLLECTION_NAME)
+        else:
+            print(f"[Weaviate] Collection '{COLLECTION_NAME}' already exists.")
+            return
 
     print(f"[Weaviate] Creating collection '{COLLECTION_NAME}'...")
     try:
         client.collections.create(
             name=COLLECTION_NAME,
             vectorizer_config=Configure.Vectorizer.none(),
+            reranker_config=Configure.Reranker.voyageai(model="rerank-2-lite"),
             properties=[
                 Property(name="chunk_text_preview", data_type=DataType.TEXT),
                 Property(name="primary_uid", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
@@ -203,7 +208,7 @@ class SimpleChunk:
 
 # --- Main Sync Logic ---
 
-async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional[int] = None):
+async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional[int] = None, recreate_collection: bool = False):
     """
     Main function to run the semantic sync process.
     """
@@ -237,8 +242,8 @@ async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional
         if clear_existing:
             print(f"[sync_semantic] Step 2: Deleting collection '{COLLECTION_NAME}'...")
             client.collections.delete(COLLECTION_NAME)
-        
-        ensure_weaviate_schema(client)
+
+        ensure_weaviate_schema(client, recreate=recreate_collection)
         collection = client.collections.get(COLLECTION_NAME)
 
         # Step 3: Wait for chunker service to be ready
@@ -250,9 +255,9 @@ async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional
             return
         step3_time = time.time() - step3_start
 
-        # Step 4: Process pages in batches
+        # Step 4: Process pages in batches with concurrent pipeline
         print(f"[sync_semantic] Step 4: Processing {total_pages} pages in batches of {BATCH_SIZE}...")
-        
+
         # Global statistics
         total_documents_added = 0
         total_chunks_created = 0  # Total chunks across all pages
@@ -262,147 +267,205 @@ async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional
         total_chunk_time = 0
         total_voyageai_time = 0
         total_weaviate_time = 0
+        total_pipeline_time = 0
 
-        for i in range(0, total_pages, BATCH_SIZE):
+        # Helper function for concurrent page processing
+        async def process_batch_concurrently(batch_uids, batch_num, start_page_num):
+            """Process a batch with page-level concurrency using producer-consumer pattern."""
+            nonlocal total_documents_added, total_chunks_created
+            nonlocal total_linearize_time, total_chunk_time, total_voyageai_time, total_weaviate_time
+
             batch_start_time = time.time()
-            batch_uids = all_page_uids[i:i + BATCH_SIZE]
-            progress = (i + len(batch_uids)) / total_pages * 100
-            print(f"\n[sync_semantic] Processing batch {i//BATCH_SIZE + 1}, pages {i+1}-{i+len(batch_uids)} ({progress:.1f}%)...", flush=True)
 
+            # Fetch all pages for this batch
             roam_start = time.time()
             pages_data = await pull_many_pages(batch_uids)
-            total_roam_time += time.time() - roam_start
+            batch_roam_time = time.time() - roam_start
 
-            batch_page_chunks: List[List[str]] = []
-            flat_objects_for_weaviate: List[Dict[str, Any]] = []
+            # Queue for passing processed pages to consumer
+            page_queue = asyncio.Queue(maxsize=5)  # Limit memory usage
+
+            # Statistics for this batch
+            batch_docs_added = 0
             batch_chunks_created = 0
 
-            processing_start = time.time()
-            batch_linearize_time = 0
-            batch_chunk_time = 0
+            # Producer: Process pages sequentially (chunk one at a time)
+            async def producer():
+                nonlocal batch_chunks_created
 
-            for page_data in pages_data:
-                if not page_data or not page_data.get(':block/uid'):
-                    continue
-
-                page_title = page_data.get(':node/title', 'Untitled')
-                page_uid = page_data.get(':block/uid')
-
-                # Always index the page title itself as a document
-                page_title_obj = {
-                    "properties": {
-                        "chunk_text_preview": page_title,
-                        "primary_uid": page_uid,
-                        "page_title": page_title,
-                        "page_uid": page_uid,
-                        "document_type": "page",
-                        "sync_version": "semantic_v2_weaviate"
-                    },
-                    "uuid": str(uuid.uuid4())
-                }
-                flat_objects_for_weaviate.append(page_title_obj)
-                batch_page_chunks.append([page_title])
-
-                if not page_data.get(':block/children'):
-                    continue
-
-                # Time linearization
-                linearize_start = time.time()
-                linearized_text, uid_map = linearize_page_markdown_style(page_data)
-                batch_linearize_time += time.time() - linearize_start
-
-                if not linearized_text.strip():
-                    continue
-
-                try:
-                    # Time chunking via service
-                    chunk_start = time.time()
-                    chunk_results = await chunk_text_via_service(linearized_text)
-                    batch_chunk_time += time.time() - chunk_start
-
-                    if not chunk_results:
+                for page_idx, page_data in enumerate(pages_data):
+                    if not page_data or not page_data.get(':block/uid'):
                         continue
 
-                    # Convert service results to chunk objects
-                    chunks = [SimpleChunk(
-                        text=c["text"],
-                        start_index=c["start_index"],
-                        end_index=c["end_index"],
-                        token_count=c["token_count"]
-                    ) for c in chunk_results]
+                    page_title = page_data.get(':node/title', 'Untitled')
+                    page_uid = page_data.get(':block/uid')
 
-                    batch_chunks_created += len(chunks)
-                    batch_page_chunks.append([chunk.text for chunk in chunks])
+                    # Prepare page document
+                    page_weaviate_objs = []
+                    page_chunks_texts = [page_title]  # Always include title
 
-                    for chunk in chunks:
-                        # Find all source UIDs that overlap with the chunk's character range
-                        source_uids = {mapping['uid'] for mapping in uid_map if chunk.start_index < mapping['end'] and chunk.end_index > mapping['start']}
-                        if not source_uids:
-                            continue
+                    # Add page title as a document
+                    page_weaviate_objs.append({
+                        "properties": {
+                            "chunk_text_preview": page_title,
+                            "primary_uid": page_uid,
+                            "page_title": page_title,
+                            "page_uid": page_uid,
+                            "document_type": "page",
+                            "sync_version": "semantic_v2_weaviate"
+                        },
+                        "uuid": str(uuid.uuid4())
+                    })
 
-                        flat_objects_for_weaviate.append({
-                            "properties": {
-                                "chunk_text_preview": chunk.text,
-                                "primary_uid": next(iter(source_uids)),
-                                "page_title": page_title,
-                                "page_uid": page_uid,
-                                "document_type": "chunk",
-                                "chunk_token_count": chunk.token_count,
-                                "source_uids_json": json.dumps(list(source_uids)),
-                                "sync_version": "semantic_v2_weaviate"
-                            },
-                            "uuid": str(uuid.uuid4())
-                        })
+                    # Process children if they exist
+                    if page_data.get(':block/children'):
+                        # Linearize
+                        linearize_start = time.time()
+                        linearized_text, uid_map = linearize_page_markdown_style(page_data)
+                        nonlocal total_linearize_time
+                        total_linearize_time += time.time() - linearize_start
 
-                except Exception as e:
-                    print(f"  ✗ Error chunking page '{page_title}': {e}")
+                        if linearized_text.strip():
+                            try:
+                                # Chunk via service
+                                chunk_start = time.time()
+                                chunk_results = await chunk_text_via_service(linearized_text)
+                                nonlocal total_chunk_time
+                                total_chunk_time += time.time() - chunk_start
 
-            total_processing_time += time.time() - processing_start
-            total_linearize_time += batch_linearize_time
-            total_chunk_time += batch_chunk_time
+                                if chunk_results:
+                                    # Convert to chunk objects
+                                    chunks = [SimpleChunk(
+                                        text=c["text"],
+                                        start_index=c["start_index"],
+                                        end_index=c["end_index"],
+                                        token_count=c["token_count"]
+                                    ) for c in chunk_results]
+
+                                    batch_chunks_created += len(chunks)
+                                    page_chunks_texts.extend([chunk.text for chunk in chunks])
+
+                                    # Create Weaviate objects for chunks
+                                    for chunk in chunks:
+                                        source_uids = {mapping['uid'] for mapping in uid_map
+                                                     if chunk.start_index < mapping['end']
+                                                     and chunk.end_index > mapping['start']}
+                                        if source_uids:
+                                            # Select the most representative UID for this chunk
+                                            # Prefer block UIDs over page UIDs (pages don't have immediate parents)
+                                            non_page_uids = source_uids - {page_uid}
+                                            if non_page_uids:
+                                                # If we have block UIDs, use the first one
+                                                primary_uid = next(iter(non_page_uids))
+                                            else:
+                                                # Fall back to page UID if chunk only contains page title
+                                                primary_uid = page_uid
+
+                                            page_weaviate_objs.append({
+                                                "properties": {
+                                                    "chunk_text_preview": chunk.text,
+                                                    "primary_uid": primary_uid,
+                                                    "page_title": page_title,
+                                                    "page_uid": page_uid,
+                                                    "document_type": "chunk",
+                                                    "chunk_token_count": chunk.token_count,
+                                                    "source_uids_json": json.dumps(list(source_uids)),
+                                                    "sync_version": "semantic_v2_weaviate"
+                                                },
+                                                "uuid": str(uuid.uuid4())
+                                            })
+                            except Exception as e:
+                                print(f"  ✗ Error chunking page '{page_title}': {e}")
+
+                    # Put processed page in queue for embedding/storage
+                    await page_queue.put({
+                        'page_title': page_title,
+                        'chunks_texts': page_chunks_texts,
+                        'weaviate_objs': page_weaviate_objs,
+                        'page_num': start_page_num + page_idx
+                    })
+
+                # Signal completion
+                await page_queue.put(None)
+
+            # Consumer: Embed and store pages as they become available
+            async def consumer():
+                nonlocal batch_docs_added
+
+                while True:
+                    item = await page_queue.get()
+                    if item is None:  # Producer finished
+                        break
+
+                    # Embed this page's chunks
+                    voyageai_start = time.time()
+                    try:
+                        # Create batch for this page (page title + chunks)
+                        voyage_result = voyage_client.contextualized_embed(
+                            inputs=[item['chunks_texts']],  # Single page as batch
+                            model=settings.voyageai_context_model,
+                            input_type="document"
+                        )
+                        embeddings = voyage_result.results[0].embeddings
+
+                        # Assign embeddings to objects
+                        for idx, obj in enumerate(item['weaviate_objs']):
+                            if idx < len(embeddings):
+                                obj["vector"] = embeddings[idx]
+
+                        nonlocal total_voyageai_time
+                        total_voyageai_time += time.time() - voyageai_start
+
+                        # Store in Weaviate
+                        weaviate_start = time.time()
+                        with collection.batch.fixed_size(batch_size=100) as batch:
+                            for obj in item['weaviate_objs']:
+                                if "vector" in obj:
+                                    batch.add_object(
+                                        properties=obj["properties"],
+                                        uuid=obj["uuid"],
+                                        vector=obj["vector"]
+                                    )
+
+                        if collection.batch.failed_objects:
+                            print(f"  ✗ Failed to import objects for page {item['page_num']}", flush=True)
+                        else:
+                            batch_docs_added += len(item['weaviate_objs'])
+
+                        nonlocal total_weaviate_time
+                        total_weaviate_time += time.time() - weaviate_start
+
+                    except Exception as e:
+                        print(f"  ✗ Failed to embed/store page '{item.get('page_title', 'Unknown')}': {e}")
+
+            # Run producer and consumer concurrently
+            await asyncio.gather(
+                producer(),
+                consumer()
+            )
+
+            # Update global statistics
+            total_documents_added += batch_docs_added
             total_chunks_created += batch_chunks_created
 
-            if not batch_page_chunks:
-                continue
-            
-            voyageai_start = time.time()
-            try:
-                print(f"  ↳ Getting {sum(len(p) for p in batch_page_chunks)} embeddings from Voyage AI...", flush=True)
-                voyage_result = voyage_client.contextualized_embed(
-                    inputs=batch_page_chunks, 
-                    model=settings.voyageai_context_model, 
-                    input_type="document"
-                )
-                flat_embeddings = [emb for res in voyage_result.results for emb in res.embeddings]
+            batch_time = time.time() - batch_start_time
+            print(f"  ✓ Batch {batch_num} complete: {batch_docs_added} documents, {batch_chunks_created} chunks in {batch_time:.1f}s", flush=True)
 
-                for i, obj in enumerate(flat_objects_for_weaviate):
-                    if i < len(flat_embeddings):
-                        obj["vector"] = flat_embeddings[i]
+            return batch_roam_time, batch_time
 
-            except Exception as e:
-                print(f"  ✗ Voyage AI embedding failed: {e}", flush=True)
-                total_voyageai_time += time.time() - voyageai_start
-                continue
-            total_voyageai_time += time.time() - voyageai_start
+        # Process all batches
+        for i in range(0, total_pages, BATCH_SIZE):
+            batch_uids = all_page_uids[i:i + BATCH_SIZE]
+            batch_num = i // BATCH_SIZE + 1
+            progress = (i + len(batch_uids)) / total_pages * 100
+            print(f"\n[sync_semantic] Processing batch {batch_num}, pages {i+1}-{i+len(batch_uids)} ({progress:.1f}%)...", flush=True)
 
-            weaviate_start = time.time()
-            with collection.batch.fixed_size(batch_size=100) as batch:
-                for obj in flat_objects_for_weaviate:
-                    if "vector" in obj:
-                        batch.add_object(
-                            properties=obj["properties"],
-                            uuid=obj["uuid"],
-                            vector=obj["vector"]
-                        )
-            total_weaviate_time += time.time() - weaviate_start
-            
-            if collection.batch.failed_objects:
-                print(f"  ✗ Failed to import {len(collection.batch.failed_objects)} objects.", flush=True)
-                for failed in collection.batch.failed_objects:
-                    print(f"    - {failed.message}", flush=True)
-            else:
-                print(f"  ✓ Added {len(flat_objects_for_weaviate)} documents to Weaviate.", flush=True)
-            total_documents_added += len(flat_objects_for_weaviate)
+            roam_time, pipeline_time = await process_batch_concurrently(batch_uids, batch_num, i+1)
+            total_roam_time += roam_time
+            total_pipeline_time += pipeline_time
+
+        # Calculate processing time (chunking + linearization)
+        total_processing_time = total_chunk_time + total_linearize_time
 
         # Final statistics
         elapsed_time = time.time() - start_time
@@ -419,11 +482,17 @@ async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional
         print(f"    - Getting page UIDs: {step1_time:.2f}s")
         print(f"    - Connecting to chunker service: {step3_time:.2f}s")
         print(f"  - Roam API calls: {total_roam_time:.2f}s ({total_roam_time/elapsed_time*100:.1f}%)")
-        print(f"  - Processing (total): {total_processing_time:.2f}s ({total_processing_time/elapsed_time*100:.1f}%)")
-        print(f"    - Linearization: {total_linearize_time:.2f}s ({total_linearize_time/elapsed_time*100:.1f}%)")
-        print(f"    - Chunking: {total_chunk_time:.2f}s ({total_chunk_time/elapsed_time*100:.1f}%)")
-        print(f"  - Voyage AI Embeddings: {total_voyageai_time:.2f}s ({total_voyageai_time/elapsed_time*100:.1f}%)")
-        print(f"  - Weaviate Batch Import: {total_weaviate_time:.2f}s ({total_weaviate_time/elapsed_time*100:.1f}%)")
+        print(f"  - Pipeline processing (concurrent): {total_pipeline_time:.2f}s ({total_pipeline_time/elapsed_time*100:.1f}%)")
+        print(f"    - Linearization: {total_linearize_time:.2f}s")
+        print(f"    - Chunking: {total_chunk_time:.2f}s")
+        print(f"    - Voyage AI Embeddings: {total_voyageai_time:.2f}s")
+        print(f"    - Weaviate Storage: {total_weaviate_time:.2f}s")
+
+        # Calculate time saved by concurrency
+        sequential_time = total_roam_time + total_linearize_time + total_chunk_time + total_voyageai_time + total_weaviate_time
+        time_saved = sequential_time - elapsed_time
+        if time_saved > 0:
+            print(f"  - Time saved by concurrency: {time_saved:.2f}s ({time_saved/sequential_time*100:.1f}% reduction)")
 
         # Calculate unaccounted time
         accounted_time = step1_time + step3_time + total_roam_time + total_processing_time + total_voyageai_time + total_weaviate_time
@@ -454,10 +523,15 @@ async def main():
         metavar='N',
         help='Test mode: only process first N pages.'
     )
+    parser.add_argument(
+        '--recreate-collection',
+        action='store_true',
+        help='Force recreate the collection even if it exists (needed when changing schema/reranker config).'
+    )
 
     args = parser.parse_args()
 
-    await sync_semantic_graph(clear_existing=args.clear, test_limit=args.test)
+    await sync_semantic_graph(clear_existing=args.clear, test_limit=args.test, recreate_collection=args.recreate_collection)
 
 
 if __name__ == "__main__":

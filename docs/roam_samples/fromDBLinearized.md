@@ -1,0 +1,10 @@
+- Good productive day #.bg-green-50
+- Woke up ~ 630 ?
+- #[[[[Now Foods]]/[[Zinc]] picolinate]]
+- 07:00 - 12:00 [[Project: Ytext]]
+    - Made the editor div resizable
+    - Made "copy text to editor" work
+    - Fixed a few simple bugs that were preventing the fetch from working
+    - tried adding blocknote keyboard and custom inline types for timestamp - but not working yet (because the / thing doesn't work yet within the isolated context)
+    - was thinking a bunch about how - if I made custom types and everything for latticework -style highlights - exports would become cumbersome. and is not needed at this stage anyway.
+- -13:00 last bout of productive coding
