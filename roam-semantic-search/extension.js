@@ -12,6 +12,8 @@ let searchState = {
   abortController: null,
   commands: [], // Track commands for cleanup
   hidePages: false, // Toggle to filter out page results
+  searchAlpha: 0.5, // Balance between keyword (0) and semantic (1) search
+  useRerank: false, // Toggle for VoyageAI reranking
 };
 
 // Configuration - will be moved to settings panel
@@ -42,10 +44,17 @@ class SearchAPI {
     }
   }
 
-  async search(query, signal, excludePages = false) {
+  async search(
+    query,
+    signal,
+    excludePages = false,
+    alpha = 0.5,
+    rerank = false,
+  ) {
     try {
-      // Simplified URL for the new semantic-only backend
-      const url = `${this.baseURL}/search?q=${encodeURIComponent(query)}&limit=${config.searchLimit}&exclude_pages=${excludePages}`;
+      // URL with alpha parameter for hybrid search balance and reranking option
+      const url = `${this.baseURL}/search?q=${encodeURIComponent(query)}&limit=${config.searchLimit}&exclude_pages=${excludePages}&alpha=${alpha}&rerank=${rerank}`;
+      console.log("[Semantic Search] API Request:", url, "Rerank:", rerank);
       const response = await fetch(url, { signal });
 
       if (!response.ok) {
@@ -105,10 +114,22 @@ function createModal() {
         </div>
         <div class="rss-filters">
           <label class="bp3-control bp3-switch rss-filter-switch">
-            <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? 'checked' : ''} />
+            <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? "checked" : ""} />
             <span class="bp3-control-indicator"></span>
             Blocks only
           </label>
+          <label class="bp3-control bp3-switch rss-filter-switch">
+            <input type="checkbox" class="rss-rerank-toggle" ${searchState.useRerank ? "checked" : ""} />
+            <span class="bp3-control-indicator"></span>
+            Rerank
+          </label>
+          <div class="rss-search-type-slider">
+            <span class="rss-slider-label">Keyword</span>
+            <input type="range" class="rss-alpha-slider"
+              min="0" max="1" step="0.1" value="${searchState.searchAlpha}"
+              title="${Math.round(searchState.searchAlpha * 100)}%" />
+            <span class="rss-slider-label">Semantic</span>
+          </div>
         </div>
         <div class="rss-status"></div>
         <div class="rss-results"></div>
@@ -133,7 +154,7 @@ function createModal() {
   input.addEventListener("input", debouncedSearch);
   document.addEventListener("keydown", handleKeydown);
 
-  // Add toggle listener
+  // Add toggle listeners
   const toggleCheckbox = modal.querySelector(".rss-hide-pages-toggle");
   if (toggleCheckbox) {
     toggleCheckbox.addEventListener("change", (e) => {
@@ -144,6 +165,36 @@ function createModal() {
       }
       // Re-run search with new filter setting
       performSearch();
+    });
+  }
+
+  const rerankToggle = modal.querySelector(".rss-rerank-toggle");
+  if (rerankToggle) {
+    rerankToggle.addEventListener("change", (e) => {
+      searchState.useRerank = e.target.checked;
+      // Save preference
+      if (extensionAPI) {
+        extensionAPI.settings.set("use-rerank", searchState.useRerank);
+      }
+      // Re-run search with new rerank setting
+      performSearch();
+    });
+  }
+
+  // Add alpha slider listener
+  const alphaSlider = modal.querySelector(".rss-alpha-slider");
+  if (alphaSlider) {
+    alphaSlider.addEventListener("input", (e) => {
+      searchState.searchAlpha = parseFloat(e.target.value);
+      // Update tooltip to show current value
+      const percentage = Math.round(searchState.searchAlpha * 100);
+      e.target.title = `${percentage}%`;
+      // Save preference
+      if (extensionAPI) {
+        extensionAPI.settings.set("search-alpha", searchState.searchAlpha);
+      }
+      // Re-run search with new alpha setting
+      debouncedSearch();
     });
   }
 
@@ -203,7 +254,9 @@ function handleKeydown(event) {
       searchState.results[searchState.selectedIndex]
     ) {
       const result = searchState.results[searchState.selectedIndex];
-      handleResultClick(result.uid, event);
+      // Navigate to parent_uid if available, otherwise page_uid, fallback to primary uid
+      const navUid = result.parent_uid || result.page_uid || result.uid;
+      handleResultClick(navUid, event);
     }
   }
 }
@@ -263,6 +316,135 @@ function clearStatus() {
   }
 }
 
+// Parse linearized chunk text into individual blocks
+function parseLinearizedChunk(text) {
+  const lines = text.split("\n");
+  const rawBlocks = [];
+  let currentBlock = null;
+
+  for (const line of lines) {
+    // Check if this line starts a new block (spaces followed by "- ")
+    const blockMatch = line.match(/^(\s*)- (.*)$/);
+
+    if (blockMatch) {
+      // Save previous block if exists
+      if (currentBlock) {
+        rawBlocks.push(currentBlock);
+      }
+
+      currentBlock = {
+        indent: blockMatch[1].length,
+        text: blockMatch[2],
+      };
+    } else if (currentBlock) {
+      // This is a continuation line of the current block
+      if (line.trim()) {
+        // Non-empty continuation line
+        currentBlock.text += "\n" + line.trimStart();
+      } else {
+        // Empty line within a block - preserve it for paragraph breaks
+        currentBlock.text += "\n";
+      }
+    }
+  }
+
+  // Don't forget the last block
+  if (currentBlock) {
+    rawBlocks.push(currentBlock);
+  }
+
+  if (rawBlocks.length === 0) {
+    return [];
+  }
+
+  // Normalize indentation so the first block becomes level 0 even if the
+  // snippet started partway through a Roam hierarchy.
+  const indentLevels = [...new Set(rawBlocks.map((block) => block.indent))].sort(
+    (a, b) => a - b,
+  );
+  const indentToLevel = new Map(
+    indentLevels.map((indent, index) => [indent, index]),
+  );
+
+  return rawBlocks.map((block) => ({
+    level: indentToLevel.get(block.indent) ?? 0,
+    text: block.text,
+  }));
+}
+
+// Render multi-block chunk with proper hierarchy
+function renderMultiBlockChunk(container, chunkText, preParsedBlocks) {
+  const blocks = Array.isArray(preParsedBlocks)
+    ? preParsedBlocks
+    : parseLinearizedChunk(chunkText);
+
+  if (blocks.length === 0) {
+    // No blocks found, fallback to simple render
+    window.roamAlphaAPI.ui.components.renderString({
+      el: container,
+      string: chunkText,
+    });
+    return;
+  }
+
+  if (blocks.length === 1 && blocks[0].level === 0) {
+    // Single top-level block - use simple render
+    window.roamAlphaAPI.ui.components.renderString({
+      el: container,
+      string: blocks[0].text,
+    });
+    return;
+  }
+
+  // Multiple blocks or nested structure - create hierarchical display
+  const blockList = document.createElement("div");
+  blockList.className = "rss-block-list";
+
+  blocks.forEach((block) => {
+    // Create container for this block
+    const blockWrapper = document.createElement("div");
+    blockWrapper.className = "rss-block-wrapper";
+    blockWrapper.style.marginLeft = `${block.level * 20}px`;
+
+    const blockItem = document.createElement("div");
+    blockItem.className = "rss-block-item";
+    blockItem.style.display = "flex";
+    blockItem.style.alignItems = "flex-start";
+
+    // Add bullet for all blocks
+    const bullet = document.createElement("span");
+    bullet.className = "rss-block-bullet";
+    bullet.textContent = "•";
+    bullet.style.marginRight = "8px";
+    bullet.style.flexShrink = "0";
+    bullet.style.marginTop = "2px";
+    bullet.style.color = "#9ca3af";
+
+    // Container for the actual block content
+    const blockContent = document.createElement("div");
+    blockContent.className = "rss-block-content";
+    blockContent.style.flex = "1";
+
+    blockItem.appendChild(bullet);
+    blockItem.appendChild(blockContent);
+    blockWrapper.appendChild(blockItem);
+    blockList.appendChild(blockWrapper);
+
+    // Render the block text with Roam formatting
+    try {
+      window.roamAlphaAPI.ui.components.renderString({
+        el: blockContent,
+        string: block.text,
+      });
+    } catch (e) {
+      // Fallback to plain text
+      blockContent.textContent = block.text;
+    }
+  });
+
+  container.appendChild(blockList);
+}
+
 function renderResults(results) {
   const resultsEl = document.querySelector(".rss-results");
   if (!resultsEl) return;
@@ -274,11 +456,18 @@ function renderResults(results) {
     return;
   }
 
-  searchState.results = results;
+  // Sort results by similarity score (highest first)
+  const sortedResults = [...results].sort((a, b) => {
+    const scoreA = a.similarity || 0;
+    const scoreB = b.similarity || 0;
+    return scoreB - scoreA; // Descending order
+  });
+
+  searchState.results = sortedResults;
   searchState.selectedIndex = 0;
   resultsEl.innerHTML = ""; // Clear previous results
 
-  results.forEach((result, index) => {
+  sortedResults.forEach((result, index) => {
     const similarity = result.similarity || 0;
     const percentage = (similarity * 100).toFixed(0);
     const pageTitle = result.page_title || "Untitled Page";
@@ -287,11 +476,25 @@ function renderResults(results) {
 
     // Pages don't need breadcrumbs, chunks show their context
     let breadcrumbHtml = "";
+    let breadcrumbConfig = null;
     if (!isPage) {
-      const breadcrumb = parentText ?
-        `${escapeHtml(pageTitle)} > ${escapeHtml(parentText)}` :
-        escapeHtml(pageTitle);
-      breadcrumbHtml = `<div class="rss-result-breadcrumb">${breadcrumb}</div>`;
+      // Don't show duplicate if parent_text is the same as page_title
+      const showParent = parentText && parentText !== pageTitle;
+      const breadcrumbId = `rss-breadcrumb-${result.uid}-${index}`;
+      const parentMarkup = showParent
+        ? '<span class="rss-breadcrumb-separator"> &gt; </span><span class="rss-breadcrumb-parent"></span>'
+        : "";
+      breadcrumbHtml = `
+        <div class="rss-result-breadcrumb" id="${breadcrumbId}">
+          <span class="rss-breadcrumb-page"></span>
+          ${parentMarkup}
+        </div>
+      `.trim();
+      breadcrumbConfig = {
+        id: breadcrumbId,
+        page: pageTitle,
+        parent: showParent ? parentText : null,
+      };
     }
 
     // The backend now sends pre-formatted text with ^^highlight^^ syntax
@@ -300,7 +503,7 @@ function renderResults(results) {
     // For pages, format as [[Page Name]]
     if (isPage) {
       // Remove any existing highlights and add page reference brackets
-      const cleanPageName = chunkTextWithHighlights.replace(/\^\^/g, '');
+      const cleanPageName = chunkTextWithHighlights.replace(/\^\^/g, "");
       chunkTextWithHighlights = `[[${cleanPageName}]]`;
     }
 
@@ -313,33 +516,94 @@ function renderResults(results) {
       ${breadcrumbHtml}
       <div class="rss-chunk-container" id="rss-chunk-${result.uid}-${index}">
         <!-- Fallback content in case renderString fails -->
-        ${escapeHtml(chunkTextWithHighlights.replace(/\^\^/g, ''))}
+        ${escapeHtml(chunkTextWithHighlights.replace(/\^\^/g, ""))}
       </div>
       <div class="rss-result-similarity">
         <div class="rss-similarity-bar">
           <div class="rss-similarity-fill" style="width: ${percentage}%;"></div>
         </div>
-        <span class="rss-similarity-value">${percentage}% match${isPage ? ' (page)' : ''}</span>
+        <span class="rss-similarity-value">${percentage}% match${isPage ? " (page)" : ""}</span>
       </div>
     `;
 
     resultDiv.addEventListener("click", (event) => {
-      handleResultClick(result.uid, event);
+      // Navigate to parent_uid if available, otherwise page_uid, fallback to primary uid
+      const navUid = result.parent_uid || result.page_uid || result.uid;
+      handleResultClick(navUid, event);
     });
 
     resultsEl.appendChild(resultDiv);
 
-    const chunkContainer = document.getElementById(`rss-chunk-${result.uid}-${index}`);
+    if (breadcrumbConfig) {
+      const breadcrumbContainer = document.getElementById(breadcrumbConfig.id);
+      if (breadcrumbContainer) {
+        const pageContainer = breadcrumbContainer.querySelector(
+          ".rss-breadcrumb-page",
+        );
+        if (pageContainer) {
+          try {
+            pageContainer.innerHTML = "";
+            window.roamAlphaAPI.ui.components.renderString({
+              el: pageContainer,
+              string: breadcrumbConfig.page,
+            });
+          } catch (e) {
+            pageContainer.textContent = breadcrumbConfig.page;
+          }
+        }
+
+        if (breadcrumbConfig.parent) {
+          const parentContainer = breadcrumbContainer.querySelector(
+            ".rss-breadcrumb-parent",
+          );
+          if (parentContainer) {
+            try {
+              parentContainer.innerHTML = "";
+              window.roamAlphaAPI.ui.components.renderString({
+                el: parentContainer,
+                string: breadcrumbConfig.parent,
+              });
+            } catch (e) {
+              parentContainer.textContent = breadcrumbConfig.parent;
+            }
+          }
+        }
+      }
+    }
+
+    const chunkContainer = document.getElementById(
+      `rss-chunk-${result.uid}-${index}`,
+    );
     if (chunkContainer) {
       try {
-        // renderString will now handle the ^^highlight^^ syntax automatically
-        window.roamAlphaAPI.ui.components.renderString({
-          el: chunkContainer,
-          string: chunkTextWithHighlights,
-        });
+        // Clear the fallback text before rendering
+        chunkContainer.innerHTML = "";
+
+        const parsedBlocks = parseLinearizedChunk(chunkTextWithHighlights);
+        const needsHierarchy =
+          parsedBlocks.length > 1 ||
+          parsedBlocks.some((block) => block.level > 0);
+
+        if (needsHierarchy) {
+          // Multi-block chunk - render with normalized hierarchy
+          renderMultiBlockChunk(
+            chunkContainer,
+            chunkTextWithHighlights,
+            parsedBlocks,
+          );
+        } else {
+          // Single block or simple text - use standard renderString
+          window.roamAlphaAPI.ui.components.renderString({
+            el: chunkContainer,
+            string: chunkTextWithHighlights,
+          });
+        }
       } catch (e) {
         console.error("[Semantic Search] renderString failed:", e);
-        // The fallback text is already in the container
+        // Restore fallback text on error
+        chunkContainer.innerHTML = escapeHtml(
+          chunkTextWithHighlights.replace(/\^\^/g, ""),
+        );
       }
     }
   });
@@ -387,7 +651,9 @@ async function performSearch() {
     const response = await searchAPI.search(
       query,
       searchState.abortController.signal,
-      searchState.hidePages
+      searchState.hidePages,
+      searchState.searchAlpha,
+      searchState.useRerank,
     );
 
     if (response && response.results) {
@@ -446,7 +712,7 @@ function addStyles() {
         position: relative;
         background: var(--bg-color, white);
         border-radius: 8px;
-        width: 600px;
+        width: 650px;
         max-height: 80vh;
         display: flex;
         flex-direction: column;
@@ -476,12 +742,35 @@ function addStyles() {
         background: var(--bg-color, white);
         position: relative;
         z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
       .rss-filter-switch {
         margin: 0;
         font-size: 13px;
         display: flex;
         align-items: center;
+      }
+      .rss-search-type-slider {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .rss-alpha-slider {
+        width: 80px;
+        height: 4px;
+        cursor: pointer;
+        margin: 0 12px;
+        flex-shrink: 0;
+      }
+      .rss-slider-label {
+        color: #9ca3af;
+        font-weight: 500;
+        font-size: 12px;
+        white-space: nowrap;
       }
       .rss-status { padding: 0 20px; min-height: 20px; }
       .rss-loading, .rss-error, .rss-success { padding: 8px 0; }
@@ -528,6 +817,38 @@ function addStyles() {
         line-height: 1.5;
         color: var(--text-color, #202020);
       }
+
+      /* Multi-block chunk styles */
+      .rss-block-list {
+        padding: 0;
+        margin: 0;
+      }
+      .rss-block-wrapper {
+        margin-bottom: 4px;
+      }
+      .rss-block-item {
+        display: flex;
+        align-items: flex-start;
+        line-height: 1.5;
+      }
+      .rss-block-bullet {
+        color: #9ca3af;
+        margin-right: 8px;
+        margin-top: 2px;
+        flex-shrink: 0;
+        font-size: 12px;
+      }
+      .rss-block-content {
+        flex: 1;
+        min-width: 0;
+        word-wrap: break-word;
+      }
+      .rss-block-content p {
+        margin: 0 0 8px 0;
+      }
+      .rss-block-content p:last-child {
+        margin-bottom: 0;
+      }
       .rss-result-similarity {
         display: flex;
         align-items: center;
@@ -569,6 +890,9 @@ function addStyles() {
       }
       .roam-body-main.bp3-dark .rss-filters {
         background: #2f3136;
+      }
+      .roam-body-main.bp3-dark .rss-block-bullet {
+        color: #6b7280;
       }
     </style>
   `;
@@ -672,8 +996,10 @@ export default {
       extensionAPI.settings.get("debounce-delay") ||
       DEFAULT_CONFIG.debounceDelay;
 
-    // Load filter preference
+    // Load filter preferences
     searchState.hidePages = extensionAPI.settings.get("hide-pages") || false;
+    searchState.searchAlpha = extensionAPI.settings.get("search-alpha") || 0.5;
+    searchState.useRerank = extensionAPI.settings.get("use-rerank") || false;
 
     // Initialize API client
     searchAPI = new SearchAPI(config.backendURL);
@@ -745,6 +1071,8 @@ export default {
       abortController: null,
       commands: [],
       hidePages: false,
+      searchAlpha: 0.5,
+      useRerank: false,
     };
 
     console.log("[Semantic Search] Extension unloaded.");

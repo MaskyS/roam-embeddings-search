@@ -245,45 +245,64 @@ async def chunk_batch(request: BatchChunkRequest):
         )
 
     start_time = time.time()
-    results = []
 
-    for text in request.texts:
-        if not text or not text.strip():
-            results.append(ChunkingResponse(
-                chunks=[],
-                total_chunks=0,
-                processing_time_ms=0
-            ))
-            continue
+    # Filter out empty texts but keep track of indices
+    non_empty_texts = []
+    non_empty_indices = []
+    for i, text in enumerate(request.texts):
+        if text and text.strip():
+            non_empty_texts.append(text)
+            non_empty_indices.append(i)
 
+    # Use Chonkie's native batch processing
+    results = [ChunkingResponse(chunks=[], total_chunks=0, processing_time_ms=0)
+               for _ in request.texts]
+
+    if non_empty_texts:
         try:
-            text_start = time.time()
-            chunks = chunker.chunk(text)
+            # Process all non-empty texts at once using chunk_batch
+            batch_chunks = chunker.chunk_batch(non_empty_texts)
 
-            chunk_responses = [
-                ChunkResponse(
-                    text=chunk.text,
-                    start_index=chunk.start_index,
-                    end_index=chunk.end_index,
-                    token_count=chunk.token_count
+            # Map results back to original indices
+            for idx, doc_chunks in zip(non_empty_indices, batch_chunks):
+                chunk_responses = [
+                    ChunkResponse(
+                        text=chunk.text,
+                        start_index=chunk.start_index,
+                        end_index=chunk.end_index,
+                        token_count=chunk.token_count
+                    )
+                    for chunk in doc_chunks
+                ]
+
+                results[idx] = ChunkingResponse(
+                    chunks=chunk_responses,
+                    total_chunks=len(chunk_responses),
+                    processing_time_ms=0  # Will be calculated from total time
                 )
-                for chunk in chunks
-            ]
-
-            results.append(ChunkingResponse(
-                chunks=chunk_responses,
-                total_chunks=len(chunk_responses),
-                processing_time_ms=round((time.time() - text_start) * 1000, 2)
-            ))
 
         except Exception as e:
-            logger.error(f"Failed to chunk text: {e}")
-            # Add empty result for failed text
-            results.append(ChunkingResponse(
-                chunks=[],
-                total_chunks=0,
-                processing_time_ms=0
-            ))
+            logger.error(f"Batch chunking failed: {e}")
+            # Fall back to sequential processing if batch fails
+            for idx in non_empty_indices:
+                try:
+                    chunks = chunker.chunk(request.texts[idx])
+                    chunk_responses = [
+                        ChunkResponse(
+                            text=chunk.text,
+                            start_index=chunk.start_index,
+                            end_index=chunk.end_index,
+                            token_count=chunk.token_count
+                        )
+                        for chunk in chunks
+                    ]
+                    results[idx] = ChunkingResponse(
+                        chunks=chunk_responses,
+                        total_chunks=len(chunk_responses),
+                        processing_time_ms=0
+                    )
+                except Exception as e2:
+                    logger.error(f"Failed to chunk text at index {idx}: {e2}")
 
     total_time = (time.time() - start_time) * 1000
 

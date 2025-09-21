@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     ollama_url: str = "http://ollama:11434"
     ollama_model: str = "embeddinggemma"
     voyageai_context_model: str = "voyage-context-3" # Contextual model for both queries and documents
+    voyageai_reranker_model: str = "rerank-2-lite" # Reranker model
+    rerank_default_enabled: bool = True # Enable reranking by default
 
 settings = Settings()
 voyageai.api_key = settings.voyageai_api_key
@@ -59,6 +61,9 @@ async def lifespan(app: FastAPI):
         grpc_host="weaviate",
         grpc_port=50051,
         grpc_secure=False,
+        headers={
+            "X-VoyageAI-Api-Key": settings.voyageai_api_key
+        }
     )
     try:
         await weaviate_client.connect()
@@ -114,8 +119,9 @@ async def pull_many_blocks_for_context(uids: List[str]) -> List[Optional[Dict]]:
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-    # This selector is designed to get the block's text and its parent's title for context.
-    selector_str = "[:block/uid :block/string :node/title {:block/parents [:block/uid :block/string :node/title]}]"
+    # This selector uses :block/_children reverse lookup to get the immediate parent
+    # :block/_children asks "who has me as a child?" which gives us the direct parent
+    selector_str = "[:block/uid :block/string :node/title {:block/_children [:block/uid :block/string :node/title]}]"
     eids_list = ' '.join([f'[:block/uid "{uid}"]' for uid in uids])
     pull_data = {
         "eids": f"[{eids_list}]",
@@ -172,7 +178,10 @@ async def search(
     q: str = Query(..., description="Search query"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return"),
     alpha: float = Query(0.5, ge=0, le=1, description="Balance between keyword and vector search. 0 for pure keyword, 1 for pure vector."),
-    exclude_pages: bool = Query(False, description="Exclude page results, only show chunks")
+    exclude_pages: bool = Query(False, description="Exclude page results, only show chunks"),
+    rerank: bool = Query(settings.rerank_default_enabled, description="Enable result reranking using VoyageAI"),
+    rerank_query: Optional[str] = Query(None, description="Custom query for reranking, if different from search query"),
+    rerank_limit: Optional[int] = Query(None, description="Number of top results to rerank (None = all results)")
 ):
     """
     Performs hybrid search on the pre-chunked documents using Weaviate.
@@ -199,13 +208,29 @@ async def search(
         from weaviate.classes.query import Filter
         filters = Filter.by_property("document_type").equal("chunk")
 
+    # Build reranking configuration
+    reranking = None
+    if rerank:
+        from weaviate.classes.query import Rerank
+        # Use custom rerank_query if provided, otherwise use the original query
+        actual_rerank_query = rerank_query if rerank_query else q
+        # If rerank_limit is specified, first fetch more results then rerank subset
+        fetch_limit = rerank_limit if rerank_limit else limit
+        reranking = Rerank(
+            prop="chunk_text_preview",
+            query=actual_rerank_query
+        )
+    else:
+        fetch_limit = limit
+
     try:
         results = await collection.query.hybrid(
             query=q,
             vector=query_vector,
             alpha=alpha,
-            limit=limit,
+            limit=fetch_limit,
             filters=filters,
+            rerank=reranking,
             return_metadata=["score"]
         )
     except Exception as e:
@@ -227,12 +252,21 @@ async def search(
 
         block_data = block_data_map.get(primary_uid)
         parent_text = ""
-        if block_data and block_data.get(':block/parents'):
-            parent_data = block_data[':block/parents'][0]
-            parent_text = parent_data.get(':node/title') or parent_data.get(':block/string', '')
+        parent_uid = None
+        if block_data and block_data.get(':block/_children'):
+            # :block/_children gives us the immediate parent
+            parent_data = block_data[':block/_children']
+            # Handle both single object and list responses
+            if isinstance(parent_data, list):
+                parent_data = parent_data[0] if parent_data else None
+            if parent_data:
+                parent_text = parent_data.get(':node/title') or parent_data.get(':block/string', '')
+                parent_uid = parent_data.get(':block/uid')
 
         formatted_results.append({
             "uid": primary_uid,
+            "parent_uid": parent_uid,
+            "page_uid": metadata.get("page_uid"),
             "similarity": round(obj.metadata.score, 4) if obj.metadata and obj.metadata.score is not None else 0.0,
             "page_title": metadata.get("page_title", ""),
             "parent_text": parent_text,
@@ -240,9 +274,15 @@ async def search(
             "document_type": metadata.get("document_type", "chunk"),
         })
 
+    # Limit results if rerank_limit was specified and we got more
+    if rerank and rerank_limit and len(formatted_results) > limit:
+        formatted_results = formatted_results[:limit]
+
     return {
         "query": q,
         "results": formatted_results,
         "count": len(formatted_results),
-        "execution_time": round(time.time() - start_time, 3)
+        "execution_time": round(time.time() - start_time, 3),
+        "reranked": rerank,
+        "rerank_query": actual_rerank_query if rerank else None
     }
