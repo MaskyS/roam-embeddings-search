@@ -206,17 +206,19 @@ function createModal() {
           <input type="text" class="rss-input bp3-input" placeholder="Enter search query..." />
         </div>
         <div class="rss-filters">
-          <label class="bp3-control bp3-switch rss-filter-switch">
-            <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? "checked" : ""} />
-            <span class="bp3-control-indicator"></span>
-            Blocks only
-          </label>
-          <label class="bp3-control bp3-switch rss-filter-switch">
-            <input type="checkbox" class="rss-rerank-toggle" ${searchState.useRerank ? "checked" : ""} />
-            <span class="bp3-control-indicator"></span>
-            Rerank
-          </label>
-          <div class="rss-search-type-slider">
+          <div class="rss-filters-group">
+            <label class="bp3-control bp3-switch rss-filter-switch">
+              <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? "checked" : ""} />
+              <span class="bp3-control-indicator"></span>
+              Blocks only
+            </label>
+            <label class="bp3-control bp3-switch rss-filter-switch">
+              <input type="checkbox" class="rss-rerank-toggle" ${searchState.useRerank ? "checked" : ""} />
+              <span class="bp3-control-indicator"></span>
+              Rerank
+            </label>
+          </div>
+          <div class="rss-search-type">
             <span class="rss-slider-label">Keyword</span>
             <input type="range" class="rss-alpha-slider"
               min="0" max="1" step="0.1" value="${searchState.searchAlpha}"
@@ -1026,39 +1028,90 @@ function addStyles() {
       }
       .rss-search .rss-input { width: 100%; }
       .rss-filters {
-        padding: 8px 20px 12px 20px;
-        border-bottom: 1px solid var(--border-color, #e5e7eb);
-        background: var(--bg-color, white);
+        padding: 6px 20px;
+        background: rgba(148, 163, 184, 0.08);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.25);
         position: relative;
         z-index: 1;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
+        border-radius: 4px;
+        margin: 0 20px;
+      }
+      .rss-filters-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
       }
       .rss-filter-switch {
         margin: 0;
-        font-size: 13px;
+        font-size: 11px;
         display: flex;
         align-items: center;
+        color: #9aa5b6;
+        gap: 5px;
       }
-      .rss-search-type-slider {
+      .rss-filter-switch input[type="checkbox"] {
+        accent-color: rgba(148, 163, 184, 0.45);
+        width: 13px;
+        height: 13px;
+      }
+      .rss-filter-switch .bp3-control-indicator {
+        background-color: rgba(148, 163, 184, 0.1);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: none;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .rss-filter-switch .bp3-control-indicator::before {
+        background: rgba(71, 85, 105, 0.8);
+        box-shadow: none;
+      }
+      .rss-filter-switch input:checked ~ .bp3-control-indicator {
+        background-color: rgba(59, 130, 246, 0.22);
+        border-color: rgba(59, 130, 246, 0.35);
+      }
+      .rss-filter-switch input:checked ~ .bp3-control-indicator::before {
+        background: rgba(59, 130, 246, 0.95);
+      }
+      .rss-search-type {
+        margin-left: auto;
         display: flex;
         align-items: center;
-        font-size: 12px;
-        margin-left: auto;
-        flex-shrink: 0;
+        gap: 6px;
+        color: #9aa5b6;
+        font-size: 11px;
       }
       .rss-alpha-slider {
         width: 80px;
-        height: 4px;
+        height: 3px;
         cursor: pointer;
-        margin: 0 12px;
+        margin: 0;
         flex-shrink: 0;
+        background: rgba(59, 130, 246, 0.18);
+        border-radius: 999px;
+      }
+      .rss-alpha-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.85);
+        border: 1px solid rgba(59, 130, 246, 0.45);
+      }
+      .rss-alpha-slider::-moz-range-thumb {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.85);
+        border: 1px solid rgba(59, 130, 246, 0.45);
       }
       .rss-slider-label {
-        color: #9ca3af;
+        color: #a8b4c4;
         font-weight: 500;
-        font-size: 12px;
+        font-size: 11px;
         white-space: nowrap;
       }
       .rss-status { padding: 0 20px; min-height: 20px; }
@@ -1203,7 +1256,8 @@ function addStyles() {
         border-left-color: var(--rss-accent-color, rgba(59, 130, 246, 0.4));
       }
       .roam-body-main.bp3-dark .rss-filters {
-        background: #2f3136;
+        background: rgba(55, 65, 81, 0.35);
+        border-bottom-color: rgba(55, 65, 81, 0.55);
       }
       .roam-body-main.bp3-dark .rss-block-bullet {
         color: #6b7280;
