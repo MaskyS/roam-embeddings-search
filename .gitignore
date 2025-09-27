@@ -1,7 +1,11 @@
 .env
 .ropeproject
-*/__pycache__/*
+__pycache__
 */.venv/
 roam-extension-calendar/
 backend/last_sync.json
+backend/data/*.db
 experiments/chunk-viz/node_modules
+ollama_data/
+weaviate_data/
+.DS_Store

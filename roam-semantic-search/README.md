@@ -1,126 +1,84 @@
 # Roam Semantic Search Extension
 
-A Roam Research extension that adds semantic (AI-powered) search capabilities to your graph using embeddings.
+A Roam Depot–compatible extension that lets you run hybrid semantic search inside Roam by connecting to the backend in this repository. It provides a search modal, sync controls, reranking toggles, and status visibility directly from Roam's UI.
 
 ## Prerequisites
 
-1. **Backend must be running** on `http://localhost:8001`
-   - Make sure Docker containers are up: `docker-compose up -d`
-   - Verify by visiting http://localhost:8001 in your browser
+Before loading the extension, make sure you have:
+- **Semantic backend running** – Follow `../README.md` to launch Weaviate, the chunker service, and `backend/main_semantic.py`. The default local endpoint is `http://localhost:8002`.
+- **Initial sync completed** – Trigger `/sync/start` with `mode: "full"` (and optionally `recreate_collection: true`) so Weaviate has your graph content. New installs must finish at least one successful sync.
+- **Browser access to the backend** – If Roam is accessed over HTTPS, expose the backend through HTTPS (reverse proxy) or a trusted tunnel. CORS is already configured server-side for Roam domains and `localhost`.
 
-2. **Graph must be synced** with embeddings
-   - Run sync: `docker exec roam-test-backend-1 python sync_full.py`
-   - This needs to be done at least once to populate the vector database
+## Installation options
 
-## Installation
+### 1. Inline `roam/js`
+1. Open `roam-semantic-search/extension.js` and copy the file contents.
+2. In Roam, create a block containing `{{[[roam/js]]}}`.
+3. Add a child code block (\`\`\`javascript) and paste the script.
+4. Click "Yes, I know what I'm doing" when prompted and refresh the page if necessary.
 
-### Method 1: Copy & Paste (Quickest)
-
-1. Copy the entire contents of `extension.js`
-2. In Roam, create a new block with `{{[[roam/js]]}}`
-3. Create a code block underneath (```) 
-4. Paste the extension code
-5. Click "Yes, I know what I'm doing" when prompted
-
-### Method 2: GitHub Gist
-
-1. Create a new GitHub Gist with the contents of `extension.js`
-2. Get the raw URL of the gist
-3. In Roam, create a block with:
-   ```
-   {{[[roam/js]]}}
-   ```
-4. In a child block, add:
+### 2. Hosted script (e.g., GitHub Gist)
+1. Upload `extension.js` to a public location that serves a raw JavaScript file.
+2. In Roam, create a `{{[[roam/js]]}}` block.
+3. In a child block, add:
    ```javascript
    var s = document.createElement("script");
-   s.src = "YOUR_GIST_RAW_URL";
+   s.src = "https://your-hosted-extension.js";
    document.head.appendChild(s);
    ```
+4. Reload Roam so the script initializes.
 
-## Usage
+Once the code is loaded, the extension registers in Roam Depot settings and command palette automatically.
 
-### Testing Connection (v0.1)
-1. Open Command Palette (Cmd/Ctrl + P)
-2. Type "Semantic Search: Test Connection"
-3. You should see a success message with your graph name and document count
+## Configuration
 
-### Testing Search (v0.2)
-1. Open Command Palette (Cmd/Ctrl + P)
-2. Type "Semantic Search: Test Query"
-3. Enter a search query
-4. Check the browser console for detailed results
+Open the command palette (`Cmd/Ctrl+P`) → "Semantic Search: Open Settings" or use the Roam Depot settings drawer. Key settings:
+- **Backend URL** – Point this to your deployment (e.g., `http://localhost:8002` or `https://search.example.com`). Changing it updates the API client immediately.
+- **Result Limit** – Maximum rows the modal renders (1–100).
+- **Search Delay (ms)** – Debounce between keystrokes and API calls (100–1000ms).
+- **Sync Test Page Limit** – Default `limit` used when running "Sync Test Page Limit" mode from the panel.
+- **Hide Page Results** – Filters out top-level page hits, returning only block chunks.
+- **Hybrid Alpha** – Balance between keyword (0) and semantic vector (1) results.
+- **Use VoyageAI Rerank** – Toggles server-side reranking for higher-precision ordering.
 
-### Full Search Interface (v0.3)
-1. Open Command Palette (Cmd/Ctrl + P)
-2. Type "Semantic Search"
-3. The search modal will appear
-4. Start typing to search (300ms debounce)
-5. Click on a result to navigate to that block
-6. Shift+Click to open in sidebar
-7. Press Escape to close
+The settings panel also displays the current sync status in real time.
 
-## Features
+## Running searches
 
-- **Real-time search** - Results update as you type
-- **Similarity scores** - Visual bars show how relevant each result is
-- **Parent context** - See the parent block for context
-- **Keyboard navigation** - Use Escape to close
-- **Smart navigation** - Click to go to block, Shift+Click for sidebar
+1. Open the command palette and choose **Semantic Search** (or use the registered hotkey if you configure one).
+2. Type your query; results update after the configured debounce delay.
+3. Navigate results with the mouse or arrow keys.
+   - `Enter` opens the block in the main pane.
+   - `Shift+Enter` opens it in the sidebar.
+   - `Esc` closes the modal.
+4. Use the in-modal toggles to hide page entries, tweak the hybrid alpha slider, or enable reranking per session.
+
+Each result shows the block text with highlighted matches, the parent context, similarity score, and the source page title.
+
+## Managing sync jobs from Roam
+
+The settings panel exposes backend actions that map to REST endpoints:
+- **Test Connection** → `GET /`
+- **Sync Recently Edited Pages** → `POST /sync/start` with `mode: "since"`
+- **Full Sync (All Pages)** → `POST /sync/start` with `mode: "full"`
+- **Run Limited Sync** → `POST /sync/start` with `mode: "limit"` and the configured page count
+- **Cancel Sync** → `POST /sync/cancel`
+- **Clear Database** → `POST /sync/clear` (drops the Weaviate collection; destructive)
+
+Status updates poll `/sync/status` and display progress, including failures.
 
 ## Troubleshooting
 
-### "Cannot connect to backend"
-- Make sure Docker is running: `docker ps`
-- Check backend is accessible: `curl http://localhost:8001`
-- Verify containers are up: `docker-compose up -d`
-- CORS is now configured automatically - no additional setup needed
+- **"Cannot connect to backend"** – Confirm the backend URL in settings, ensure the service is reachable from the browser (`curl -I https://your-backend/`), and check Docker logs for FastAPI startup errors.
+- **No search results** – Verify a sync has completed and Weaviate contains data (`GET /` should show a non-zero `collection_count`). Hybrid alpha of `1.0` with no embeddings can also produce empty output; lower it temporarily.
+- **Sync jobs fail immediately** – Usually caused by invalid Roam or VoyageAI credentials. Review backend logs for `401` or quota errors.
+- **Chunker not ready** – The backend waits for `http://chunker:8003/health`. Make sure the chunker container is healthy before starting a sync.
+- **Mixed-content warnings** – Serve the backend over HTTPS when Roam is loaded via HTTPS.
 
-### "No results found"
-- Ensure sync has been run: `docker exec roam-test-backend-1 python sync_full.py`
-- Try a simpler query
-- Check if ChromaDB has documents: `curl http://localhost:8001`
+## Development notes
 
-### Modal doesn't appear
-- Check browser console for errors
-- Make sure roam/js is enabled in your graph
-- Try refreshing the page
+- The extension exports `onload`/`onunload` for Depot compatibility; use `extension.old.js` for prior experiments.
+- When iterating locally, keep the backend running with `uvicorn main_semantic:app --reload` on port 8002 so requests succeed.
+- Inspect the browser console (`Cmd/Ctrl+Shift+J`) for diagnostic logs prefixed with `[Semantic Search]`.
 
-### CORS Configuration
-- **CORS is handled automatically** by the backend
-- The backend allows requests from:
-  - `https://roamresearch.com` (production)
-  - `https://*.roamresearch.com` (subdomains)
-  - `https://relemma-git-roam-app-store.roamresearch.com` (Roam Depot dev)
-  - `http://localhost:*` (local development)
-- If you still get CORS errors, check backend logs: `docker logs roam-test-backend-1`
-
-## Development
-
-### Current Version: v0.3
-- ✅ v0.1: Test connection command
-- ✅ v0.2: Basic search with console output
-- ✅ v0.3: Floating modal with results display
-- ⏳ v0.4: Keyboard navigation (arrow keys)
-- ⏳ v0.5: Dark mode support
-- ⏳ v0.6: Settings panel
-
-### Project Structure
-```
-roam-semantic-search/
-├── extension.js    # Main extension code
-├── extension.css   # Styles (future)
-└── README.md      # This file
-```
-
-### Testing Workflow
-1. Make changes to `extension.js`
-2. Copy updated code to Roam
-3. Refresh the page or re-run the roam/js block
-4. Test the changes
-
-## Notes
-
-- The extension currently connects to `localhost:8001` (hardcoded)
-- Search limit is set to 20 results
-- Debounce delay is 300ms
-- No data is stored locally (stateless)
+For end-to-end setup details, see the repository root `README.md`.

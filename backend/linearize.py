@@ -53,12 +53,13 @@ def linearize_page_markdown_style(page_data: Dict) -> Tuple[str, List[Dict], Dic
             # Skip blocks without a UID, as they cannot be referenced.
             return
 
-        if text:
+        stripped = text.strip() if text else ""
+        if stripped:
             if level > 0:
                 indent = "    " * (level - 1)
-                full_line = f"{indent}- {text}"
+                full_line = f"{indent}- {stripped}"
             else:
-                full_line = f"# {text}"
+                full_line = f"[[{stripped}]]"
 
             start_pos = current_pos
             end_pos = start_pos + len(full_line)

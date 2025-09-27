@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import re
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from funcy import notnone, select_values
@@ -39,6 +40,26 @@ def parse_int(value: Optional[str]) -> Optional[int]:
         return int(value)
     except (ValueError, TypeError):
         return None
+
+
+def _normalise_title(value: str) -> str:
+    cleaned = (value or "").strip()
+    if cleaned.startswith("[[") and cleaned.endswith("]]"):
+        cleaned = cleaned[2:-2]
+    cleaned = cleaned.strip()
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.lower()
+
+
+
+def _is_page_only_chunk(text: str, page_title: str, primary_uid: str, source_uids, page_uid: str) -> bool:
+    if primary_uid != page_uid:
+        return False
+    if any(uid != page_uid for uid in source_uids):
+        return False
+    chunk_clean = _normalise_title(text)
+    page_clean = _normalise_title(page_title)
+    return bool(chunk_clean) and chunk_clean == page_clean
 
 
 def collect_page_snapshot(page_data: Mapping[str, Any]) -> Dict[str, Any]:
@@ -162,10 +183,14 @@ def build_weaviate_objects(
         end = chunk.get("end_index", 0)
         token_count = chunk.get("token_count")
 
-        chunk_texts.append(text)
         source_uids = _uids_for_span(uid_map, start, end) or [page_uid]
         non_page_uids = [uid for uid in source_uids if uid != page_uid]
         primary_uid = non_page_uids[0] if non_page_uids else page_uid
+
+        if _is_page_only_chunk(text, page_title, primary_uid, source_uids, page_uid):
+            continue
+
+        chunk_texts.append(text)
 
         chunk_props = select_values(
             notnone,

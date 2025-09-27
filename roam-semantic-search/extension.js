@@ -11,9 +11,9 @@ let searchState = {
   error: null,
   abortController: null,
   commands: [], // Track commands for cleanup
-  hidePages: false, // Toggle to filter out page results
+  hidePages: true, // Toggle to filter out page results
   searchAlpha: 0.5, // Balance between keyword (0) and semantic (1) search
-  useRerank: false, // Toggle for VoyageAI reranking
+  useRerank: true, // Toggle for VoyageAI reranking
 };
 
 const syncState = {
@@ -605,19 +605,42 @@ function renderResults(results) {
     resultDiv.dataset.uid = result.uid;
     resultDiv.dataset.index = index;
 
-    resultDiv.innerHTML = `
-      ${breadcrumbHtml}
-      <div class="rss-chunk-container" id="rss-chunk-${result.uid}-${index}">
-        <!-- Fallback content in case renderString fails -->
-        ${escapeHtml(chunkTextWithHighlights.replace(/\^\^/g, ""))}
-      </div>
-      <div class="rss-result-similarity">
-        <div class="rss-similarity-bar">
-          <div class="rss-similarity-fill" style="width: ${percentage}%;"></div>
+    const accentIntensity = Math.max(0, Math.min(similarity, 1));
+    const accentAlpha = Math.max(0.18, Math.min(0.45, 0.2 + accentIntensity * 0.4));
+    const baseColor = "59, 130, 246";
+    const accentColor = `rgba(${baseColor}, ${accentAlpha.toFixed(2)})`;
+    resultDiv.style.setProperty("--rss-accent-color", accentColor);
+
+    let headerHtml = "";
+    const chipText = `${percentage}% Match`;
+    const scoreChip = `<span class="rss-score-chip">${chipText}</span>`;
+    const chunkFallback = escapeHtml(chunkTextWithHighlights.replace(/\^\^/g, ""));
+
+    let pageTextId = null;
+
+    if (isPage) {
+      pageTextId = `rss-page-text-${result.uid}-${index}`;
+      resultDiv.innerHTML = `
+        <div class="rss-page-line">
+          <span class="rss-page-text" id="${pageTextId}">${chunkFallback}</span>
+          ${scoreChip}
         </div>
-        <span class="rss-similarity-value">${percentage}% match${isPage ? " (page)" : ""}</span>
-      </div>
-    `;
+      `;
+    } else {
+      if (breadcrumbHtml) {
+        headerHtml = `<div class="rss-result-header">${breadcrumbHtml}${scoreChip}</div>`;
+      } else {
+        headerHtml = `<div class="rss-result-header">${scoreChip}<span class="rss-header-label">Match</span></div>`;
+      }
+
+      resultDiv.innerHTML = `
+        ${headerHtml}
+        <div class="rss-chunk-container" id="rss-chunk-${result.uid}-${index}">
+          <!-- Fallback content in case renderString fails -->
+          ${chunkFallback}
+        </div>
+      `;
+    }
 
     resultDiv.addEventListener("click", (event) => {
       // Navigate to parent_uid if available, otherwise page_uid, fallback to primary uid
@@ -626,6 +649,22 @@ function renderResults(results) {
     });
 
     resultsEl.appendChild(resultDiv);
+
+    if (isPage && pageTextId) {
+      const pageTextEl = resultDiv.querySelector(`#${pageTextId}`);
+      if (pageTextEl) {
+        try {
+          pageTextEl.innerHTML = "";
+          window.roamAlphaAPI.ui.components.renderString({
+            el: pageTextEl,
+            string: chunkTextWithHighlights,
+          });
+        } catch (e) {
+          console.error("[Semantic Search] renderString failed for page result:", e);
+          pageTextEl.textContent = chunkTextWithHighlights.replace(/\^\^/g, "");
+        }
+      }
+    }
 
     if (breadcrumbConfig) {
       const breadcrumbContainer = document.getElementById(breadcrumbConfig.id);
@@ -664,39 +703,41 @@ function renderResults(results) {
       }
     }
 
-    const chunkContainer = document.getElementById(
-      `rss-chunk-${result.uid}-${index}`,
-    );
-    if (chunkContainer) {
-      try {
-        // Clear the fallback text before rendering
-        chunkContainer.innerHTML = "";
+    if (!isPage) {
+      const chunkContainer = document.getElementById(
+        `rss-chunk-${result.uid}-${index}`,
+      );
+      if (chunkContainer) {
+        try {
+          // Clear the fallback text before rendering
+          chunkContainer.innerHTML = "";
 
-        const parsedBlocks = parseLinearizedChunk(chunkTextWithHighlights);
-        const needsHierarchy =
-          parsedBlocks.length > 1 ||
-          parsedBlocks.some((block) => block.level > 0);
+          const parsedBlocks = parseLinearizedChunk(chunkTextWithHighlights);
+          const needsHierarchy =
+            parsedBlocks.length > 1 ||
+            parsedBlocks.some((block) => block.level > 0);
 
-        if (needsHierarchy) {
-          // Multi-block chunk - render with normalized hierarchy
-          renderMultiBlockChunk(
-            chunkContainer,
-            chunkTextWithHighlights,
-            parsedBlocks,
+          if (needsHierarchy) {
+            // Multi-block chunk - render with normalized hierarchy
+            renderMultiBlockChunk(
+              chunkContainer,
+              chunkTextWithHighlights,
+              parsedBlocks,
+            );
+          } else {
+            // Single block or simple text - use standard renderString
+            window.roamAlphaAPI.ui.components.renderString({
+              el: chunkContainer,
+              string: chunkTextWithHighlights,
+            });
+          }
+        } catch (e) {
+          console.error("[Semantic Search] renderString failed:", e);
+          // Restore fallback text on error
+          chunkContainer.innerHTML = escapeHtml(
+            chunkTextWithHighlights.replace(/\^\^/g, ""),
           );
-        } else {
-          // Single block or simple text - use standard renderString
-          window.roamAlphaAPI.ui.components.renderString({
-            el: chunkContainer,
-            string: chunkTextWithHighlights,
-          });
         }
-      } catch (e) {
-        console.error("[Semantic Search] renderString failed:", e);
-        // Restore fallback text on error
-        chunkContainer.innerHTML = escapeHtml(
-          chunkTextWithHighlights.replace(/\^\^/g, ""),
-        );
       }
     }
   });
@@ -983,7 +1024,7 @@ function addStyles() {
       .rss-search {
         padding: 16px 20px;
       }
-      .rss-input { width: 100%; }
+      .rss-search .rss-input { width: 100%; }
       .rss-filters {
         padding: 8px 20px 12px 20px;
         border-bottom: 1px solid var(--border-color, #e5e7eb);
@@ -1040,16 +1081,22 @@ function addStyles() {
         padding: 12px;
         margin-bottom: 8px;
         border: 1px solid var(--border-color, #e5e7eb);
+        border-left: 3px solid var(--rss-accent-color, rgba(59, 130, 246, 0.25));
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: background-color 0.2s, border-color 0.2s;
       }
       .rss-result:hover {
         background-color: var(--hover-bg, #f9fafb);
+        border-left-color: var(--rss-accent-color, rgba(59, 130, 246, 0.45));
       }
       .rss-result.rss-selected {
         background-color: var(--selected-bg, #eff6ff);
         border-color: var(--selected-border, #3b82f6);
+        border-left-color: var(--rss-accent-color, rgba(59, 130, 246, 0.55));
+      }
+      .rss-result.rss-page-result {
+        padding: 10px;
       }
       .rss-result-breadcrumb {
         font-size: 11px;
@@ -1097,26 +1144,38 @@ function addStyles() {
       .rss-block-content p:last-child {
         margin-bottom: 0;
       }
-      .rss-result-similarity {
+      .rss-result-header {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 8px;
+        margin-bottom: 4px;
+        min-height: 18px;
       }
-      .rss-similarity-bar {
-        flex: 1;
-        height: 4px;
-        background: #e5e7eb;
-        border-radius: 2px;
+      .rss-score-chip {
+        font-size: 9px;
+        font-weight: 500;
+        color: #6b7280;
+        padding: 0 4px;
+        margin-left: 0;
+        white-space: nowrap;
       }
-      .rss-similarity-fill {
-        height: 100%;
-        background: #3b82f6;
-        border-radius: 2px;
+      .rss-result-header .rss-result-breadcrumb {
+        margin-bottom: 0;
       }
-      .rss-similarity-value {
+      .rss-header-label {
         font-size: 11px;
         color: #6b7280;
+      }
+      .rss-page-line {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-color, #202020);
+      }
+      .rss-page-text {
+        display: inline-block;
       }
 
       /* Dark mode support */
@@ -1133,14 +1192,27 @@ function addStyles() {
         border-color: #5a9fd4;
       }
       .roam-body-main.bp3-dark .rss-result-breadcrumb {
-        color: #9ca3af;
+        color: #d1d5db;
         background: #374151;
+      }
+      .roam-body-main.bp3-dark .rss-score-chip {
+        color: #d1d5db;
+        border-color: rgba(148, 163, 184, 0.45);
+      }
+      .roam-body-main.bp3-dark .rss-result {
+        border-left-color: var(--rss-accent-color, rgba(59, 130, 246, 0.4));
       }
       .roam-body-main.bp3-dark .rss-filters {
         background: #2f3136;
       }
       .roam-body-main.bp3-dark .rss-block-bullet {
         color: #6b7280;
+      }
+      .roam-body-main.bp3-dark .rss-page-line {
+        color: #dcddde;
+      }
+      .rss-alpha-slider {
+        width: 80px !important;
       }
     </style>
   `;
@@ -1390,9 +1462,24 @@ export default {
       extensionAPI.settings.get("sync-limit") || DEFAULT_CONFIG.syncLimit;
 
     // Load filter preferences
-    searchState.hidePages = extensionAPI.settings.get("hide-pages") || false;
-    searchState.searchAlpha = extensionAPI.settings.get("search-alpha") || 0.5;
-    searchState.useRerank = extensionAPI.settings.get("use-rerank") || false;
+    const hidePagesSetting = extensionAPI.settings.get("hide-pages");
+    const hidePagesUnset = hidePagesSetting === undefined || hidePagesSetting === null;
+    searchState.hidePages = hidePagesUnset ? true : hidePagesSetting;
+    if (hidePagesUnset) {
+      extensionAPI.settings.set("hide-pages", searchState.hidePages);
+    }
+    const alphaSetting = extensionAPI.settings.get("search-alpha");
+    const alphaUnset = alphaSetting === undefined || alphaSetting === null;
+    searchState.searchAlpha = alphaUnset ? 0.5 : alphaSetting;
+    if (alphaUnset) {
+      extensionAPI.settings.set("search-alpha", searchState.searchAlpha);
+    }
+    const rerankSetting = extensionAPI.settings.get("use-rerank");
+    const rerankUnset = rerankSetting === undefined || rerankSetting === null;
+    searchState.useRerank = rerankUnset ? true : rerankSetting;
+    if (rerankUnset) {
+      extensionAPI.settings.set("use-rerank", searchState.useRerank);
+    }
 
     // Initialize API client
     searchAPI = new SearchAPI(config.backendURL);

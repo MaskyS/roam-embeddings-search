@@ -176,7 +176,7 @@ def process_page(page_data: Dict, chunkers: Dict) -> Dict:
 
     # Linearize the page
     print(f"    [DEBUG] Starting linearization...")
-    linearized_text, uid_map = linearize_page_markdown_style(page_data)
+    linearized_text, uid_map, _page_meta = linearize_page_markdown_style(page_data)
     print(f"    [DEBUG] Linearized to {len(linearized_text)} chars")
 
     result = {
