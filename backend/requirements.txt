@@ -5,7 +5,8 @@ httpx
 python-dotenv
 pydantic-settings
 chonkie[semantic]
+chonkie[voyageai]
 sentence-transformers
-ollama
 voyageai
-weaviate-client
+weaviate-client>=4.17.0
+funcy

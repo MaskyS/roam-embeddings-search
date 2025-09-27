@@ -1,64 +1,310 @@
 """
-Sync Semantic: A new approach to sync the graph for semantic search.
+Semantic sync pipeline for Roam -> Weaviate using contextual embeddings.
 
-This script replaces the complex context-building logic of sync_full.py.
-It operates on a page-by-page basis, linearizing the entire page's content
-and then using Chonkie's SemanticChunker to create semantically coherent
-chunks for indexing.
-
-This version is updated to use Weaviate as the vector store and Voyage AI's
-contextual embedding models.
-
-Core pipeline:
-1. Fetch all pages from Roam.
-2. For each page:
-    a. Linearize its content into a single text document.
-    b. Chunk the linearized text using Chonkie.
-3. In batches of pages:
-    a. Generate contextual embeddings for all chunks using Voyage AI.
-    b. Batch-insert the chunks and their vectors into Weaviate.
+The sync now relies on a functional core (``backend.semantic_sync``) and a
+thin orchestration layer which wires together Roam pulls, chunking, embedding
+and Weaviate persistence. This keeps the business logic declarative and makes
+incremental sync behaviour easier to reason about.
 """
-print("[sync_semantic] Starting...")
 
-import asyncio
-import json
-import re
-import uuid
 import argparse
+import asyncio
+import logging
+import re
 import time
-from typing import Dict, List, Optional, Any
+import uuid
+from collections import deque
+from contextlib import suppress
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, Iterable, List, Optional, Callable, Awaitable
 
 import httpx
 import weaviate
-import voyageai
-from weaviate.classes.config import (Property, DataType, Tokenization, Configure)
+from funcy import chunks, compact, decorator, merge, merge_with, silent
 
 # Add backend to path to allow local imports
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from linearize import linearize_page_markdown_style
-from roam import query_roam
-from main_semantic import settings
+LOGGER = logging.getLogger(__name__)
 
-voyageai.api_key = settings.voyageai_api_key
-voyage_client = voyageai.Client()
+from main_semantic import settings
+from persistent_state import (
+    DEFAULT_DB_PATH,
+    initialise as initialise_state,
+    load_page_state as load_state_rows,
+    record_run,
+    upsert_page_state,
+)
+from roam import query_roam
+from semantic_sync import (
+    ChunkerClient,
+    ChunkerConfig,
+    VoyageEmbeddingClient,
+    WeaviateSyncAdapter,
+    build_weaviate_objects,
+    collect_page_snapshot,
+    decide_sync_action,
+    load_state,
+    persist_state,
+    remove_state_file,
+)
 
 # --- Constants ---
-BATCH_SIZE = 20 # Pages per Roam pull-many request
-COLLECTION_NAME = "RoamSemanticChunks" # Weaviate class names are capitalized
-CHUNKER_SERVICE_URL = "http://chunker:8003"  # Docker service name
-CHUNKER_RETRY_ATTEMPTS = 3
-CHUNKER_RETRY_DELAY = 2  # seconds
 
-# --- Roam API Functions ---
+
+@dataclass(frozen=True)
+class SyncConfig:
+    batch_size: int
+    metadata_batch_size: int
+    metadata_state_concurrency: int
+    collection_name: str
+    weaviate_http_host: str
+    weaviate_http_port: int
+    weaviate_http_secure: bool
+    weaviate_grpc_host: str
+    weaviate_grpc_port: int
+    weaviate_grpc_secure: bool
+    chunker_url: str
+    chunker_retries: int
+    chunker_retry_delay: int
+    sync_version: str
+    uuid_namespace: uuid.UUID
+    chunker_group_size: int
+    chunker_concurrency: int
+    voyage_concurrency: int
+    weaviate_write_concurrency: int
+    roam_requests_per_minute: int
+
+
+CONFIG = SyncConfig(
+    batch_size=20,
+    metadata_batch_size=int(os.getenv("ROAM_METADATA_BATCH_SIZE", "500")),
+    metadata_state_concurrency=int(os.getenv("ROAM_METADATA_STATE_CONCURRENCY", "8")),
+    collection_name="RoamSemanticChunks",
+    weaviate_http_host=os.getenv("WEAVIATE_HTTP_HOST", "127.0.0.1"),
+    weaviate_http_port=int(os.getenv("WEAVIATE_HTTP_PORT", "8080")),
+    weaviate_http_secure=os.getenv("WEAVIATE_HTTP_SECURE", "false").lower() == "true",
+    weaviate_grpc_host=os.getenv("WEAVIATE_GRPC_HOST", os.getenv("WEAVIATE_HTTP_HOST", "127.0.0.1")),
+    weaviate_grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
+    weaviate_grpc_secure=os.getenv("WEAVIATE_GRPC_SECURE", "false").lower() == "true",
+    chunker_url=os.getenv("CHUNKER_SERVICE_URL", "http://127.0.0.1:8003"),
+    chunker_retries=3,
+    chunker_retry_delay=2,
+    sync_version="semantic_v3_incremental",
+    uuid_namespace=uuid.uuid5(uuid.NAMESPACE_URL, "roam-semantic-sync"),
+    chunker_group_size=int(os.getenv("CHUNKER_GROUP_SIZE", "4")),
+    chunker_concurrency=int(os.getenv("CHUNKER_CONCURRENCY", "1")),
+    voyage_concurrency=int(os.getenv("VOYAGE_CONCURRENCY", "4")),
+    weaviate_write_concurrency=int(os.getenv("WEAVIATE_WRITE_CONCURRENCY", "1")),
+    roam_requests_per_minute=int(os.getenv("ROAM_MAX_REQUESTS_PER_MINUTE", "50")),
+)
+
+
+METADATA_SELECTOR = (
+    "[:block/uid :create/time :edit/time "
+    "{:block/children [:block/uid :create/time :edit/time {:block/children ...}]}]"
+)
+
+FULL_PAGE_SELECTOR = (
+    "[:block/uid :block/string :node/title :block/order :create/time :edit/time "
+    "{:create/user [:user/uid]} {:edit/user [:user/uid]} {:block/refs [:block/uid :node/title :block/string]} "
+    "{:block/children ...}]"
+)
+
+# Flag stored in persisted state once metadata filtering has been applied.
+STATE_FLAG_METADATA_APPLIED = "metadata_applied"
+
+TO_INT = silent(int)
+
+ROAM_BASE_URL = f"https://api.roamresearch.com/api/graph/{settings.roam_graph_name}/"
+ROAM_HEADERS = {
+    "X-Authorization": f"Bearer {settings.roam_api_token}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+}
+
+
+# --- Rate limiter ---------------------------------------------------------
+
+
+class RateLimiter:
+    """Simple async rate limiter using a sliding window."""
+
+    def __init__(self, max_calls: int, period: float) -> None:
+        self.max_calls = max_calls
+        self.period = period
+        self.calls: deque[float] = deque()
+        self._lock = asyncio.Lock()
+
+    async def acquire(self) -> None:
+        loop = asyncio.get_running_loop()
+        while True:
+            async with self._lock:
+                now = loop.time()
+                while self.calls and now - self.calls[0] > self.period:
+                    self.calls.popleft()
+                if len(self.calls) < self.max_calls:
+                    self.calls.append(now)
+                    return
+                sleep_for = self.period - (now - self.calls[0]) + 0.01
+            await asyncio.sleep(max(sleep_for, 0.01))
+
+
+ROAM_RATE_LIMITER = RateLimiter(CONFIG.roam_requests_per_minute, 60.0)
+
+
+@decorator
+async def async_retry(call, *, tries: int = 3, timeout=0.0, errors=(Exception,), filter_errors=None):
+    attempt = 0
+    while True:
+        try:
+            return await call()
+        except errors as exc:  # type: ignore[arg-type]
+            if filter_errors and not filter_errors(exc):
+                raise
+            attempt += 1
+            if attempt >= tries:
+                raise
+            delay = timeout(attempt) if callable(timeout) else timeout
+            if delay:
+                await asyncio.sleep(delay)
+
+
+def _sum_values(*values: Optional[float]) -> float:
+    if len(values) == 1 and isinstance(values[0], (list, tuple)):
+        values = tuple(values[0])
+    return sum((value or 0) for value in values)
+
+
+def merge_stats(base: Dict[str, int], delta: Optional[Dict[str, int]]) -> Dict[str, int]:
+    if not delta:
+        return base
+    return merge_with(_sum_values, base, delta)
+
+
+def merge_durations(base: Dict[str, float], delta: Optional[Dict[str, float]]) -> Dict[str, float]:
+    if not delta:
+        return base
+    return merge_with(_sum_values, base, delta)
+
+
+def make_summary(
+    *,
+    status: str,
+    stats: Optional[Dict[str, int]] = None,
+    durations: Optional[Dict[str, float]] = None,
+    metadata_applied: bool,
+    extra: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    summary = {
+        "status": status,
+        "stats": dict(stats or {}),
+        "durations": dict(durations or {}),
+        STATE_FLAG_METADATA_APPLIED: metadata_applied,
+    }
+    if extra:
+        summary.update(extra)
+    return summary
+
+@async_retry(tries=3, timeout=lambda attempt: min(2 ** attempt, 4), errors=(httpx.HTTPError,))
+async def _post_roam(endpoint: str, payload: Dict[str, Any], *, timeout: float) -> httpx.Response:
+    await ROAM_RATE_LIMITER.acquire()
+    async with httpx.AsyncClient(
+        base_url=ROAM_BASE_URL,
+        headers=ROAM_HEADERS,
+        follow_redirects=True,
+        timeout=timeout,
+    ) as client:
+        response = await client.post(endpoint, json=payload)
+
+    if response.status_code >= 500 or response.status_code == 429:
+        response.raise_for_status()
+    return response
+
+
+@async_retry(tries=3, timeout=lambda attempt: min(2 ** attempt, 4), errors=(Exception,))
+async def chunk_batch_with_retry(client: ChunkerClient, texts: List[str]) -> List[List[Dict[str, Any]]]:
+    return await client.chunk_batch(texts)
+
+
+@async_retry(tries=3, timeout=lambda attempt: min(2 ** attempt, 4), errors=(Exception,))
+async def embed_documents_with_retry(client: VoyageEmbeddingClient, docs: List[List[str]]) -> List[List[List[float]]]:
+    return await client.embed_documents(docs)
+
+
+@async_retry(tries=3, timeout=lambda attempt: min(2 ** attempt, 4), errors=(Exception,))
+async def weaviate_insert_with_retry(adapter: WeaviateSyncAdapter, objects: List[Dict[str, Any]]):
+    return await adapter.insert_objects(objects)
+
+
+@async_retry(tries=3, timeout=lambda attempt: min(2 ** attempt, 4), errors=(Exception,))
+async def weaviate_delete_with_retry(adapter: WeaviateSyncAdapter, page_uid: str, content_hash: str) -> None:
+    await adapter.delete_stale_objects(page_uid, content_hash)
+
+
+# --- Data containers ------------------------------------------------------
+
+
+@dataclass
+class PageWorkItem:
+    snapshot: Dict[str, Any]
+    page_title: str
+    page_uid: str
+    page_num: int
+
+
+@dataclass
+class PageMetric:
+    page_uid: str
+    chunk_duration: float
+    embed_duration: float
+    weaviate_duration: float
+
+
+@dataclass
+class PageMetadata:
+    page_uid: str
+    max_edit_time: Optional[int]
+    has_children: bool
+    raw: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class GroupResult:
+    metrics: List[PageMetric] = field(default_factory=list)
+    docs_added: int = 0
+    chunks_created: int = 0
+    pages_updated: int = 0
+    pages_failed: int = 0
+    chunk_duration: float = 0.0
+    voyage_duration: float = 0.0
+    weaviate_duration: float = 0.0
+    chunk_wait: float = 0.0
+    voyage_wait: float = 0.0
+    weaviate_wait: float = 0.0
+    fail_messages: List[str] = field(default_factory=list)
+    state_updates: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+
+@dataclass
+class MetadataPassResult:
+    remaining_uids: List[str]
+    metadata_map: Dict[str, PageMetadata]
+    state_cache: Dict[str, Dict[str, Any]]
+    stats_delta: Dict[str, int]
+    durations_delta: Dict[str, float]
+    missing_edit_uids: set[str]
+    max_edit_time_seen: Optional[int]
+
+
+# --- Roam API helpers -----------------------------------------------------
 
 async def get_all_page_uids() -> List[str]:
-    """
-    Fetches all page UIDs from Roam, including Daily Note Pages.
-    """
-    print("[sync_semantic] Step 1: Getting all page UIDs...")
+    LOGGER.info("Step 1: getting all page UIDs")
     query = """[:find ?uid
                :where [?e :node/title]
                       [?e :block/uid ?uid]]"""
@@ -66,474 +312,1088 @@ async def get_all_page_uids() -> List[str]:
     result = await query_roam(
         token=settings.roam_api_token,
         graph_name=settings.roam_graph_name,
-        query=query
+        query=query,
     )
-
-    if not result or not result.get('result'):
+    if not result or not result.get("result"):
         return []
 
-    all_uids = [item[0] for item in result['result']]
-    # Count DNPs for informational purposes
-    dnp_count = len([uid for uid in all_uids if re.match(r'^\d{2}-\d{2}-\d{4}$', uid)])
-    print(f"[sync_semantic] Found {len(all_uids)} total pages ({dnp_count} Daily Notes, {len(all_uids) - dnp_count} regular pages).")
+    all_uids = [item[0] for item in result["result"]]
+    dnp_count = sum(1 for uid in all_uids if re.match(r"^\d{2}-\d{2}-\d{4}$", uid))
+    LOGGER.info(
+        "Found %d total pages (%d Daily Notes, %d regular pages)",
+        len(all_uids),
+        dnp_count,
+        len(all_uids) - dnp_count,
+    )
     return all_uids
 
-async def pull_many_pages(uids: List[str]) -> List[Optional[Dict]]:
-    """
-    Pulls full page data for a list of UIDs.
-    """
-    if not uids:
+
+async def pull_many_pages(uids: Iterable[str]) -> List[Optional[Dict[str, Any]]]:
+    batch = list(uids)
+    if not batch:
         return []
 
-    url = f"https://api.roamresearch.com/api/graph/{settings.roam_graph_name}/pull-many"
-    headers = {
-        "X-Authorization": f"Bearer {settings.roam_api_token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+    eids_list = " ".join([f'[:block/uid \"{uid}\"]' for uid in batch])
+    payload = {"eids": f"[{eids_list}]", "selector": FULL_PAGE_SELECTOR}
+
+    try:
+        response = await _post_roam("pull-many", payload, timeout=60.0)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        LOGGER.exception("Pull-many request error: %s", exc)
+        return [None] * len(batch)
+
+    if response.status_code == 200:
+        return response.json().get("result", [])
+
+    LOGGER.warning(
+        "Pull-many failed with status %s: %s",
+        response.status_code,
+        response.text[:200],
+    )
+    return [None] * len(batch)
+
+
+async def pull_many_metadata(uids: Iterable[str]) -> List[Optional[Dict[str, Any]]]:
+    batch = list(uids)
+    if not batch:
+        return []
+
+    eids_list = " ".join([f'[:block/uid \"{uid}\"]' for uid in batch])
+    payload = {"eids": f"[{eids_list}]", "selector": METADATA_SELECTOR}
+
+    try:
+        response = await _post_roam("pull-many", payload, timeout=30.0)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        LOGGER.exception("Metadata pull-many request error: %s", exc)
+        return [None] * len(batch)
+
+    if response.status_code == 200:
+        return response.json().get("result", [])
+
+    LOGGER.warning(
+        "Metadata pull-many failed with status %s: %s",
+        response.status_code,
+        response.text[:200],
+    )
+    return [None] * len(batch)
+
+
+def extract_page_metadata(page_data: Optional[Dict[str, Any]]) -> Optional[PageMetadata]:
+    if not page_data or not isinstance(page_data, dict):
+        return None
+
+    page_uid = page_data.get(":block/uid")
+    if not page_uid:
+        return None
+
+    max_edit: Optional[int] = None
+    has_children = bool(page_data.get(":block/children"))
+
+    def walk(node: Optional[Dict[str, Any]]) -> None:
+        nonlocal max_edit, has_children
+        if not node or not isinstance(node, dict):
+            return
+        edit_raw = node.get(":edit/time")
+        edit_int = TO_INT(edit_raw) if edit_raw is not None else None
+        if edit_int is not None:
+            max_edit = edit_int if max_edit is None else max(max_edit, edit_int)
+
+        children = node.get(":block/children") or []
+        if children and isinstance(children, list):
+            has_children = True
+            for child in children:
+                if isinstance(child, dict):
+                    walk(child)
+
+    walk(page_data)
+    return PageMetadata(page_uid=page_uid, max_edit_time=max_edit, has_children=has_children, raw=page_data)
+
+
+async def run_metadata_pass(
+    uids: List[str],
+    *,
+    since: Optional[int],
+    adapter: WeaviateSyncAdapter,
+    config: SyncConfig,
+    preloaded_state: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> MetadataPassResult:
+    if not uids:
+        return MetadataPassResult([], {}, {}, {}, {}, set(), None)
+
+    metadata_map: Dict[str, PageMetadata] = {}
+    missing_edit_uids: set[str] = set()
+    max_edit_seen: Optional[int] = None
+
+    metadata_start = time.time()
+    failures = 0
+
+    preloaded_state = preloaded_state or {}
+
+    for batch in chunks(config.metadata_batch_size, uids):
+        results = await pull_many_metadata(batch)
+        for uid, payload in zip(batch, results or []):
+            meta = extract_page_metadata(payload)
+            if meta:
+                metadata_map[uid] = meta
+                if meta.max_edit_time is not None:
+                    max_edit_seen = meta.max_edit_time if max_edit_seen is None else max(max_edit_seen, meta.max_edit_time)
+                else:
+                    missing_edit_uids.add(uid)
+            else:
+                missing_edit_uids.add(uid)
+                failures += 1
+
+    metadata_duration = time.time() - metadata_start
+
+    stats_delta: Dict[str, int] = {
+        "metadata_candidates": 0,
+        "metadata_filtered": 0,
+        "pages_skipped": 0,
+        "pages_since_filtered": 0,
     }
 
-    eids_list = " ".join([f'[:block/uid \"{uid}\"]' for uid in uids])
-    eids_str = f"[{eids_list}]"
-    # Recursive selector to get all children of the page
-    selector_str = "[:block/uid :block/string :node/title :block/order {:block/children ...}]"
+    remaining_after_since: List[str] = []
+    for uid in uids:
+        meta = metadata_map.get(uid)
+        if meta and meta.max_edit_time is not None and since is not None and meta.max_edit_time <= since:
+            stats_delta["pages_since_filtered"] += 1
+            stats_delta["pages_skipped"] += 1
+            stats_delta["metadata_filtered"] += 1
+            continue
+        remaining_after_since.append(uid)
 
-    pull_data = {"eids": eids_str, "selector": selector_str}
+    # Fetch Weaviate states for candidates with known metadata; others will be processed later without comparison.
+    state_fetch_uids = [
+        uid
+        for uid in remaining_after_since
+        if metadata_map.get(uid)
+        and metadata_map[uid].max_edit_time is not None
+        and uid not in preloaded_state
+    ]
+    stats_delta["metadata_candidates"] = len(state_fetch_uids)
 
-    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-        try:
-            response = await client.post(url, headers=headers, json=pull_data)
-            if response.status_code == 200:
-                return response.json().get('result', [])
-            else:
-                print(f"  ✗ Pull-many failed with status {response.status_code}: {response.text[:200]}")
-                return [None] * len(uids)
-        except Exception as e:
-            print(f"  ✗ Pull-many request error: {e}")
-            return [None] * len(uids)
+    state_cache: Dict[str, Dict[str, Any]] = dict(preloaded_state)
+    weaviate_duration = 0.0
 
-# --- Weaviate Schema ---
-
-def ensure_weaviate_schema(client: weaviate.Client, recreate: bool = False):
-    """Ensure the Weaviate collection exists and has the correct schema."""
-    print(f"[Weaviate] Ensuring collection '{COLLECTION_NAME}' exists...")
-    if client.collections.exists(COLLECTION_NAME):
-        if recreate:
-            print(f"[Weaviate] Recreating collection '{COLLECTION_NAME}' with updated configuration...")
-            client.collections.delete(COLLECTION_NAME)
-        else:
-            print(f"[Weaviate] Collection '{COLLECTION_NAME}' already exists.")
-            return
-
-    print(f"[Weaviate] Creating collection '{COLLECTION_NAME}'...")
-    try:
-        client.collections.create(
-            name=COLLECTION_NAME,
-            vectorizer_config=Configure.Vectorizer.none(),
-            reranker_config=Configure.Reranker.voyageai(model="rerank-2-lite"),
-            properties=[
-                Property(name="chunk_text_preview", data_type=DataType.TEXT),
-                Property(name="primary_uid", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
-                Property(name="page_title", data_type=DataType.TEXT, tokenization=Tokenization.WORD),
-                Property(name="page_uid", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
-                Property(name="document_type", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
-                Property(name="source_uids_json", data_type=DataType.TEXT, skip_vectorization=True),
-                Property(name="chunk_token_count", data_type=DataType.INT),
-                Property(name="sync_version", data_type=DataType.TEXT, skip_vectorization=True),
-            ]
-        )
-        print(f"[Weaviate] Collection '{COLLECTION_NAME}' created successfully.")
-    except Exception as e:
-        print(f"[Weaviate] Failed to create collection: {e}")
-        raise
-
-# --- Chunker Service Integration ---
-
-async def chunk_text_via_service(text: str, max_retries: int = CHUNKER_RETRY_ATTEMPTS) -> Optional[List[Dict[str, Any]]]:
-    """
-    Call the chunker service to chunk text.
-    Returns list of chunks with text, start_index, end_index, token_count.
-    Returns None if service is unavailable after retries.
-    """
-    for attempt in range(max_retries):
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{CHUNKER_SERVICE_URL}/chunk",
-                    json={"text": text}
-                )
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get("chunks", [])
-                elif response.status_code == 503:
-                    # Service still initializing
-                    print(f"  ↳ Chunker service initializing, attempt {attempt + 1}/{max_retries}...")
-                    await asyncio.sleep(CHUNKER_RETRY_DELAY * (2 ** attempt))  # Exponential backoff
+    if state_fetch_uids:
+        for group in chunks(config.metadata_state_concurrency, state_fetch_uids):
+            group_start = time.time()
+            fetch_tasks = [asyncio.create_task(adapter.fetch_existing_page_state(uid)) for uid in group]
+            results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+            weaviate_duration += time.time() - group_start
+            for uid, result in zip(group, results):
+                if isinstance(result, Exception):  # pragma: no cover - defensive logging
+                    LOGGER.exception("Failed to fetch existing state for %s during metadata pass", uid, exc_info=result)
+                    state_cache[uid] = {}
                 else:
-                    print(f"  ✗ Chunker service error: {response.status_code}")
-                    return None
-        except (httpx.ConnectError, httpx.TimeoutException) as e:
-            if attempt == max_retries - 1:
-                print(f"  ✗ Cannot connect to chunker service: {e}")
-                return None
-            await asyncio.sleep(CHUNKER_RETRY_DELAY * (2 ** attempt))
-    return None
+                    state_cache[uid] = result or {}
 
-async def wait_for_chunker_service(timeout: int = 60) -> bool:
-    """
-    Wait for the chunker service to be ready.
-    Returns True if service is ready, False if timeout.
-    """
+    remaining_uids: List[str] = []
+    retained_state_cache: Dict[str, Dict[str, Any]] = dict(state_cache)
+    for uid in remaining_after_since:
+        meta = metadata_map.get(uid)
+        state = state_cache.get(uid)
+
+        if meta and meta.max_edit_time is not None and state:
+            stored_edit = TO_INT(state.get("last_synced_edit_time")) if state.get("last_synced_edit_time") is not None else None
+            if stored_edit is not None and stored_edit >= meta.max_edit_time and state.get("page_objects"):
+                stats_delta["metadata_filtered"] += 1
+                stats_delta["pages_skipped"] += 1
+                continue
+
+        remaining_uids.append(uid)
+        if state is not None:
+            retained_state_cache[uid] = state
+
+    if failures:
+        LOGGER.warning("Metadata pull left %d pages without metadata; scheduling full pulls", failures)
+
+    durations_delta = {
+        "metadata_pull": metadata_duration,
+        "weaviate_meta": weaviate_duration,
+    }
+
+    return MetadataPassResult(
+        remaining_uids=remaining_uids,
+        metadata_map=metadata_map,
+        state_cache=retained_state_cache,
+        stats_delta=stats_delta,
+        durations_delta=durations_delta,
+        missing_edit_uids=missing_edit_uids,
+        max_edit_time_seen=max_edit_seen,
+    )
+
+
+# --- Sync -----------------------------------------------------------------
+
+async def sync_semantic_graph(
+    clear_existing: bool = False,
+    test_limit: Optional[int] = None,
+    recreate_collection: bool = False,
+    state_file: Optional[str] = None,
+    resume: bool = False,
+    since: Optional[int] = None,
+    config: SyncConfig = CONFIG,
+    status_cb: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None,
+    completion_cb: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None,
+) -> Dict[str, Any]:
+    LOGGER.info("Starting semantic graph sync with Weaviate")
     start_time = time.time()
-    while time.time() - start_time < timeout:
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{CHUNKER_SERVICE_URL}/health")
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("chunker_loaded"):
-                        print(f"[sync_semantic] Chunker service ready (init took {data.get('chunker_init_time_seconds', 0):.2f}s)")
-                        return True
-        except (httpx.ConnectError, httpx.TimeoutException):
-            pass
-        await asyncio.sleep(2)
-    return False
+    start_timestamp = datetime.utcnow().isoformat()
 
-# Simple chunk class to mimic Chonkie's chunk structure
-class SimpleChunk:
-    def __init__(self, text: str, start_index: int, end_index: int, token_count: int):
-        self.text = text
-        self.start_index = start_index
-        self.end_index = end_index
-        self.token_count = token_count
+    initialise_state()
+    run_id = str(uuid.uuid4())
 
-# --- Main Sync Logic ---
+    summary: Dict[str, Any] = {}
 
-async def sync_semantic_graph(clear_existing: bool = False, test_limit: Optional[int] = None, recreate_collection: bool = False):
-    """
-    Main function to run the semantic sync process.
-    """
-    print("\n[sync_semantic] Starting semantic graph sync with Weaviate...")
-    start_time = time.time()
+    async def emit_status(payload: Dict[str, Any]) -> None:
+        if status_cb:
+            await status_cb(payload)
 
-    # Step 1: Get all page UIDs
+    async def emit_completion(payload: Dict[str, Any]) -> None:
+        if completion_cb:
+            await completion_cb(payload)
+
+    state_path = os.path.abspath(state_file) if state_file else None
+    if resume and not state_path:
+        LOGGER.warning("--resume requested without --state-file; ignoring resume flag")
+        resume = False
+
     step1_start = time.time()
     all_page_uids = await get_all_page_uids()
     step1_time = time.time() - step1_start
-    if not all_page_uids:
-        print("[sync_semantic] No pages found to process.")
-        return
-
-    total_pages = len(all_page_uids)
-    if test_limit:
-        print(f"[sync_semantic] TEST MODE: Limiting to first {test_limit} pages.")
-        all_page_uids = all_page_uids[:test_limit]
-        total_pages = len(all_page_uids)
-
-    # Step 2: Handle collection and client
-    client = weaviate.connect_to_custom(
-        http_host="weaviate",
-        http_port=8080,
-        http_secure=False,
-        grpc_host="weaviate",
-        grpc_port=50051,
-        grpc_secure=False,
+    total_pages_discovered = len(all_page_uids)
+    await emit_status(
+        {
+            "event": "uids_loaded",
+            "total_pages": total_pages_discovered,
+            "started_at": start_timestamp,
+            "progress": {
+                "processed": 0,
+                "total": total_pages_discovered,
+                "percent": 0.0,
+            },
+        }
     )
-    try:
-        if clear_existing:
-            print(f"[sync_semantic] Step 2: Deleting collection '{COLLECTION_NAME}'...")
-            client.collections.delete(COLLECTION_NAME)
+    if not all_page_uids:
+        LOGGER.info("No pages found to process")
+        summary = make_summary(
+            status="no_pages",
+            stats={},
+            durations={"uids": step1_time},
+            metadata_applied=False,
+            extra={
+                "total_pages": 0,
+                "since": since,
+                "test_limit": test_limit,
+                "state_file": state_path,
+                "resume": resume,
+            },
+        )
+        record_run(run_id, "no_pages", since=since, test_limit=test_limit, notes=summary)
+        await emit_completion(summary)
+        return summary
 
-        ensure_weaviate_schema(client, recreate=recreate_collection)
-        collection = client.collections.get(COLLECTION_NAME)
+    if test_limit:
+        LOGGER.info("TEST MODE: limiting to first %d pages", test_limit)
+        all_page_uids = all_page_uids[:test_limit]
 
-        # Step 3: Wait for chunker service to be ready
-        print("[sync_semantic] Step 3: Connecting to chunker service...")
-        step3_start = time.time()
-        chunker_ready = await wait_for_chunker_service()
-        if not chunker_ready:
-            print("[sync_semantic] WARNING: Chunker service not available, sync cannot proceed")
-            return
-        step3_time = time.time() - step3_start
+    processed_offset = 0
+    pending_uids = list(all_page_uids)
+    total_target_pages = len(pending_uids)
+    state_loaded = False
+    state_completed = False
 
-        # Step 4: Process pages in batches with concurrent pipeline
-        print(f"[sync_semantic] Step 4: Processing {total_pages} pages in batches of {BATCH_SIZE}...")
+    saved_state: Optional[Dict[str, Any]] = None
+    metadata_applied_from_state = False
 
-        # Global statistics
-        total_documents_added = 0
-        total_chunks_created = 0  # Total chunks across all pages
-        total_roam_time = 0
-        total_processing_time = 0
-        total_linearize_time = 0
-        total_chunk_time = 0
-        total_voyageai_time = 0
-        total_weaviate_time = 0
-        total_pipeline_time = 0
+    if resume and state_path:
+        saved_state = load_state(state_path)
+        if saved_state:
+            state_loaded = True
+            pending = saved_state.get("pending_page_uids", [])
+            processed_offset = saved_state.get("processed_count", 0)
+            total_target_pages = saved_state.get("total_pages", processed_offset + len(pending))
+            stored_since = saved_state.get("since")
+            metadata_applied_from_state = bool(saved_state.get(STATE_FLAG_METADATA_APPLIED, False))
+            if pending:
+                pending_uids = pending
+                LOGGER.info(
+                    "Resuming from state file '%s'. Pending pages: %d, already processed: %d.",
+                    state_path,
+                    len(pending_uids),
+                    processed_offset,
+                )
+                if since is None and stored_since is not None:
+                    since = stored_since
+                elif since is not None and stored_since is not None and since != stored_since:
+                    LOGGER.warning(
+                        "--since (%s) differs from stored state (%s); using provided value",
+                        since,
+                        stored_since,
+                    )
+            else:
+                LOGGER.info("State file '%s' has no pending pages. Nothing to resume.", state_path)
+                durations_empty = {
+                    "uids": step1_time,
+                    "chunker_wait": 0.0,
+                    "roam": 0.0,
+                    "linearize": 0.0,
+                    "chunk": 0.0,
+                    "voyage": 0.0,
+                    "weaviate": 0.0,
+                    "chunk_wait": 0.0,
+                    "voyage_wait": 0.0,
+                    "weaviate_wait": 0.0,
+                }
+                stats_empty = {
+                    "documents_added": 0,
+                    "chunks_created": 0,
+                    "pages_updated": 0,
+                    "pages_skipped": 0,
+                    "pages_failed": 0,
+                    "pages_since_filtered": 0,
+                }
+                summary = make_summary(
+                    status="resume_complete",
+                    stats=stats_empty,
+                    durations=durations_empty,
+                    metadata_applied=metadata_applied_from_state,
+                    extra={
+                        "elapsed_seconds": 0.0,
+                        "pages_processed": 0,
+                        "processed_offset": processed_offset,
+                        "total_target_pages": total_target_pages,
+                        "total_pages": total_pages_discovered,
+                        "missing_edit_time_count": 0,
+                        "empty_linearized_count": 0,
+                        "max_edit_time": None,
+                        "since": since,
+                        "test_limit": test_limit,
+                        "state_file": state_path,
+                        "state_loaded": True,
+                        "resume": True,
+                        "started_at": start_timestamp,
+                        "failures": [],
+                        "step1_time": step1_time,
+                        "chunker_time": 0.0,
+                    },
+                )
+                await emit_completion(summary)
+                if state_path:
+                    remove_state_file(state_path)
+                record_run(run_id, "resume_complete", since=since, test_limit=test_limit, notes=summary)
+                return summary
+        else:
+            LOGGER.info("No valid state found at '%s', starting fresh.", state_path)
 
-        # Helper function for concurrent page processing
-        async def process_batch_concurrently(batch_uids, batch_num, start_page_num):
-            """Process a batch with page-level concurrency using producer-consumer pattern."""
-            nonlocal total_documents_added, total_chunks_created
-            nonlocal total_linearize_time, total_chunk_time, total_voyageai_time, total_weaviate_time
+    db_state_rows = load_state_rows(pending_uids)
+    preloaded_state = {}
+    for uid, row in db_state_rows.items():
+        last_synced = row.get("last_synced_edit_time")
+        if last_synced is None:
+            continue
+        preloaded_state[uid] = {
+            "page_objects": [
+                {
+                    "properties": {
+                        "last_synced_edit_time": str(last_synced),
+                        "content_hash": row.get("content_hash"),
+                    }
+                }
+            ],
+            "chunk_objects": [],
+            "last_synced_edit_time": last_synced,
+            "content_hash": row.get("content_hash"),
+        }
 
-            batch_start_time = time.time()
+    client = weaviate.use_async_with_custom(
+        http_host=config.weaviate_http_host,
+        http_port=config.weaviate_http_port,
+        http_secure=config.weaviate_http_secure,
+        grpc_host=config.weaviate_grpc_host,
+        grpc_port=config.weaviate_grpc_port,
+        grpc_secure=config.weaviate_grpc_secure,
+        skip_init_checks=True,
+    )
+    await client.connect()
 
-            # Fetch all pages for this batch
-            roam_start = time.time()
-            pages_data = await pull_many_pages(batch_uids)
-            batch_roam_time = time.time() - roam_start
+    chunker_client = ChunkerClient(
+        ChunkerConfig(
+            url=config.chunker_url,
+            retries=config.chunker_retries,
+            base_delay=config.chunker_retry_delay,
+        )
+    )
+    voyage_timeout = float(os.getenv("VOYAGE_TIMEOUT", "60"))
+    voyage_client = VoyageEmbeddingClient(
+        api_key=settings.voyageai_api_key,
+        model=settings.voyageai_context_model,
+        timeout=voyage_timeout,
+    )
+    weaviate_adapter = WeaviateSyncAdapter(client, config.collection_name)
 
-            # Queue for passing processed pages to consumer
-            page_queue = asyncio.Queue(maxsize=5)  # Limit memory usage
+    durations: Dict[str, float] = {
+        "roam": 0.0,
+        "linearize": 0.0,
+        "chunk": 0.0,
+        "voyage": 0.0,
+        "weaviate": 0.0,
+        "chunk_wait": 0.0,
+        "voyage_wait": 0.0,
+        "weaviate_wait": 0.0,
+        "metadata_pull": 0.0,
+        "weaviate_meta": 0.0,
+    }
+    stats: Dict[str, int] = {
+        "documents_added": 0,
+        "chunks_created": 0,
+        "pages_updated": 0,
+        "pages_skipped": 0,
+        "pages_failed": 0,
+        "pages_since_filtered": 0,
+        "metadata_candidates": 0,
+        "metadata_filtered": 0,
+    }
+    max_edit_time_seen: Optional[int] = None
 
-            # Statistics for this batch
-            batch_docs_added = 0
-            batch_chunks_created = 0
+    def bump_stat(key: str, delta: int = 1) -> None:
+        nonlocal stats
+        stats = merge_stats(stats, {key: delta})
 
-            # Producer: Process pages sequentially (chunk one at a time)
-            async def producer():
-                nonlocal batch_chunks_created
+    def add_duration(key: str, delta: float) -> None:
+        nonlocal durations
+        durations = merge_durations(durations, {key: delta})
 
-                for page_idx, page_data in enumerate(pages_data):
-                    if not page_data or not page_data.get(':block/uid'):
-                        continue
+    pages_missing_edit_time: set[str] = set()
+    pages_empty_linearized: set[str] = set()
+    failures: List[str] = []
 
-                    page_title = page_data.get(':node/title', 'Untitled')
-                    page_uid = page_data.get(':block/uid')
+    pages_processed_this_run = 0
+    per_page_metrics: List[PageMetric] = []
+    metadata_applied = metadata_applied_from_state
+    metadata_map: Dict[str, PageMetadata] = {}
+    page_state_cache: Dict[str, Dict[str, Any]] = dict(preloaded_state)
 
-                    # Prepare page document
-                    page_weaviate_objs = []
-                    page_chunks_texts = [page_title]  # Always include title
+    chunk_semaphore = asyncio.Semaphore(max(1, config.chunker_concurrency))
+    voyage_semaphore = asyncio.Semaphore(max(1, config.voyage_concurrency))
+    weaviate_semaphore = asyncio.Semaphore(max(1, config.weaviate_write_concurrency))
 
-                    # Add page title as a document
-                    page_weaviate_objs.append({
-                        "properties": {
-                            "chunk_text_preview": page_title,
-                            "primary_uid": page_uid,
-                            "page_title": page_title,
-                            "page_uid": page_uid,
-                            "document_type": "page",
-                            "sync_version": "semantic_v2_weaviate"
-                        },
-                        "uuid": str(uuid.uuid4())
-                    })
+    async def process_group(group_items: List[PageWorkItem]) -> GroupResult:
+        result = GroupResult()
+        try:
+            texts = [item.snapshot.get("linearized_text") or "" for item in group_items]
+            chunk_wait_start = time.time()
+            await chunk_semaphore.acquire()
+            result.chunk_wait = time.time() - chunk_wait_start
+            try:
+                chunk_start = time.time()
+                chunk_batches = await chunk_batch_with_retry(chunker_client, texts)
+                result.chunk_duration = time.time() - chunk_start
+            finally:
+                chunk_semaphore.release()
+        except Exception as exc:  # pragma: no cover - defensive logging
+            result.pages_failed = len(group_items)
+            result.fail_messages.append(f"  ✗ Chunker failed for group: {exc}")
+            return result
 
-                    # Process children if they exist
-                    if page_data.get(':block/children'):
-                        # Linearize
-                        linearize_start = time.time()
-                        linearized_text, uid_map = linearize_page_markdown_style(page_data)
-                        nonlocal total_linearize_time
-                        total_linearize_time += time.time() - linearize_start
+        processed_items: List[tuple[PageWorkItem, Dict[str, Any]]] = []
+        for item, chunk_data in zip(group_items, chunk_batches):
+            try:
+                payload = build_weaviate_objects(
+                    snapshot=item.snapshot,
+                    chunk_results=chunk_data,
+                    sync_version=config.sync_version,
+                    namespace=config.uuid_namespace,
+                )
+                processed_items.append((item, payload))
+            except Exception as exc:
+                result.pages_failed += 1
+                result.fail_messages.append(
+                    f"  ✗ Failed building payload for page '{item.page_title}' ({item.page_uid}): {exc}"
+                )
 
-                        if linearized_text.strip():
-                            try:
-                                # Chunk via service
-                                chunk_start = time.time()
-                                chunk_results = await chunk_text_via_service(linearized_text)
-                                nonlocal total_chunk_time
-                                total_chunk_time += time.time() - chunk_start
+        if not processed_items:
+            return result
 
-                                if chunk_results:
-                                    # Convert to chunk objects
-                                    chunks = [SimpleChunk(
-                                        text=c["text"],
-                                        start_index=c["start_index"],
-                                        end_index=c["end_index"],
-                                        token_count=c["token_count"]
-                                    ) for c in chunk_results]
+        try:
+            voyage_wait_start = time.time()
+            await voyage_semaphore.acquire()
+            result.voyage_wait = time.time() - voyage_wait_start
+            try:
+                voyage_start = time.time()
+                embeddings_nested = await embed_documents_with_retry(
+                    voyage_client,
+                    [payload["chunk_texts"] for _, payload in processed_items],
+                )
+                result.voyage_duration = time.time() - voyage_start
+            finally:
+                voyage_semaphore.release()
+        except Exception as exc:
+            result.pages_failed += len(processed_items)
+            result.fail_messages.append(f"  ✗ Voyage embedding failed for group: {exc}")
+            return result
 
-                                    batch_chunks_created += len(chunks)
-                                    page_chunks_texts.extend([chunk.text for chunk in chunks])
+        successful_payloads: List[tuple[PageWorkItem, Dict[str, Any]]] = []
+        for (item, payload), embeddings in zip(processed_items, embeddings_nested):
+            if len(embeddings) != len(payload["all_objects"]):
+                result.pages_failed += 1
+                result.fail_messages.append(
+                    f"  ✗ Embedding count mismatch for page '{item.page_title}' ({item.page_uid})"
+                )
+                continue
+            for obj, vector in zip(payload["all_objects"], embeddings):
+                obj["vector"] = vector
+            successful_payloads.append((item, payload))
 
-                                    # Create Weaviate objects for chunks
-                                    for chunk in chunks:
-                                        source_uids = {mapping['uid'] for mapping in uid_map
-                                                     if chunk.start_index < mapping['end']
-                                                     and chunk.end_index > mapping['start']}
-                                        if source_uids:
-                                            # Select the most representative UID for this chunk
-                                            # Prefer block UIDs over page UIDs (pages don't have immediate parents)
-                                            non_page_uids = source_uids - {page_uid}
-                                            if non_page_uids:
-                                                # If we have block UIDs, use the first one
-                                                primary_uid = next(iter(non_page_uids))
-                                            else:
-                                                # Fall back to page UID if chunk only contains page title
-                                                primary_uid = page_uid
+        if not successful_payloads:
+            return result
 
-                                            page_weaviate_objs.append({
-                                                "properties": {
-                                                    "chunk_text_preview": chunk.text,
-                                                    "primary_uid": primary_uid,
-                                                    "page_title": page_title,
-                                                    "page_uid": page_uid,
-                                                    "document_type": "chunk",
-                                                    "chunk_token_count": chunk.token_count,
-                                                    "source_uids_json": json.dumps(list(source_uids)),
-                                                    "sync_version": "semantic_v2_weaviate"
-                                                },
-                                                "uuid": str(uuid.uuid4())
-                                            })
-                            except Exception as e:
-                                print(f"  ✗ Error chunking page '{page_title}': {e}")
+        weaviate_objects = [obj for _, payload in successful_payloads for obj in payload["all_objects"]]
+        try:
+            weaviate_wait_start = time.time()
+            await weaviate_semaphore.acquire()
+            result.weaviate_wait = time.time() - weaviate_wait_start
+            try:
+                weaviate_start = time.time()
+                failed_objects = await weaviate_insert_with_retry(weaviate_adapter, weaviate_objects)
+                result.weaviate_duration = time.time() - weaviate_start
+                if failed_objects:
+                    sample_messages = ", ".join((error.message or "") for error in failed_objects[:3])
+                    raise RuntimeError(
+                        f"Weaviate reported {len(failed_objects)} failed objects: {sample_messages}"
+                    )
+                for item, payload in successful_payloads:
+                    await weaviate_delete_with_retry(
+                        weaviate_adapter,
+                        item.page_uid,
+                        payload["content_hash"],
+                    )
+            finally:
+                weaviate_semaphore.release()
+        except Exception as exc:
+            result.pages_failed += len(successful_payloads)
+            result.fail_messages.append(f"  ✗ Weaviate write failed for group: {exc}")
+            return result
 
-                    # Put processed page in queue for embedding/storage
-                    await page_queue.put({
-                        'page_title': page_title,
-                        'chunks_texts': page_chunks_texts,
-                        'weaviate_objs': page_weaviate_objs,
-                        'page_num': start_page_num + page_idx
-                    })
+        result.docs_added = len(weaviate_objects)
+        result.pages_updated = len(successful_payloads)
+        result.chunks_created = sum(len(payload["chunk_objects"]) for _, payload in successful_payloads)
 
-                # Signal completion
-                await page_queue.put(None)
+        state_updates = {}
+        for item, payload in successful_payloads:
+            meta = item.snapshot.get("meta", {})
+            state_updates[item.page_uid] = {
+                "last_synced_edit_time": TO_INT(meta.get("max_edit_time")),
+                "content_hash": payload["content_hash"],
+            }
+        result.state_updates = state_updates
 
-            # Consumer: Embed and store pages as they become available
-            async def consumer():
-                nonlocal batch_docs_added
+        per_page_chunk = result.chunk_duration / max(1, len(processed_items))
+        per_page_embed = result.voyage_duration / max(1, len(processed_items))
+        per_page_weaviate = result.weaviate_duration / max(1, len(successful_payloads))
 
-                while True:
-                    item = await page_queue.get()
-                    if item is None:  # Producer finished
-                        break
-
-                    # Embed this page's chunks
-                    voyageai_start = time.time()
-                    try:
-                        # Create batch for this page (page title + chunks)
-                        voyage_result = voyage_client.contextualized_embed(
-                            inputs=[item['chunks_texts']],  # Single page as batch
-                            model=settings.voyageai_context_model,
-                            input_type="document"
-                        )
-                        embeddings = voyage_result.results[0].embeddings
-
-                        # Assign embeddings to objects
-                        for idx, obj in enumerate(item['weaviate_objs']):
-                            if idx < len(embeddings):
-                                obj["vector"] = embeddings[idx]
-
-                        nonlocal total_voyageai_time
-                        total_voyageai_time += time.time() - voyageai_start
-
-                        # Store in Weaviate
-                        weaviate_start = time.time()
-                        with collection.batch.fixed_size(batch_size=100) as batch:
-                            for obj in item['weaviate_objs']:
-                                if "vector" in obj:
-                                    batch.add_object(
-                                        properties=obj["properties"],
-                                        uuid=obj["uuid"],
-                                        vector=obj["vector"]
-                                    )
-
-                        if collection.batch.failed_objects:
-                            print(f"  ✗ Failed to import objects for page {item['page_num']}", flush=True)
-                        else:
-                            batch_docs_added += len(item['weaviate_objs'])
-
-                        nonlocal total_weaviate_time
-                        total_weaviate_time += time.time() - weaviate_start
-
-                    except Exception as e:
-                        print(f"  ✗ Failed to embed/store page '{item.get('page_title', 'Unknown')}': {e}")
-
-            # Run producer and consumer concurrently
-            await asyncio.gather(
-                producer(),
-                consumer()
+        for item, _payload in successful_payloads:
+            result.metrics.append(
+                PageMetric(
+                    page_uid=item.page_uid,
+                    chunk_duration=per_page_chunk,
+                    embed_duration=per_page_embed,
+                    weaviate_duration=per_page_weaviate,
+                )
             )
 
-            # Update global statistics
-            total_documents_added += batch_docs_added
-            total_chunks_created += batch_chunks_created
+        return result
 
-            batch_time = time.time() - batch_start_time
-            print(f"  ✓ Batch {batch_num} complete: {batch_docs_added} documents, {batch_chunks_created} chunks in {batch_time:.1f}s", flush=True)
+    try:
+        if clear_existing:
+            LOGGER.info("Deleting collection '%s'", config.collection_name)
+            with suppress(Exception):
+                await client.collections.delete(config.collection_name)
 
-            return batch_roam_time, batch_time
+        if clear_existing or recreate_collection:
+            await weaviate_adapter.ensure_schema(True)
+        else:
+            with suppress(Exception):
+                if not await client.collections.exists(config.collection_name):
+                    await weaviate_adapter.ensure_schema(False)
 
-        # Process all batches
-        for i in range(0, total_pages, BATCH_SIZE):
-            batch_uids = all_page_uids[i:i + BATCH_SIZE]
-            batch_num = i // BATCH_SIZE + 1
-            progress = (i + len(batch_uids)) / total_pages * 100
-            print(f"\n[sync_semantic] Processing batch {batch_num}, pages {i+1}-{i+len(batch_uids)} ({progress:.1f}%)...", flush=True)
+        metadata_should_run = (
+            not metadata_applied
+            and not clear_existing
+            and not recreate_collection
+            and bool(pending_uids)
+        )
 
-            roam_time, pipeline_time = await process_batch_concurrently(batch_uids, batch_num, i+1)
-            total_roam_time += roam_time
-            total_pipeline_time += pipeline_time
+        if metadata_should_run:
+            LOGGER.info(
+                "Running metadata pre-pass on %d pages (batch size %d)",
+                len(pending_uids),
+                config.metadata_batch_size,
+            )
+            metadata_result = await run_metadata_pass(
+                pending_uids,
+                since=since,
+                adapter=weaviate_adapter,
+                config=config,
+                preloaded_state=preloaded_state,
+            )
 
-        # Calculate processing time (chunking + linearization)
-        total_processing_time = total_chunk_time + total_linearize_time
+            stats = merge_stats(stats, metadata_result.stats_delta)
+            durations = merge_durations(durations, metadata_result.durations_delta)
 
-        # Final statistics
+            pages_missing_edit_time.update(metadata_result.missing_edit_uids)
+            if metadata_result.max_edit_time_seen is not None:
+                max_edit_time_seen = (
+                    metadata_result.max_edit_time_seen
+                    if max_edit_time_seen is None
+                    else max(max_edit_time_seen, metadata_result.max_edit_time_seen)
+                )
+
+            upsert_page_state(
+                {
+                    uid: {
+                        "last_synced_edit_time": TO_INT(meta.max_edit_time),
+                        "content_hash": None,
+                    }
+                    for uid, meta in metadata_result.metadata_map.items()
+                    if meta.max_edit_time is not None
+                }
+            )
+
+            pending_uids = metadata_result.remaining_uids
+            total_target_pages = processed_offset + len(pending_uids)
+            metadata_map = metadata_result.metadata_map
+            page_state_cache = metadata_result.state_cache
+            metadata_applied = True
+            page_state_cache = dict(metadata_result.state_cache)
+
+            LOGGER.info(
+                "Metadata pre-pass skipped %d pages; %d remain for full processing",
+                metadata_result.stats_delta.get("metadata_filtered", 0),
+                len(pending_uids),
+            )
+
+            await emit_status(
+                {
+                    "event": "metadata_filtered",
+                    "remaining": len(pending_uids),
+                    "skipped": metadata_result.stats_delta.get("metadata_filtered", 0),
+                    "durations": {
+                        "metadata_pull": metadata_result.durations_delta.get("metadata_pull", 0.0),
+                        "weaviate_meta": metadata_result.durations_delta.get("weaviate_meta", 0.0),
+                    },
+                }
+            )
+
+            if not pending_uids:
+                LOGGER.info("All pages filtered by metadata pre-pass; finishing early")
+                summary = make_summary(
+                    status="metadata_skip",
+                    stats=stats,
+                    durations=merge(durations, {"uids": step1_time, "chunker_wait": 0.0}),
+                    metadata_applied=True,
+                    extra={
+                        "elapsed_seconds": time.time() - start_time,
+                        "pages_processed": 0,
+                        "processed_offset": processed_offset,
+                        "total_target_pages": total_target_pages,
+                        "total_pages": total_pages_discovered,
+                        "missing_edit_time_count": len(pages_missing_edit_time),
+                        "empty_linearized_count": len(pages_empty_linearized),
+                        "max_edit_time": max_edit_time_seen,
+                        "since": since,
+                        "test_limit": test_limit,
+                        "state_file": state_path,
+                        "state_loaded": state_loaded,
+                        "resume": resume,
+                        "started_at": start_timestamp,
+                        "step1_time": step1_time,
+                        "chunker_time": 0.0,
+                        "failures": failures,
+                    },
+                )
+                await emit_completion(summary)
+                if state_path:
+                    remove_state_file(state_path)
+                record_run(run_id, "metadata_skip", since=since, test_limit=test_limit, notes=summary)
+                return summary
+
+        LOGGER.info("Connecting to chunker service")
+        step3_start = time.time()
+        chunker_ready = await chunker_client.wait_until_ready()
+        step3_time = time.time() - step3_start
+        if not chunker_ready:
+            LOGGER.error("Chunker service not available, sync cannot proceed")
+            failures.append("Chunker service not available")
+            summary = make_summary(
+                status="chunker_unavailable",
+                stats=stats,
+                durations=merge(durations, {"uids": step1_time, "chunker_wait": step3_time}),
+                metadata_applied=metadata_applied,
+                extra={
+                    "since": since,
+                    "test_limit": test_limit,
+                    "state_file": state_path,
+                    "state_loaded": state_loaded,
+                    "resume": resume,
+                    "started_at": start_timestamp,
+                    "total_pages": total_pages_discovered,
+                    "failures": failures,
+                },
+            )
+            await emit_completion(summary)
+            record_run(run_id, "chunker_unavailable", since=since, test_limit=test_limit, notes=summary)
+            return summary
+
+        await emit_status(
+            {
+                "event": "chunker_ready",
+                "duration": step3_time,
+            }
+        )
+
+        if since is not None:
+            readable_since = datetime.fromtimestamp(since / 1000).isoformat()
+            LOGGER.info("Applying --since filter at %s (%s)", since, readable_since)
+            await emit_status({"event": "since_applied", "since": since, "readable": readable_since})
+
+        batch_num = 0
+        while pending_uids:
+            batch = pending_uids[:config.batch_size]
+            batch_size = len(batch)
+            if not batch:
+                break
+
+            batch_num += 1
+            current_start = processed_offset + pages_processed_this_run + 1
+            current_end = current_start + batch_size - 1
+            progress_numerator = processed_offset + pages_processed_this_run + batch_size
+            progress_denominator = total_target_pages or progress_numerator
+            progress = (progress_numerator / progress_denominator) * 100
+
+            LOGGER.info(
+                "Processing batch %d, pages %d-%d (%.1f%%)",
+                batch_num,
+                current_start,
+                current_end,
+                progress,
+            )
+            await emit_status(
+                {
+                    "event": "batch_start",
+                    "batch": batch_num,
+                    "page_range": [current_start, current_end],
+                    "progress": {
+                        "processed": processed_offset + pages_processed_this_run,
+                        "total": total_target_pages,
+                        "percent": progress,
+                    },
+                    "stats": stats.copy(),
+                    "durations": durations.copy(),
+                    "failures": failures[-5:],
+                    "total_pages": total_pages_discovered,
+                }
+            )
+
+            roam_start = time.time()
+            pages_data = await pull_many_pages(batch)
+            add_duration("roam", time.time() - roam_start)
+
+            work_items: List[PageWorkItem] = []
+
+            for offset, page_data in enumerate(pages_data):
+                if not page_data or not page_data.get(":block/uid"):
+                    bump_stat("pages_failed")
+                    continue
+
+                page_uid = page_data.get(":block/uid")
+                page_title = page_data.get(":node/title") or page_data.get(":block/string") or "Untitled"
+                page_number = current_start + offset
+
+                linearize_start = time.time()
+                snapshot = collect_page_snapshot(page_data)
+                linearize_duration = time.time() - linearize_start
+                add_duration("linearize", linearize_duration)
+
+                if snapshot.get("meta", {}).get("max_edit_time") is None:
+                    pages_missing_edit_time.add(page_uid)
+                if not (snapshot.get("linearized_text") or "").strip() and snapshot.get("has_children"):
+                    pages_empty_linearized.add(page_uid)
+
+                existing_state = page_state_cache.get(page_uid)
+                if existing_state is None:
+                    existing_state = await weaviate_adapter.fetch_existing_page_state(page_uid)
+                    page_state_cache[page_uid] = existing_state
+                decision = decide_sync_action(snapshot, existing_state, since_ms=since)
+                max_edit_time_int = decision.get("max_edit_time_int")
+                if max_edit_time_int is not None:
+                    max_edit_time_seen = max_edit_time_int if max_edit_time_seen is None else max(max_edit_time_seen, max_edit_time_int)
+
+                if decision.get("should_skip"):
+                    bump_stat("pages_skipped")
+                    if decision.get("since_filtered"):
+                        bump_stat("pages_since_filtered")
+                    continue
+
+                work_items.append(
+                    PageWorkItem(
+                        snapshot=snapshot,
+                        page_title=page_title,
+                        page_uid=page_uid,
+                        page_num=page_number,
+                    )
+                )
+
+            group_tasks = [
+                asyncio.create_task(process_group(list(group)))
+                for group in chunks(config.chunker_group_size, work_items)
+            ]
+
+            if group_tasks:
+                results = await asyncio.gather(*group_tasks)
+                for result in results:
+                    bump_stat("documents_added", result.docs_added)
+                    bump_stat("chunks_created", result.chunks_created)
+                    bump_stat("pages_updated", result.pages_updated)
+                    bump_stat("pages_failed", result.pages_failed)
+                    add_duration("chunk", result.chunk_duration)
+                    add_duration("voyage", result.voyage_duration)
+                    add_duration("weaviate", result.weaviate_duration)
+                    add_duration("chunk_wait", result.chunk_wait)
+                    add_duration("voyage_wait", result.voyage_wait)
+                    add_duration("weaviate_wait", result.weaviate_wait)
+                    per_page_metrics.extend(result.metrics)
+                    for msg in result.fail_messages:
+                        LOGGER.error(msg)
+                        failures.append(msg)
+                    if result.state_updates:
+                        upsert_page_state(result.state_updates)
+                        for uid, state in result.state_updates.items():
+                            last_synced = state.get("last_synced_edit_time")
+                            if last_synced is None:
+                                continue
+                            page_state_cache[uid] = {
+                                "page_objects": [
+                                    {
+                                        "properties": {
+                                            "last_synced_edit_time": str(last_synced),
+                                            "content_hash": state.get("content_hash"),
+                                        }
+                                    }
+                                ],
+                                "chunk_objects": [],
+                                "last_synced_edit_time": last_synced,
+                                "content_hash": state.get("content_hash"),
+                            }
+
+            pages_processed_this_run += batch_size
+            pending_uids = pending_uids[batch_size:]
+
+            await emit_status(
+                {
+                    "event": "batch_complete",
+                    "batch": batch_num,
+                    "progress": {
+                        "processed": processed_offset + pages_processed_this_run,
+                        "total": total_target_pages,
+                        "percent": (
+                            (processed_offset + pages_processed_this_run)
+                            / (total_target_pages or 1)
+                        )
+                        * 100,
+                    },
+                    "stats": stats.copy(),
+                    "durations": durations.copy(),
+                    "max_edit_time": max_edit_time_seen,
+                    "pages_missing_edit_time": len(pages_missing_edit_time),
+                    "pages_empty_linearized": len(pages_empty_linearized),
+                    "failures": failures[-5:],
+                    "total_pages": total_pages_discovered,
+                }
+            )
+
+            if state_path:
+                state_payload = compact(
+                    {
+                        "created_at": datetime.utcnow().isoformat() + "Z",
+                        "total_pages": total_target_pages,
+                        "processed_count": processed_offset + pages_processed_this_run,
+                        "pending_page_uids": pending_uids,
+                        "since": since,
+                        "test_limit": test_limit,
+                        STATE_FLAG_METADATA_APPLIED: metadata_applied,
+                    }
+                )
+                persist_state(state_path, state_payload)
+                state_loaded = True
+
+        state_completed = True
+
         elapsed_time = time.time() - start_time
-        print("\n" + "="*50)
-        print("[sync_semantic] SYNC COMPLETE!")
-        print(f"  - Time elapsed: {elapsed_time:.2f} seconds")
-        print(f"  - Total pages processed: {total_pages}")
-        print(f"  - Total chunks created: {total_chunks_created}")
-        print(f"  - Total documents added: {total_documents_added}")
-        # count = await collection.aggregate.over_all(total_count=True)
-        # print(f"  - Documents in collection: {count.total_count}")
-        print("\n[sync_semantic] Time breakdown:")
-        print(f"  - Initial setup: {step1_time + step3_time:.2f}s ({(step1_time + step3_time)/elapsed_time*100:.1f}%)")
-        print(f"    - Getting page UIDs: {step1_time:.2f}s")
-        print(f"    - Connecting to chunker service: {step3_time:.2f}s")
-        print(f"  - Roam API calls: {total_roam_time:.2f}s ({total_roam_time/elapsed_time*100:.1f}%)")
-        print(f"  - Pipeline processing (concurrent): {total_pipeline_time:.2f}s ({total_pipeline_time/elapsed_time*100:.1f}%)")
-        print(f"    - Linearization: {total_linearize_time:.2f}s")
-        print(f"    - Chunking: {total_chunk_time:.2f}s")
-        print(f"    - Voyage AI Embeddings: {total_voyageai_time:.2f}s")
-        print(f"    - Weaviate Storage: {total_weaviate_time:.2f}s")
+        LOGGER.info("\n%s", "=" * 50)
+        LOGGER.info("SYNC COMPLETE!")
+        LOGGER.info("  • Time elapsed: %.2f seconds", elapsed_time)
+        LOGGER.info("  • Pages attempted this run: %d", pages_processed_this_run)
+        if processed_offset:
+            LOGGER.info("  • Previously completed pages: %d", processed_offset)
+            LOGGER.info("  • Total target pages (state): %d", total_target_pages)
+        LOGGER.info("  • Total chunks created: %d", stats.get("chunks_created", 0))
+        LOGGER.info("  • Total documents added: %d", stats.get("documents_added", 0))
+        LOGGER.info("  • Pages updated: %d", stats.get("pages_updated", 0))
+        LOGGER.info("  • Pages skipped (unchanged): %d", stats.get("pages_skipped", 0))
+        if stats.get("pages_since_filtered", 0):
+            LOGGER.info("    ◦ of which skipped by --since: %d", stats.get("pages_since_filtered", 0))
+        if stats.get("pages_failed", 0):
+            LOGGER.warning("  • Pages failed: %d", stats.get("pages_failed", 0))
+        if pages_missing_edit_time:
+            LOGGER.info("  • Pages missing edit timestamps: %d", len(pages_missing_edit_time))
+        if pages_empty_linearized:
+            LOGGER.info("  • Pages with empty linearized text: %d", len(pages_empty_linearized))
 
-        # Calculate time saved by concurrency
-        sequential_time = total_roam_time + total_linearize_time + total_chunk_time + total_voyageai_time + total_weaviate_time
-        time_saved = sequential_time - elapsed_time
-        if time_saved > 0:
-            print(f"  - Time saved by concurrency: {time_saved:.2f}s ({time_saved/sequential_time*100:.1f}% reduction)")
+        LOGGER.info("\nTime breakdown:")
+        LOGGER.info("  • Initial setup: %.2fs", step1_time + step3_time)
+        LOGGER.info("    ◦ Getting page UIDs: %.2fs", step1_time)
+        LOGGER.info("    ◦ Connecting to chunker service: %.2fs", step3_time)
+        LOGGER.info("  • Roam API calls: %.2fs", durations.get("roam", 0.0))
+        LOGGER.info("  • Linearization: %.2fs", durations.get("linearize", 0.0))
+        LOGGER.info("  • Metadata pull: %.2fs", durations.get("metadata_pull", 0.0))
+        LOGGER.info("  • Weaviate metadata fetch: %.2fs", durations.get("weaviate_meta", 0.0))
+        LOGGER.info("  • Chunking: %.2fs", durations.get("chunk", 0.0))
+        LOGGER.info("  • Voyage embeddings: %.2fs", durations.get("voyage", 0.0))
+        LOGGER.info("  • Weaviate storage: %.2fs", durations.get("weaviate", 0.0))
+        LOGGER.info("  • Chunk semaphore wait: %.2fs", durations.get("chunk_wait", 0.0))
+        LOGGER.info("  • Voyage semaphore wait: %.2fs", durations.get("voyage_wait", 0.0))
+        LOGGER.info("  • Weaviate semaphore wait: %.2fs", durations.get("weaviate_wait", 0.0))
 
-        # Calculate unaccounted time
-        accounted_time = step1_time + step3_time + total_roam_time + total_processing_time + total_voyageai_time + total_weaviate_time
-        unaccounted_time = elapsed_time - accounted_time
-        if unaccounted_time > 0.1:  # Only show if significant
-            print(f"  - Other (Weaviate connection, etc.): {unaccounted_time:.2f}s ({unaccounted_time/elapsed_time*100:.1f}%)")
+        if per_page_metrics:
+            slow_chunk = [
+                m
+                for m in sorted(per_page_metrics, key=lambda x: x.chunk_duration, reverse=True)
+                if m.chunk_duration
+            ][:3]
+            slow_embed = [
+                m
+                for m in sorted(per_page_metrics, key=lambda x: x.embed_duration, reverse=True)
+                if m.embed_duration
+            ][:3]
+            slow_write = [
+                m
+                for m in sorted(per_page_metrics, key=lambda x: x.weaviate_duration, reverse=True)
+                if m.weaviate_duration
+            ][:3]
+            if slow_chunk:
+                LOGGER.info(
+                    "  • Slowest chunk durations (s): %s",
+                    ", ".join(f"{m.page_uid}:{m.chunk_duration:.3f}" for m in slow_chunk),
+                )
+            if slow_embed:
+                LOGGER.info(
+                    "  • Slowest embed durations (s): %s",
+                    ", ".join(f"{m.page_uid}:{m.embed_duration:.3f}" for m in slow_embed),
+                )
+            if slow_write:
+                LOGGER.info(
+                    "  • Slowest write durations (s): %s",
+                    ", ".join(f"{m.page_uid}:{m.weaviate_duration:.3f}" for m in slow_write),
+                )
 
-        if total_documents_added > 0:
-            print(f"  - Average time per document: {elapsed_time/total_documents_added:.3f}s")
-        print("="*50)
+        summary = make_summary(
+            status="success",
+            stats=stats,
+            durations=merge(durations, {"uids": step1_time, "chunker_wait": step3_time}),
+            metadata_applied=metadata_applied,
+            extra={
+                "elapsed_seconds": elapsed_time,
+                "pages_processed": pages_processed_this_run,
+                "processed_offset": processed_offset,
+                "total_target_pages": total_target_pages,
+                "total_pages": total_pages_discovered,
+                "missing_edit_time_count": len(pages_missing_edit_time),
+                "empty_linearized_count": len(pages_empty_linearized),
+                "max_edit_time": max_edit_time_seen,
+                "since": since,
+                "test_limit": test_limit,
+                "state_file": state_path,
+                "state_loaded": state_loaded,
+                "resume": resume,
+                "started_at": start_timestamp,
+                "step1_time": step1_time,
+                "chunker_time": step3_time,
+                "failures": failures,
+            },
+        )
+        await emit_completion(summary)
+        record_run(run_id, "success", since=since, test_limit=test_limit, notes=summary)
+        return summary
+    except Exception as exc:
+        summary = make_summary(
+            status="failed",
+            stats=stats,
+            durations=durations,
+            metadata_applied=metadata_applied,
+            extra={
+                "error": str(exc),
+                "pages_processed": pages_processed_this_run,
+                "processed_offset": processed_offset,
+                "total_target_pages": total_target_pages,
+                "max_edit_time": max_edit_time_seen,
+                "since": since,
+                "test_limit": test_limit,
+                "state_file": state_path,
+                "state_loaded": state_loaded,
+                "resume": resume,
+                "started_at": start_timestamp,
+                "total_pages": total_pages_discovered,
+                "failures": failures,
+            },
+        )
+        await emit_completion(summary)
+        record_run(run_id, "failed", since=since, test_limit=test_limit, notes=summary)
+        raise
 
     finally:
-        if client.is_connected():
-            client.close()
-            print("[Weaviate] Sync client connection closed.")
+        if state_path and state_completed:
+            remove_state_file(state_path)
+        with suppress(Exception):
+            await chunker_client.close()
+        with suppress(Exception):
+            was_connected = client.is_connected()
+            await client.close()
+            if was_connected:
+                LOGGER.info("Weaviate sync client connection closed")
 
-async def main():
-    """Main entry point with argument parsing."""
-    parser = argparse.ArgumentParser(description='Sync Roam graph to Weaviate using contextual embeddings.')
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(description="Sync Roam graph to Weaviate using contextual embeddings.")
+    parser.add_argument("--clear", action="store_true", help="Clear all existing objects before syncing.")
+    parser.add_argument("--test", type=int, metavar="N", help="Test mode: only process first N pages.")
     parser.add_argument(
-        '--clear',
-        action='store_true',
-        help='Clear all existing objects in the Weaviate collection before syncing.'
+        "--recreate-collection",
+        action="store_true",
+        help="Force recreate the collection even if it exists.",
     )
+    parser.add_argument("--state-file", type=str, help="Path to persist incremental sync progress.")
+    parser.add_argument("--resume", action="store_true", help="Resume from a previously saved state file.")
     parser.add_argument(
-        '--test',
+        "--since",
         type=int,
-        metavar='N',
-        help='Test mode: only process first N pages.'
-    )
-    parser.add_argument(
-        '--recreate-collection',
-        action='store_true',
-        help='Force recreate the collection even if it exists (needed when changing schema/reranker config).'
+        help="Only process pages whose max edit time is greater than the provided epoch milliseconds.",
     )
 
     args = parser.parse_args()
 
-    await sync_semantic_graph(clear_existing=args.clear, test_limit=args.test, recreate_collection=args.recreate_collection)
+    await sync_semantic_graph(
+        clear_existing=args.clear,
+        test_limit=args.test,
+        recreate_collection=args.recreate_collection,
+        state_file=args.state_file,
+        resume=args.resume,
+        since=args.since,
+    )
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
     asyncio.run(main())
-    print("[sync_semantic] Done!")
+    LOGGER.info("Done!")
