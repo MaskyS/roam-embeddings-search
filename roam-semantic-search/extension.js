@@ -199,35 +199,37 @@ function createModal() {
       <div class="rss-backdrop"></div>
       <div class="rss-container">
         <div class="rss-header">
-          <h3 class="rss-title">🔍 Semantic Search</h3>
+          <h3 class="rss-title">Semantic Search</h3>
           <button class="rss-close bp3-button bp3-minimal">×</button>
         </div>
         <div class="rss-search">
           <input type="text" class="rss-input bp3-input" placeholder="Enter search query..." />
         </div>
-        <div class="rss-filters">
-          <div class="rss-filters-group">
-            <label class="bp3-control bp3-switch rss-filter-switch">
-              <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? "checked" : ""} />
-              <span class="bp3-control-indicator"></span>
-              Blocks only
-            </label>
-            <label class="bp3-control bp3-switch rss-filter-switch">
-              <input type="checkbox" class="rss-rerank-toggle" ${searchState.useRerank ? "checked" : ""} />
-              <span class="bp3-control-indicator"></span>
-              Rerank
-            </label>
+        <div class="rss-results">
+          <div class="rss-results-toolbar">
+            <div class="rss-filters-group">
+              <label class="bp3-control bp3-switch rss-filter-switch">
+                <input type="checkbox" class="rss-hide-pages-toggle" ${searchState.hidePages ? "checked" : ""} />
+                <span class="bp3-control-indicator"></span>
+                Blocks only
+              </label>
+              <label class="bp3-control bp3-switch rss-filter-switch">
+                <input type="checkbox" class="rss-rerank-toggle" ${searchState.useRerank ? "checked" : ""} />
+                <span class="bp3-control-indicator"></span>
+                Rerank
+              </label>
+            </div>
+            <div class="rss-search-type">
+              <span class="rss-slider-label">Keyword</span>
+              <input type="range" class="rss-alpha-slider"
+                min="0" max="1" step="0.1" value="${searchState.searchAlpha}"
+                title="${Math.round(searchState.searchAlpha * 100)}%" />
+              <span class="rss-slider-label">Semantic</span>
+            </div>
+            <div class="rss-results-meta"></div>
           </div>
-          <div class="rss-search-type">
-            <span class="rss-slider-label">Keyword</span>
-            <input type="range" class="rss-alpha-slider"
-              min="0" max="1" step="0.1" value="${searchState.searchAlpha}"
-              title="${Math.round(searchState.searchAlpha * 100)}%" />
-            <span class="rss-slider-label">Semantic</span>
-          </div>
+          <div class="rss-results-list"></div>
         </div>
-        <div class="rss-status"></div>
-        <div class="rss-results"></div>
       </div>
     </div>
   `;
@@ -248,6 +250,12 @@ function createModal() {
   closeBtn.addEventListener("click", closeModal);
   input.addEventListener("input", debouncedSearch);
   document.addEventListener("keydown", handleKeydown);
+
+  const resultsList = modal.querySelector(".rss-results-list");
+  if (resultsList) {
+    resultsList.innerHTML = '<div class="rss-no-results">Type to search your graph</div>';
+  }
+  updateResultsMeta("");
 
   // Add toggle listeners
   const toggleCheckbox = modal.querySelector(".rss-hide-pages-toggle");
@@ -313,11 +321,12 @@ function closeModal() {
 
   // Clean up rendered blocks before removing modal
   // This is important to prevent memory leaks from Roam's renderBlock
-  const resultsEl = document.querySelector(".rss-results");
+  const resultsEl = document.querySelector(".rss-results-list");
   if (resultsEl) {
     // Clear all rendered blocks
     resultsEl.innerHTML = "";
   }
+  updateResultsMeta("");
 
   // Remove DOM element
   const modal = document.getElementById("rss-modal");
@@ -390,26 +399,35 @@ function updateSelection() {
   });
 }
 
-function showLoading() {
-  const statusEl = document.querySelector(".rss-status");
-  if (statusEl) {
-    statusEl.innerHTML = '<div class="rss-loading">Searching...</div>';
+function updateResultsMeta(text = "", variant = "info") {
+  const metaEl = document.querySelector(".rss-results-meta");
+  if (!metaEl) return;
+
+  metaEl.classList.remove("rss-meta-loading", "rss-meta-error", "rss-meta-info");
+
+  if (!text) {
+    metaEl.textContent = "";
+    return;
   }
+
+  metaEl.textContent = text;
+  if (variant === "loading") {
+    metaEl.classList.add("rss-meta-loading");
+  } else if (variant === "error") {
+    metaEl.classList.add("rss-meta-error");
+  } else {
+    metaEl.classList.add("rss-meta-info");
+  }
+}
+
+function showLoading() {
+  updateResultsMeta("Searching…", "loading");
 }
 
 function showError(message) {
-  const statusEl = document.querySelector(".rss-status");
-  if (statusEl) {
-    statusEl.innerHTML = `<div class="rss-error">⚠️ ${escapeHtml(message)}</div>`;
-  }
+  updateResultsMeta(`⚠️ ${escapeHtml(message)}`, "error");
 }
 
-function clearStatus() {
-  const statusEl = document.querySelector(".rss-status");
-  if (statusEl) {
-    statusEl.innerHTML = "";
-  }
-}
 
 // Parse linearized chunk text into individual blocks
 function parseLinearizedChunk(text) {
@@ -541,14 +559,17 @@ function renderMultiBlockChunk(container, chunkText, preParsedBlocks) {
 }
 
 function renderResults(results) {
-  const resultsEl = document.querySelector(".rss-results");
-  if (!resultsEl) return;
+  const resultsEl = document.querySelector(".rss-results-list");
+  if (!resultsEl) return 0;
+
+  searchState.results = [];
+  searchState.selectedIndex = 0;
 
   if (!results || results.length === 0) {
     resultsEl.innerHTML = searchState.hidePages
       ? '<div class="rss-no-results">No block results found (try disabling "Blocks only" filter)</div>'
       : '<div class="rss-no-results">No results found</div>';
-    return;
+    return 0;
   }
 
   // Sort results by similarity score (highest first)
@@ -744,6 +765,7 @@ function renderResults(results) {
     }
   });
   updateSelection();
+  return sortedResults.length;
 }
 
 function handleResultClick(uid, event) {
@@ -921,10 +943,14 @@ async function performSearch() {
   if (!input) return;
 
   const query = input.value.trim();
+  const resultsEl = document.querySelector(".rss-results-list");
   if (!query) {
-    const resultsEl = document.querySelector(".rss-results");
-    if (resultsEl) resultsEl.innerHTML = "";
-    clearStatus();
+    if (resultsEl) {
+      resultsEl.innerHTML = '<div class="rss-no-results">Type to search your graph</div>';
+    }
+    updateResultsMeta("");
+    searchState.results = [];
+    searchState.selectedIndex = 0;
     return;
   }
 
@@ -948,14 +974,16 @@ async function performSearch() {
     );
 
     if (response && response.results) {
-      renderResults(response.results);
-      clearStatus();
-
-      if (response.count > 0) {
-        const statusEl = document.querySelector(".rss-status");
-        if (statusEl) {
-          statusEl.innerHTML = `<div class="rss-success">Found ${response.count} results</div>`;
-        }
+      const renderedCount = renderResults(response.results);
+      const totalCount = typeof response.count === "number" ? response.count : renderedCount;
+      if (renderedCount > 0) {
+        updateResultsMeta(
+          `Found ${totalCount} result${totalCount === 1 ? "" : "s"}`,
+          "info",
+        );
+      } else {
+        const message = searchState.hidePages ? "No block results" : "No results";
+        updateResultsMeta(message, "info");
       }
     }
   } catch (error) {
@@ -1011,7 +1039,7 @@ function addStyles() {
         overflow: hidden;
       }
       .rss-header {
-        padding: 16px 20px;
+        padding: 12px 18px;
         border-bottom: 1px solid var(--border-color, #e5e7eb);
         display: flex;
         justify-content: space-between;
@@ -1019,12 +1047,14 @@ function addStyles() {
       }
       .rss-title {
         margin: 0;
-        font-size: 18px;
+        font-size: 16px;
+        font-weight: 600;
         color: var(--text-color, #202020);
       }
-      .rss-close { font-size: 24px; }
+      .rss-close { font-size: 20px; }
       .rss-search {
-        padding: 16px 20px;
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
       }
       .rss-search .rss-input { width: 100%; }
       .rss-filters {
@@ -1037,7 +1067,7 @@ function addStyles() {
         align-items: center;
         gap: 12px;
         border-radius: 4px;
-        margin: 0 20px;
+        margin: 0;
       }
       .rss-filters-group {
         display: flex;
@@ -1114,16 +1144,33 @@ function addStyles() {
         font-size: 11px;
         white-space: nowrap;
       }
-      .rss-status { padding: 0 20px; min-height: 20px; }
-      .rss-loading, .rss-error, .rss-success { padding: 8px 0; }
-      .rss-error { color: #dc2626; }
-      .rss-success { color: #059669; font-size: 12px; }
       .rss-results {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 20px;
-        max-height: calc(80vh - 200px);
+        padding: 12px 20px 20px 20px;
+        max-height: calc(85vh - 150px);
         position: relative;
+      }
+      .rss-results-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .rss-results-meta {
+        margin-left: auto;
+        font-size: 11px;
+        color: #94a3b8;
+        white-space: nowrap;
+        flex: none;
+      }
+      .rss-results-meta.rss-meta-loading { color: #60a5fa; }
+      .rss-results-meta.rss-meta-error { color: #ef4444; }
+      .rss-results-meta.rss-meta-info { color: #94a3b8; }
+      .rss-results-list {
+        display: flex;
+        flex-direction: column;
       }
       .rss-no-results {
         padding: 20px;
@@ -1261,6 +1308,15 @@ function addStyles() {
       }
       .roam-body-main.bp3-dark .rss-block-bullet {
         color: #6b7280;
+      }
+      .roam-body-main.bp3-dark .rss-results-meta {
+        color: #cbd5f5;
+      }
+      .roam-body-main.bp3-dark .rss-results-meta.rss-meta-loading {
+        color: #bfdbfe;
+      }
+      .roam-body-main.bp3-dark .rss-results-meta.rss-meta-error {
+        color: #fca5a5;
       }
       .roam-body-main.bp3-dark .rss-page-line {
         color: #dcddde;
