@@ -1,15 +1,14 @@
-
 services:
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./ollama_data:/root/.ollama
-    command: serve
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ./ollama_data:/root/.ollama
+  #   command: serve
 
   weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.25.4
+    image: cr.weaviate.io/semitechnologies/weaviate:1.33.0
     ports:
       - "8080:8080"
       - "50051:50051"
@@ -18,27 +17,27 @@ services:
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
-      ENABLE_MODULES: 'reranker-voyageai'
-      CLUSTER_HOSTNAME: 'node1'
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: "reranker-voyageai"
+      CLUSTER_HOSTNAME: "node1"
 
-  backend:
-    build:
-      context: ./backend
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./backend:/app
-    depends_on:
-      - weaviate
-      - ollama
-    environment:
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - .env
-    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+  # backend:
+  #   build:
+  #     context: ./backend
+  #   ports:
+  #     - "8001:8001"
+  #   volumes:
+  #     - ./backend:/app
+  #   depends_on:
+  #     - weaviate
+  #     - ollama
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   env_file:
+  #     - .env
+  #   command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
   backend-semantic:
     build:
@@ -49,7 +48,7 @@ services:
       - ./backend:/app
     depends_on:
       - weaviate
-      - ollama
+      # - ollama
       - chunker
     environment:
       - PYTHONUNBUFFERED=1
@@ -67,12 +66,15 @@ services:
       - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - CHUNKER_MODEL=ibm-granite/granite-embedding-small-english-r2
-      - CHUNKER_THRESHOLD=0.6
-      - CHUNKER_CHUNK_SIZE=800
-      - CHUNKER_SKIP_WINDOW=1
-      - CHUNKER_MIN_CHUNK_SIZE=50
-    command: uvicorn chunker_service:app --host 0.0.0.0 --port 8003 --reload
+      - CHUNKER_EMBEDDING_PROVIDER=${CHUNKER_EMBEDDING_PROVIDER:-granite}
+      - CHUNKER_VOYAGE_MODEL=${CHUNKER_VOYAGE_MODEL:-voyage-3-lite}
+      - VOYAGE_API_KEY=${VOYAGEAI_API_KEY}
+      - CHUNKER_MODEL=${CHUNKER_MODEL:-ibm-granite/granite-embedding-small-english-r2}
+      - CHUNKER_THRESHOLD=${CHUNKER_THRESHOLD:-0.6}
+      - CHUNKER_CHUNK_SIZE=${CHUNKER_CHUNK_SIZE:-800}
+      - CHUNKER_SKIP_WINDOW=${CHUNKER_SKIP_WINDOW:-1}
+      - CHUNKER_MIN_CHUNK_SIZE=${CHUNKER_MIN_CHUNK_SIZE:-50}
+    command: uvicorn chunker_service:app --host 0.0.0.0 --port 8003
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
