@@ -16,11 +16,37 @@ let searchState = {
   useRerank: false, // Toggle for VoyageAI reranking
 };
 
+const syncState = {
+  pollInterval: null,
+  lastStatus: null,
+};
+
+function isJobActive(status) {
+  const st = status?.status || status?.summary?.status;
+  return st === "running" || st === "cancelling";
+}
+
+function updateSyncStatusDisplay(status) {
+  const container = document.querySelector('.rss-sync-status-setting');
+  if (!container) return;
+  const input = container.querySelector('input');
+  if (!input) return;
+  const message = renderSyncStatusMessage(status || { status: "idle" });
+  input.value = message;
+  input.setAttribute("readonly", "readonly");
+  input.classList.add("rss-sync-status-input");
+  const description = container.querySelector('.rm-settings-panel__description');
+  if (description) {
+    description.textContent = message;
+  }
+}
+
 // Configuration - will be moved to settings panel
 const DEFAULT_CONFIG = {
   backendURL: "http://localhost:8002", // Changed to semantic backend port
   searchLimit: 20,
   debounceDelay: 300,
+  syncLimit: 50,
 };
 
 let config = { ...DEFAULT_CONFIG };
@@ -33,11 +59,7 @@ class SearchAPI {
 
   async checkConnection() {
     try {
-      const response = await fetch(this.baseURL);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
+      return await this.request("/");
     } catch (error) {
       console.error("[Semantic Search] Connection error:", error);
       throw error;
@@ -71,6 +93,65 @@ class SearchAPI {
       throw error;
     }
   }
+
+  async startSync(body) {
+    return await this.request("/sync/start", {
+      method: "POST",
+      body: JSON.stringify(body || {}),
+    });
+  }
+
+  async getSyncStatus() {
+    return await this.request("/sync/status");
+  }
+
+  async cancelSync() {
+    return await this.request("/sync/cancel", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  }
+
+  async clearDatabase() {
+    return await this.request("/sync/clear", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  }
+
+  async request(path, options = {}) {
+    const url = path.startsWith("http") ? path : `${this.baseURL}${path}`;
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    };
+
+    const response = await fetch(url, { ...options, headers });
+    const text = await response.text();
+
+    if (!response.ok) {
+      let detail = text || response.statusText;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object") {
+          detail = parsed.detail || parsed.message || detail;
+        }
+      } catch (err) {
+        // swallow JSON parse errors
+      }
+      throw new Error(detail);
+    }
+
+    if (!text) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      return text;
+    }
+  }
 }
 
 let searchAPI;
@@ -92,6 +173,18 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+function showToast(message, intent = "primary") {
+  if (extensionAPI && extensionAPI.ui && typeof extensionAPI.ui.showToast === "function") {
+    extensionAPI.ui.showToast({ message, intent });
+    return;
+  }
+  if (window.roamAlphaAPI && window.roamAlphaAPI.ui && typeof window.roamAlphaAPI.ui.showToast === "function") {
+    window.roamAlphaAPI.ui.showToast({ message, intent });
+    return;
+  }
+  window.alert(message);
 }
 
 // Modal management with proper CSS prefixes
@@ -625,6 +718,161 @@ function handleResultClick(uid, event) {
   closeModal();
 }
 
+function stopSyncPolling() {
+  if (syncState.pollInterval) {
+    clearInterval(syncState.pollInterval);
+    syncState.pollInterval = null;
+  }
+}
+
+function startSyncPolling() {
+  if (syncState.pollInterval) {
+    return;
+  }
+  syncState.pollInterval = setInterval(() => {
+    fetchAndNotifyStatus(false).catch((error) =>
+      console.error("[Semantic Search] Sync status polling error", error),
+    );
+  }, 5000);
+}
+
+function renderSyncStatusMessage(status) {
+  const jobStatus = status?.status || status?.summary?.status || "idle";
+  const parts = [`Sync status: ${jobStatus}`];
+  if (status?.mode) {
+    parts.push(`mode: ${status.mode}`);
+  }
+
+  const summary = status?.summary || {};
+  const stats = summary.stats || {};
+  const params = status?.params || {};
+  const progress = status?.progress || summary.progress || {};
+
+  const totalPages = summary.total_pages ?? summary.total_target_pages ?? progress.total;
+  if (typeof progress.processed === "number" && typeof progress.total === "number") {
+    parts.push(`processed: ${progress.processed}/${progress.total}`);
+    if (typeof progress.percent === "number") {
+      parts.push(`progress: ${progress.percent.toFixed(1)}%`);
+    }
+  } else if (typeof totalPages === "number") {
+    parts.push(`total pages: ${totalPages}`);
+  }
+
+  if (stats) {
+    const docs = stats.documents_added ?? stats.docs ?? 0;
+    const updated = stats.pages_updated ?? 0;
+    const skipped = stats.pages_skipped ?? 0;
+    const failed = stats.pages_failed ?? 0;
+    parts.push(`docs: ${docs}, updated: ${updated}, skipped: ${skipped}, failed: ${failed}`);
+  }
+
+  if (typeof summary.elapsed_seconds === "number") {
+    parts.push(`elapsed: ${summary.elapsed_seconds.toFixed(2)}s`);
+  }
+
+  if (summary.started_at) {
+    parts.push(`started: ${summary.started_at}`);
+  }
+
+  if (params.since) {
+    parts.push(`since: ${params.since}`);
+  }
+  if (params.limit) {
+    parts.push(`limit: ${params.limit}`);
+  }
+
+  const failures = (summary.failures || status?.failures || []).filter(Boolean);
+  if (failures.length) {
+    const latest = failures.slice(-2).join("; ");
+    parts.push(`failures: ${latest}`);
+  }
+
+  if (summary.error || status?.error) {
+    parts.push(`error: ${summary.error || status.error}`);
+  }
+  return parts.join(" | ");
+}
+
+function showSyncToast(status, intentOverride) {
+  const jobStatus = status?.status || status?.summary?.status || "idle";
+  let intent = intentOverride;
+  if (!intent) {
+    if (jobStatus === "success") {
+      intent = "success";
+    } else if (jobStatus === "failed") {
+      intent = "danger";
+    } else if (jobStatus === "cancelled") {
+      intent = "warning";
+    } else {
+      intent = "primary";
+    }
+  }
+  showToast(renderSyncStatusMessage(status), intent);
+}
+
+async function fetchAndNotifyStatus(showToast = false) {
+  try {
+    const status = await searchAPI.getSyncStatus();
+    syncState.lastStatus = status;
+    updateSyncStatusDisplay(status);
+
+    const jobStatus = status?.status || status?.summary?.status || "idle";
+    const isActive = { running: true, cancelling: true }.hasOwnProperty(jobStatus);
+    if (showToast) {
+      showSyncToast(status);
+    }
+
+    if (!isActive) {
+      const shouldNotify = showToast || syncState.pollInterval !== null;
+      stopSyncPolling();
+      if (shouldNotify) {
+        showSyncToast(status);
+      }
+    }
+
+    return status;
+  } catch (error) {
+    stopSyncPolling();
+    showToast(`Sync status error: ${error.message}`, "danger");
+    throw error;
+  }
+}
+
+async function triggerSyncStart(params) {
+  if (isJobActive(syncState.lastStatus)) {
+    showToast("A sync job is already running", "warning");
+    return;
+  }
+  try {
+    const response = await searchAPI.startSync(params);
+    syncState.lastStatus = response;
+    const modeLabel = params?.mode || "full";
+    showToast(`Sync started (${modeLabel})`, "primary");
+    startSyncPolling();
+    updateSyncStatusDisplay(response);
+  } catch (error) {
+    showToast(`Sync start failed: ${error.message}`, "danger");
+    throw error;
+  }
+}
+
+async function triggerSyncCancel() {
+  if (!isJobActive(syncState.lastStatus)) {
+    showToast("No running sync to cancel", "warning");
+    return;
+  }
+  try {
+    const response = await searchAPI.cancelSync();
+    syncState.lastStatus = response;
+    showToast("Cancel requested", "warning");
+    startSyncPolling();
+    updateSyncStatusDisplay(response);
+  } catch (error) {
+    showToast(`Cancel failed: ${error.message}`, "danger");
+    throw error;
+  }
+}
+
 async function performSearch() {
   const input = document.querySelector(".rss-input");
   if (!input) return;
@@ -906,6 +1154,17 @@ function createSettingsPanel() {
     tabTitle: "Semantic Search",
     settings: [
       {
+        id: "sync-status",
+        name: "Current Sync Status",
+        description: "Idle",
+        className: "rss-sync-status-setting",
+        action: {
+          type: "input",
+          placeholder: "Idle",
+          onChange: () => {},
+        },
+      },
+      {
         id: "backend-url",
         name: "Backend URL",
         description: "URL of the semantic search backend service",
@@ -956,23 +1215,155 @@ function createSettingsPanel() {
         },
       },
       {
+        id: "sync-limit",
+        name: "Sync Test Page Limit",
+        description: "Used when running limited sync",
+        action: {
+          type: "input",
+          placeholder: `${config.syncLimit}`,
+          onChange: (e) => {
+            const value = parseInt(e.target.value, 10);
+            if (Number.isInteger(value) && value > 0) {
+              config.syncLimit = value;
+              extensionAPI.settings.set("sync-limit", value);
+            }
+          },
+        },
+      },
+      {
         id: "test-connection",
         name: "Test Connection",
         description: "Test the connection to the backend",
         action: {
           type: "button",
+          label: "Test Connection",
+          content: "Test Connection",
           onClick: async () => {
             try {
               const data = await searchAPI.checkConnection();
-              window.roamAlphaAPI.ui.showToast({
-                message: `✅ Connected! Graph: ${data.roam_graph_name}, Documents: ${data.collection_count}`,
-                intent: "success",
-              });
+              showToast(
+                `✅ Connected! Graph: ${data.roam_graph_name}, Documents: ${data.collection_count}`,
+                "success",
+              );
             } catch (error) {
-              window.roamAlphaAPI.ui.showToast({
-                message: `❌ Connection failed: ${error.message}`,
-                intent: "danger",
-              });
+              showToast(`❌ Connection failed: ${error.message}`, "danger");
+            }
+          },
+        },
+      },
+      {
+        id: "sync-recent",
+        name: "Sync Recently Edited Pages",
+        description: "Uses the last successful run's edit time when available.",
+        action: {
+          type: "button",
+          label: "Sync Recently Edited Pages",
+          content: "Sync Recently Edited Pages",
+          onClick: async () => {
+            try {
+              await triggerSyncStart({ mode: "since" });
+            } catch (error) {
+              console.error("[Semantic Search] Sync since failed", error);
+            }
+          },
+        },
+      },
+      {
+        id: "sync-full",
+        name: "Full Sync (All Pages)",
+        description: "Runs a complete sync of the graph.",
+        action: {
+          type: "button",
+          label: "Full Sync",
+          content: "Full Sync",
+          onClick: async () => {
+            const confirmed = window.confirm(
+              "Run a full sync? This may take a long time on large graphs.",
+            );
+            if (!confirmed) return;
+            try {
+              await triggerSyncStart({ mode: "full" });
+            } catch (error) {
+              console.error("[Semantic Search] Full sync failed", error);
+            }
+          },
+        },
+      },
+      {
+        id: "clear-database",
+        name: "Clear Semantic Database",
+        description:
+          "Deletes all objects from Weaviate. Run a sync afterwards to repopulate.",
+        action: {
+          type: "button",
+          label: "Clear Database",
+          content: "Clear Database",
+          onClick: async () => {
+            const confirmed = window.confirm(
+              "This will permanently delete all synced data. Continue?",
+            );
+            if (!confirmed) return;
+            try {
+              await searchAPI.clearDatabase();
+              showToast(
+                "Semantic database cleared. Run a sync to repopulate.",
+                "warning",
+              );
+              await fetchAndNotifyStatus(true);
+            } catch (error) {
+              console.error("[Semantic Search] Clear database failed", error);
+              showToast(`Clear database failed: ${error.message}`, "danger");
+            }
+          },
+        },
+      },
+      {
+        id: "sync-limited",
+        name: "Sync Limited Pages",
+        description: "Runs a limited sync using the configured page count.",
+        action: {
+          type: "button",
+          label: "Sync Limited Pages",
+          content: "Sync Limited Pages",
+          onClick: async () => {
+            try {
+              await triggerSyncStart({ mode: "limit", limit: config.syncLimit });
+            } catch (error) {
+              console.error("[Semantic Search] Limited sync failed", error);
+            }
+          },
+        },
+      },
+      {
+        id: "sync-cancel",
+        name: "Cancel Sync",
+        description: "Request cancellation of the running sync job.",
+        action: {
+          type: "button",
+          label: "Cancel Sync",
+          content: "Cancel Sync",
+          onClick: async () => {
+            try {
+              await triggerSyncCancel();
+            } catch (error) {
+              console.error("[Semantic Search] Cancel sync failed", error);
+            }
+          },
+        },
+      },
+      {
+        id: "sync-status-refresh",
+        name: "Refresh Sync Status",
+        description: "Fetch the current sync job status and display it.",
+        action: {
+          type: "button",
+          label: "Refresh Sync Status",
+          content: "Refresh Sync Status",
+          onClick: async () => {
+            try {
+              await fetchAndNotifyStatus(true);
+            } catch (error) {
+              console.error("[Semantic Search] Refresh status failed", error);
             }
           },
         },
@@ -995,6 +1386,8 @@ export default {
     config.debounceDelay =
       extensionAPI.settings.get("debounce-delay") ||
       DEFAULT_CONFIG.debounceDelay;
+    config.syncLimit =
+      extensionAPI.settings.get("sync-limit") || DEFAULT_CONFIG.syncLimit;
 
     // Load filter preferences
     searchState.hidePages = extensionAPI.settings.get("hide-pages") || false;
@@ -1006,6 +1399,19 @@ export default {
 
     // Create settings panel
     extensionAPI.settings.panel.create(createSettingsPanel());
+    setTimeout(() => updateSyncStatusDisplay(syncState.lastStatus), 100);
+
+    // Resume polling if a job is already running
+    fetchAndNotifyStatus(false)
+      .then((status) => {
+        const jobStatus = status?.status || status?.summary?.status;
+        if (jobStatus === "running" || jobStatus === "cancelling") {
+          startSyncPolling();
+        }
+      })
+      .catch(() => {
+        // ignore initial status errors
+      });
 
     // Add main search command using extensionAPI
     extensionAPI.ui.commandPalette.addCommand({
@@ -1051,6 +1457,8 @@ export default {
     if (searchState.abortController) {
       searchState.abortController.abort();
     }
+
+    stopSyncPolling();
 
     // Remove styles
     const styles = document.getElementById("rss-styles");
