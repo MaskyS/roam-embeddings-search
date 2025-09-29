@@ -9,3 +9,7 @@ experiments/chunk-viz/node_modules
 ollama_data/
 weaviate_data/
 .DS_Store
+docs/codex-logs-incremental-sync.md
+docs/deployment.md
+docs/funcy-plan.md
+docs/semantic_sync_playbook.md
