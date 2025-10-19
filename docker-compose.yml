@@ -54,7 +54,7 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: uvicorn main_semantic:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn services.search_service:app --host 0.0.0.0 --port 8000 --reload
 
   chunker:
     build:
@@ -74,7 +74,7 @@ services:
       - CHUNKER_CHUNK_SIZE=${CHUNKER_CHUNK_SIZE:-800}
       - CHUNKER_SKIP_WINDOW=${CHUNKER_SKIP_WINDOW:-1}
       - CHUNKER_MIN_CHUNK_SIZE=${CHUNKER_MIN_CHUNK_SIZE:-50}
-    command: uvicorn chunker_service:app --host 0.0.0.0 --port 8003
+    command: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8003
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]

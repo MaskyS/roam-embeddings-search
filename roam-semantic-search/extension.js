@@ -835,8 +835,9 @@ function renderSyncStatusMessage(status) {
     parts.push(`elapsed: ${summary.elapsed_seconds.toFixed(2)}s`);
   }
 
-  if (summary.started_at) {
-    parts.push(`started: ${summary.started_at}`);
+  const startedAt = status?.started_at;
+  if (startedAt) {
+    parts.push(`started: ${startedAt}`);
   }
 
   if (params.since) {
@@ -1352,7 +1353,7 @@ function createSettingsPanel() {
         description: "URL of the semantic search backend service",
         action: {
           type: "input",
-          placeholder: "http://localhost:8001",
+          placeholder: "http://localhost:8002",
           onChange: (e) => {
             const newUrl = e.target.value;
             if (newUrl) {

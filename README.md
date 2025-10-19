@@ -5,16 +5,22 @@ This repository packages everything needed to run the Roam Semantic Search backe
 The goal of this guide is to help a production user go from an empty machine to a working deployment.
 
 ## Architecture Overview
-- **Roam Semantic Backend (`backend/main_semantic.py`)** – FastAPI service that runs the sync pipeline, talks to the chunker, embeds with VoyageAI, and writes/query Weaviate. Exposes `/sync/*` management endpoints and `/search` for the extension.
-- **Chunker microservice (`backend/chunker_service.py`)** – Keeps a warm `chonkie` semantic chunker process so the pipeline can cut Roam pages into semantically coherent sections.
-- **Weaviate** – Vector database (self-hosted container) storing `RoamSemanticChunks`. Uses the VoyageAI reranker module for hybrid search.
+- **Search + Sync API (`backend/services/search_service.py`)** – FastAPI service that runs the semantic sync, talks to the chunker, embeds with VoyageAI, and writes/queries Weaviate. Exposes `/sync/*` management endpoints and `/search` for the extension.
+- **Chunker microservice (`backend/services/chunker_service.py`)** – Keeps a warm `chonkie` semantic chunker process so the pipeline can cut Roam pages into semantically coherent sections.
+- **Weaviate** – Vector database (self‑hosted container) storing `RoamSemanticChunks`. Uses the VoyageAI reranker module for hybrid search.
 - **Roam extension (`roam-semantic-search/extension.js`)** – Runs inside Roam. Lets you trigger syncs, monitor status, and perform hybrid semantic search against the backend.
-- **Persistent state (`backend/data/semantic_sync.db`)** – SQLite cache so incremental syncs can resume quickly.
+- **Persistent state (`backend/data/semantic_sync.db`)** – SQLite cache backing incremental sync and run history.
 
 A typical request path:
-1. Sync job pulls pages from the Roam Backend API using your graph token.
-2. Text is linearised, chunked via the chunker microservice, embedded with VoyageAI, and batch-written to Weaviate.
-3. Roam extension queries `/search`, which embeds the query with VoyageAI, runs Weaviate hybrid + optional rerank, and returns formatted results with block context.
+1. Sync job lists page UIDs from the Roam Backend API using your graph token.
+2. Metadata prepass fetches each page's max edit time (and title) and filters out unchanged pages.
+3. Pages with children are fully pulled and linearised; childless pages use their title only (no extra pull).
+4. Childless pages bypass chunking; pages with children are chunked via the chunker; all payloads are embedded with VoyageAI and written to Weaviate.
+5. Roam extension queries `/search`, which embeds the query with VoyageAI, runs Weaviate hybrid + optional rerank, and returns formatted results with block context.
+
+> **Change detection:** Roam pages do not update their own `:edit/time` when children change, so the pipeline aggregates the maximum block edit timestamp observed while walking each page. Incremental syncs skip a page when its aggregated edit time is not greater than the cached value. A content hash is stored with each write and used to safely delete any stale objects from earlier runs.
+
+> **Childless‑page optimisation:** For pages without children, all content lives in `:node/title`. The pipeline avoids a second Roam pull and the chunker entirely for those pages, embedding and indexing only the page object.
 
 ## Prerequisites
 
@@ -79,6 +85,7 @@ Optional but recommended:
    ```
 
    > **Note:** `SEMANTIC_SYNC_DB` and `SYNC_STATE_FILE` default to files under `backend/data/`. Persist that directory to keep incremental state across container restarts.
+   > The Docker image installs Python packages into `/opt/venv` (outside `/app`) so the bind‑mounted source code at `/app` does not hide dependencies during local development.
 
 3. Point Docker Compose at your customised env file, e.g. `export COMPOSE_FILE=docker-compose.yml` and `export COMPOSE_ENV_FILE=.env.production`, or rename `.env.production` back to `.env`.
 
@@ -102,12 +109,13 @@ Optional but recommended:
    ```bash
    curl http://localhost:8003/health          # chunker ready
    curl http://localhost:8002/                # backend handshake (shows graph + document count)
+   curl http://localhost:8002/sync/runs        # recent run history from SQLite
    docker compose logs -f chunker backend-semantic weaviate
    ```
 
    The first chunker start may download models; expect a short delay.
 
-> ⚙️ **Production tip:** The Compose file starts FastAPI with `--reload` and mounts the source directory for local development. Swap the command for `uvicorn main_semantic:app --host 0.0.0.0 --port 8000 --workers 2` and remove the bind mount for a leaner production container.
+> ⚙️ **Production tip:** The Compose file starts FastAPI with `--reload` and mounts the source directory for local development. Swap the command for `uvicorn services.search_service:app --host 0.0.0.0 --port 8000 --workers 2` and remove the bind mount for a leaner production container.
 
 ## Populating Weaviate
 
@@ -127,7 +135,7 @@ Optional but recommended:
    watch -n5 curl -s http://localhost:8002/sync/status | jq
    ```
 
-   The status payload includes per-stage counters, durations, and any failures. Jobs run in the background; only one sync can run at a time.
+   The status feed reports progress events (batches, metadata) and a minimal job summary (processed/updated/skipped/failed + cursor). Detailed timings are available in logs.
 
 3. Cancel a stuck job if needed:
    ```bash
@@ -159,7 +167,7 @@ Optional but recommended:
 
 - **Security** – Place the FastAPI service behind an authenticated reverse proxy. Lock down ports 8002 and 8003 to trusted networks. Store API keys in a secrets manager rather than committing them to the repo.
 - **TLS** – Terminate HTTPS in a proxy (nginx, Caddy, Traefik) and forward to the backend. Update the extension’s backend URL accordingly.
-- **Scheduling syncs** – Use cron or an automation platform to POST to `/sync/start` on intervals (e.g. hourly `since` sync). A simple example: `curl -X POST https://backend.example.com/sync/start -d '{"mode":"since"}'`.
+- **Scheduling syncs** – Use cron or an automation platform to POST to `/sync/start` on intervals (e.g. hourly `since` sync). If you omit the timestamp, the service uses the previous run's cursor.
 - **Backups** – Snapshot `weaviate_data/` and `backend/data/` regularly. The latter holds sync history and state.
 - **Monitoring** – Watch container logs for `Voyage embedding failed` or Roam API rate-limit messages. Consider scraping `/sync/status` and `uvicorn` metrics.
 - **Resource sizing** – Embedding large graphs is CPU and network intensive. Ensure the host has enough CPU/RAM and allows outbound HTTPS calls to `api.roamresearch.com` and `api.voyageai.com`.
@@ -175,11 +183,12 @@ Optional but recommended:
 
 ## Reference & Further Reading
 
-- Backend source: `backend/` (see `main_semantic.py`, `sync_semantic.py`, `semantic_sync/`).
+- Backend source: `backend/` (see `services/search_service.py`, `services/chunker_service.py`, `sync/`, `clients/`, `common/`).
+- CLI sync: `backend/cli/sync.py` (run orchestration outside the API if needed).
 - Roam extension: `roam-semantic-search/extension.js`.
 - Roam API docs: `docs/external/roam_research/roam-backend-api.md`.
 - VoyageAI context models: `docs/external/voyageai/context-model-guide.md`.
-- Chunker service (`chonkie`) configuration: `backend/chunker_service.py`.
+- Chunker service (`chonkie`) configuration: `backend/services/chunker_service.py`.
 
 Feel free to adapt Docker Compose or deploy the services on your own orchestration platform. The key requirements are:
 1. FastAPI backend with the env vars above.
