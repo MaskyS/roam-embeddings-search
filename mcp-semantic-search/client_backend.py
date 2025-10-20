@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 from pydantic import AnyUrl
 
-from .models import SearchInput, SearchResult
+from models import SearchInput, SearchResult
 
 
 class BackendClient:
@@ -85,4 +85,3 @@ def from_env() -> BackendClient:
     key = os.getenv("SEMANTIC_BACKEND_API_KEY")
     graph = os.getenv("GRAPH_SLUG")
     return BackendClient(base_url=base, api_key=key, graph_slug=graph)
-
