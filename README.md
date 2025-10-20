@@ -89,7 +89,39 @@ Optional but recommended:
 
 3. Point Docker Compose at your customised env file, e.g. `export COMPOSE_FILE=docker-compose.yml` and `export COMPOSE_ENV_FILE=.env.production`, or rename `.env.production` back to `.env`.
 
-## Building & Running the stack
+## Deployment Options
+
+### Option 1: Using Pre-Built Images (Recommended)
+
+The fastest way to deploy is using pre-built Docker images from GitHub Container Registry. This skips the 5-10 minute build process and ensures you're running tested, consistent images.
+
+**Quick Start:**
+```bash
+# Pull pre-built images (optional, will auto-pull on first run)
+docker pull ghcr.io/maskys/roam-embeddings-search-backend:latest
+docker pull ghcr.io/maskys/roam-embeddings-search-chunker:latest
+
+# Launch with production compose file
+docker compose -f docker-compose.prod.yml up -d
+```
+
+**Benefits:**
+- ✅ No build time required (instant startup)
+- ✅ Consistent, tested images
+- ✅ Optimized for production (multi-worker backend, no hot-reload)
+- ✅ Auto-restart on failures
+- ✅ ML models pre-cached in images
+
+**Available Images:**
+- Backend/Search API: `ghcr.io/maskys/roam-embeddings-search-backend:latest`
+- Chunker Service: `ghcr.io/maskys/roam-embeddings-search-chunker:latest`
+- Weaviate: `cr.weaviate.io/semitechnologies/weaviate:1.33.0`
+
+Images are automatically built and published on every push to `main` branch via GitHub Actions.
+
+### Option 2: Building from Source (Development)
+
+If you're modifying the code or prefer to build locally:
 
 1. Build images (first run or after dependency changes):
    ```bash
@@ -101,21 +133,24 @@ Optional but recommended:
    docker compose up -d weaviate chunker backend-semantic
    ```
 
-   - `weaviate` listens on `8080` (HTTP) and `50051` (gRPC) and stores data in `./weaviate_data`.
-   - `chunker` exposes port `8003` (`http://localhost:8003/health`).
-   - `backend-semantic` serves FastAPI on `http://localhost:8002` (container port `8000`).
+## Verifying the Deployment
 
-3. Confirm everything is healthy:
-   ```bash
-   curl http://localhost:8003/health          # chunker ready
-   curl http://localhost:8002/                # backend handshake (shows graph + document count)
-   curl http://localhost:8002/sync/runs        # recent run history from SQLite
-   docker compose logs -f chunker backend-semantic weaviate
-   ```
+Regardless of which deployment option you chose, verify everything is running correctly:
 
-   The first chunker start may download models; expect a short delay.
+**Check service health:**
+```bash
+curl http://localhost:8003/health          # chunker ready
+curl http://localhost:8002/                # backend handshake (shows graph + document count)
+curl http://localhost:8002/sync/runs       # recent run history from SQLite
+docker compose logs -f chunker backend-semantic weaviate
+```
 
-> ⚙️ **Production tip:** The Compose file starts FastAPI with `--reload` and mounts the source directory for local development. Swap the command for `uvicorn services.search_service:app --host 0.0.0.0 --port 8000 --workers 2` and remove the bind mount for a leaner production container.
+**Service endpoints:**
+- `weaviate` listens on `8080` (HTTP) and `50051` (gRPC) and stores data in `./weaviate_data`.
+- `chunker` exposes port `8003` (`http://localhost:8003/health`).
+- `backend-semantic` serves FastAPI on `http://localhost:8002` (container port `8000`).
+
+> **Note:** The first chunker start may download ML models; expect a 1-2 minute delay.
 
 ## Populating Weaviate
 

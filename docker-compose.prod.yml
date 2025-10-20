@@ -1,16 +1,7 @@
-# Development Docker Compose
-# For production deployment with pre-built images, use: docker-compose.prod.yml
-# See README.md for deployment options
+# Production Docker Compose - Uses pre-built images from GitHub Container Registry
+# Usage: docker compose -f docker-compose.prod.yml up -d
 
 services:
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   ports:
-  #     - "11434:11434"
-  #   volumes:
-  #     - ./ollama_data:/root/.ollama
-  #   command: serve
-
   weaviate:
     image: cr.weaviate.io/semitechnologies/weaviate:1.33.0
     ports:
@@ -18,7 +9,7 @@ services:
       - "50051:50051"
     volumes:
       - ./weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
+    restart: unless-stopped
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
@@ -27,55 +18,35 @@ services:
       ENABLE_MODULES: "reranker-voyageai"
       CLUSTER_HOSTNAME: "node1"
 
-  # backend:
-  #   build:
-  #     context: ./backend
-  #   ports:
-  #     - "8001:8001"
-  #   volumes:
-  #     - ./backend:/app
-  #   depends_on:
-  #     - weaviate
-  #     - ollama
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #   env_file:
-  #     - .env
-  #   command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-
   backend-semantic:
-    # Development: Build from source with hot-reload
-    build:
-      context: ./backend
-    # Production alternative: Use pre-built image from GHCR
-    # Uncomment the line below and comment out 'build' section:
-    # image: ghcr.io/maskys/roam-embeddings-search-backend:latest
+    image: ghcr.io/maskys/roam-embeddings-search-backend:latest
     ports:
       - "8002:8000"
     volumes:
-      - ./backend:/app
+      # Only mount data directory for persistence
+      - ./backend/data:/app/data
     depends_on:
       - weaviate
-      # - ollama
       - chunker
+    restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: uvicorn services.search_service:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn services.search_service:app --host 0.0.0.0 --port 8000 --workers 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   chunker:
-    # Development: Build from source
-    build:
-      context: ./backend
-    # Production alternative: Use pre-built image from GHCR
-    # Uncomment the line below and comment out 'build' section:
-    # image: ghcr.io/maskys/roam-embeddings-search-chunker:latest
-    container_name: roam-test-chunker
+    image: ghcr.io/maskys/roam-embeddings-search-chunker:latest
+    container_name: roam-prod-chunker
     ports:
       - "8003:8003"
-    volumes:
-      - ./backend:/app
+    restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
       - CHUNKER_EMBEDDING_PROVIDER=${CHUNKER_EMBEDDING_PROVIDER:-granite}
@@ -87,7 +58,6 @@ services:
       - CHUNKER_SKIP_WINDOW=${CHUNKER_SKIP_WINDOW:-1}
       - CHUNKER_MIN_CHUNK_SIZE=${CHUNKER_MIN_CHUNK_SIZE:-50}
     command: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8003
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
       interval: 30s

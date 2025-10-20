@@ -1,25 +1,68 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
 .venv
-.venv.local
-__pycache__
-.pytest_cache
-.mypy_cache
-.ruff_cache
-*.pyc
-*.pyo
-*.pyd
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
-.git
-.gitignore
-dist
-build
-node_modules
-weaviate_data
-data
-experiments
-scripts
-roam-extension-calendar
-roam-semantic-search
-ollama_data
-*.sqlite
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Data and state files (these should be mounted as volumes)
+data/
 *.db
+*.json
+*.sqlite
+*.sqlite3
+
+# Documentation
+docs/
+*.md
+README*
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Logs
 *.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Development dependencies
+tests/
+test_*.py
+*_test.py
