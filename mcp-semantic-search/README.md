@@ -23,6 +23,7 @@ Config
 Run with MCP Inspector
   uv run mcp dev server.py
 
+
 Claude Desktop Integration
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
 
@@ -44,6 +45,38 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` and add:
   }
 }
 
+One‑line MCP Config (uvx, after PyPI publish)
+- After publishing this server to PyPI (package name `roam-semantic-mcp`), you can run it without cloning using `uvx` (npx‑like for Python):
+
+{
+  "mcpServers": {
+    "roam-semantic-search": {
+      "command": "uvx",
+      "args": ["roam-semantic-mcp"],
+      "env": {
+        "SEMANTIC_BACKEND_URL": "http://localhost:8002",
+        "GRAPH_SLUG": "your-graph-slug",
+        "SEMANTIC_BACKEND_API_KEY": "optional"
+      }
+    }
+  }
+}
+
+Pipx Alternative (no uv)
+{
+  "mcpServers": {
+    "roam-semantic-search": {
+      "command": "pipx",
+      "args": ["run", "roam-semantic-mcp"],
+      "env": {
+        "SEMANTIC_BACKEND_URL": "http://localhost:8002",
+        "GRAPH_SLUG": "your-graph-slug",
+        "SEMANTIC_BACKEND_API_KEY": "optional"
+      }
+    }
+  }
+}
+
 Tool Schema
 - `semantic_search(query: str, limit: int=10, rerank: bool=True, exclude_pages: bool=False, alpha: float=0.5) -> List[SearchResult]`
 - SearchResult: { page_title, page_uid, block_uid?, block_text?, score, url?, highlights?[] }
@@ -51,4 +84,3 @@ Tool Schema
 Notes
 - Logging goes to stderr; no stdout prints to keep stdio transport stable.
 - Per-result deep links are generated when `GRAPH_SLUG` is set.
-

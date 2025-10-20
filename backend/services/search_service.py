@@ -105,8 +105,45 @@ async def lifespan(app: FastAPI):
             "task": None,
         }
         LOGGER.info("Weaviate connection established")
+
+        # Initialize auto-sync scheduler
+        try:
+            from services.scheduler import initialize_scheduler
+            from services.sync_service import _run_sync_job
+
+            # Create sync trigger function
+            async def trigger_auto_sync(mode: str = "since"):
+                """Trigger an automatic sync job."""
+                DEFAULT_STATE_FILE = os.getenv(
+                    "SYNC_STATE_FILE",
+                    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "sync_state.json"),
+                )
+                sync_kwargs = {
+                    "clear_existing": False,
+                    "test_limit": None,
+                    "recreate_collection": False,
+                    "state_file": DEFAULT_STATE_FILE,
+                    "resume": False,
+                    "since": None,  # Will use last successful run time
+                }
+                await _run_sync_job(app, sync_kwargs)
+
+            scheduler = await initialize_scheduler(trigger_auto_sync)
+            app.state.scheduler = scheduler
+            LOGGER.info("Auto-sync scheduler initialized")
+        except Exception as exc:
+            LOGGER.error("Failed to initialize scheduler", error=str(exc))
+            # Don't fail startup if scheduler fails
+
         yield
     finally:
+        # Shutdown scheduler
+        try:
+            from services.scheduler import shutdown_scheduler
+            await shutdown_scheduler()
+        except Exception:
+            pass
+
         ctx: Optional[AppContext] = getattr(app.state, "ctx", None)
         job_state: Dict[str, Any] = getattr(app.state, "sync_job", {})
         task = job_state.get("task") if isinstance(job_state, dict) else None

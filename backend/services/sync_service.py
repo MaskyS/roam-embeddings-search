@@ -10,7 +10,13 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from services.search_service import get_context  # reuse app context dependency
-from sync.state.db_persistence import list_recent_runs, delete_page_state, list_page_state_uids
+from sync.state.db_persistence import (
+    list_recent_runs,
+    delete_page_state,
+    list_page_state_uids,
+    get_scheduler_config,
+    update_scheduler_config,
+)
 
 router = APIRouter()
 
@@ -230,3 +236,117 @@ async def clear_database(request: Request, ctx=Depends(get_context)) -> Dict[str
         job["status"] = job.get("status", "idle")
 
         return {"status": "cleared", "cleared_at": cleared_at}
+
+
+@router.get("/sync/schedule")
+async def get_schedule(ctx=Depends(get_context)) -> Dict[str, Any]:
+    """Get current auto-sync schedule configuration."""
+    config = get_scheduler_config()
+
+    # Calculate next run time if enabled
+    next_run_time = None
+    if config.get("enabled"):
+        try:
+            from services.scheduler import get_scheduler
+            scheduler = get_scheduler()
+            if scheduler:
+                job = scheduler.get_job("daily_auto_sync")
+                if job and job.next_run_time:
+                    next_run_time = job.next_run_time.isoformat()
+        except Exception:
+            pass  # Ignore errors getting next run time
+
+    return {
+        **config,
+        "next_run_time": next_run_time
+    }
+
+
+@router.post("/sync/schedule")
+async def update_schedule(
+    payload: Dict[str, Any] = Body(...),
+    request: Request = None,
+    ctx=Depends(get_context),
+) -> Dict[str, Any]:
+    """Update auto-sync schedule configuration."""
+    app_state = request.app
+    lock: asyncio.Lock = app_state.state.sync_lock
+
+    async with lock:
+        # Extract configuration parameters
+        enabled = payload.get("enabled")
+        schedule_time = payload.get("schedule_time")
+        timezone = payload.get("timezone")
+
+        # Validate schedule_time format if provided
+        if schedule_time is not None:
+            try:
+                hour, minute = schedule_time.split(":")
+                hour = int(hour)
+                minute = int(minute)
+                if not (0 <= hour < 24 and 0 <= minute < 60):
+                    raise ValueError("Invalid time range")
+            except (ValueError, AttributeError):
+                raise HTTPException(
+                    status_code=400,
+                    detail="schedule_time must be in HH:MM format (e.g., '02:00')"
+                )
+
+        # Validate timezone if provided
+        if timezone is not None:
+            try:
+                import pytz
+                pytz.timezone(timezone)
+            except pytz.UnknownTimeZoneError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown timezone: {timezone}. Use IANA timezone names (e.g., 'America/New_York', 'UTC')"
+                )
+
+        # Update configuration in database
+        updated_config = update_scheduler_config(
+            enabled=enabled,
+            schedule_time=schedule_time,
+            timezone=timezone
+        )
+
+        # Reschedule job with new configuration
+        try:
+            from services.scheduler import reschedule_job
+            # Create a sync trigger function that uses the app's sync job
+            async def trigger_sync(mode: str = "since"):
+                sync_kwargs = {
+                    "clear_existing": False,
+                    "test_limit": None,
+                    "recreate_collection": False,
+                    "state_file": DEFAULT_STATE_FILE,
+                    "resume": False,
+                    "since": None,
+                }
+                await _run_sync_job(app_state, sync_kwargs)
+
+            await reschedule_job(updated_config, trigger_sync)
+        except Exception as exc:
+            # Log error but don't fail the request
+            # Configuration is saved, scheduler will pick it up on restart
+            import structlog
+            logger = structlog.get_logger(__name__)
+            logger.error("Failed to reschedule job", error=str(exc))
+
+        # Get next run time
+        next_run_time = None
+        if updated_config.get("enabled"):
+            try:
+                from services.scheduler import get_scheduler
+                scheduler = get_scheduler()
+                if scheduler:
+                    job = scheduler.get_job("daily_auto_sync")
+                    if job and job.next_run_time:
+                        next_run_time = job.next_run_time.isoformat()
+            except Exception:
+                pass
+
+        return {
+            **updated_config,
+            "next_run_time": next_run_time
+        }

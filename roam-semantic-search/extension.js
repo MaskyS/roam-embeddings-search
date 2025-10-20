@@ -21,6 +21,15 @@ const syncState = {
   lastStatus: null,
 };
 
+const autoSyncState = {
+  enabled: false,
+  schedule_time: "02:00",
+  timezone: "UTC",
+  last_auto_run: null,
+  last_auto_status: null,
+  next_run_time: null,
+};
+
 function isJobActive(status) {
   const st = status?.status || status?.summary?.status;
   return st === "running" || st === "cancelling";
@@ -116,6 +125,17 @@ class SearchAPI {
     return await this.request("/sync/clear", {
       method: "POST",
       body: JSON.stringify({}),
+    });
+  }
+
+  async getSchedule() {
+    return await this.request("/sync/schedule");
+  }
+
+  async updateSchedule(config) {
+    return await this.request("/sync/schedule", {
+      method: "POST",
+      body: JSON.stringify(config),
     });
   }
 
@@ -939,6 +959,71 @@ async function triggerSyncCancel() {
   }
 }
 
+async function fetchScheduleConfig() {
+  try {
+    const config = await searchAPI.getSchedule();
+    Object.assign(autoSyncState, config);
+    updateAutoSyncDisplay();
+  } catch (error) {
+    console.error("[Semantic Search] Failed to fetch schedule config:", error);
+  }
+}
+
+async function updateScheduleConfig(updates) {
+  try {
+    const config = await searchAPI.updateSchedule(updates);
+    Object.assign(autoSyncState, config);
+    updateAutoSyncDisplay();
+    showToast("Auto-sync settings updated", "success");
+  } catch (error) {
+    showToast(`Failed to update schedule: ${error.message}`, "danger");
+    throw error;
+  }
+}
+
+function updateAutoSyncDisplay() {
+  // Update status display
+  const statusContainer = document.querySelector('.rss-autosync-status-setting');
+  if (statusContainer) {
+    const statusText = autoSyncState.enabled
+      ? `Enabled - Next run: ${autoSyncState.next_run_time ? new Date(autoSyncState.next_run_time).toLocaleString() : 'calculating...'}`
+      : "Disabled";
+
+    const statusInput = statusContainer.querySelector('input');
+    if (statusInput) {
+      statusInput.value = statusText;
+      statusInput.setAttribute("readonly", "readonly");
+    }
+  }
+
+  // Update enabled switch
+  const enabledSetting = document.querySelector('[data-panel-setting-id="autosync-enabled"]');
+  if (enabledSetting) {
+    const switchInput = enabledSetting.querySelector('input[type="checkbox"]');
+    if (switchInput) {
+      switchInput.checked = autoSyncState.enabled;
+    }
+  }
+
+  // Update time input
+  const timeSetting = document.querySelector('[data-panel-setting-id="autosync-time"]');
+  if (timeSetting) {
+    const timeInput = timeSetting.querySelector('input[type="text"]');
+    if (timeInput) {
+      timeInput.value = autoSyncState.schedule_time || "02:00";
+    }
+  }
+
+  // Update timezone input
+  const timezoneSetting = document.querySelector('[data-panel-setting-id="autosync-timezone"]');
+  if (timezoneSetting) {
+    const timezoneInput = timezoneSetting.querySelector('input[type="text"]');
+    if (timezoneInput) {
+      timezoneInput.value = autoSyncState.timezone || "UTC";
+    }
+  }
+}
+
 async function performSearch() {
   const input = document.querySelector(".rss-input");
   if (!input) return;
@@ -1348,6 +1433,61 @@ function createSettingsPanel() {
         },
       },
       {
+        id: "autosync-status",
+        name: "Auto-Sync Status",
+        description: "Disabled",
+        className: "rss-autosync-status-setting",
+        action: {
+          type: "input",
+          placeholder: "Disabled",
+          onChange: () => {},
+        },
+      },
+      {
+        id: "autosync-enabled",
+        name: "Enable Daily Auto-Sync",
+        description: "Automatically sync recently edited pages daily",
+        action: {
+          type: "switch",
+          onChange: async (e) => {
+            const enabled = e.target.checked;
+            await updateScheduleConfig({ enabled });
+          },
+        },
+      },
+      {
+        id: "autosync-time",
+        name: "Auto-Sync Time",
+        description: "Time to run daily sync (HH:MM format, 24-hour)",
+        action: {
+          type: "input",
+          placeholder: "02:00",
+          onChange: async (e) => {
+            const schedule_time = e.target.value;
+            if (/^\d{2}:\d{2}$/.test(schedule_time)) {
+              await updateScheduleConfig({ schedule_time });
+            } else {
+              showToast("Invalid time format. Use HH:MM (e.g., 02:00)", "warning");
+            }
+          },
+        },
+      },
+      {
+        id: "autosync-timezone",
+        name: "Auto-Sync Timezone",
+        description: "IANA timezone (e.g., America/New_York, UTC)",
+        action: {
+          type: "input",
+          placeholder: "UTC",
+          onChange: async (e) => {
+            const timezone = e.target.value;
+            if (timezone && timezone.trim()) {
+              await updateScheduleConfig({ timezone });
+            }
+          },
+        },
+      },
+      {
         id: "backend-url",
         name: "Backend URL",
         description: "URL of the semantic search backend service",
@@ -1598,6 +1738,7 @@ export default {
     // Create settings panel
     extensionAPI.settings.panel.create(createSettingsPanel());
     setTimeout(() => updateSyncStatusDisplay(syncState.lastStatus), 100);
+    setTimeout(() => fetchScheduleConfig(), 200);
 
     // Resume polling if a job is already running
     fetchAndNotifyStatus(false)

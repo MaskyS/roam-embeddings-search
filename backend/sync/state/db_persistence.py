@@ -55,6 +55,18 @@ sync_runs_table = Table(
     Column("notes", Text),
 )
 
+scheduler_config_table = Table(
+    "scheduler_config",
+    _metadata,
+    Column("id", Integer, primary_key=True, default=1),
+    Column("enabled", Integer, default=0),  # SQLite uses 0/1 for boolean
+    Column("schedule_time", String, default="02:00"),  # HH:MM format
+    Column("timezone", String, default="UTC"),  # IANA timezone
+    Column("last_auto_run", String),  # ISO timestamp
+    Column("last_auto_status", String),  # success, failed, etc.
+    Column("updated_at", String),
+)
+
 _engine_cache: Dict[str, Engine] = {}
 
 
@@ -202,4 +214,67 @@ def list_recent_runs(limit: int = 10, path: str = DEFAULT_DB_PATH) -> List[Dict[
             }
         )
     return output
+
+
+def get_scheduler_config(path: str = DEFAULT_DB_PATH) -> Dict[str, Any]:
+    """Get scheduler configuration. Returns default config if not found."""
+    engine = _get_engine(path)
+    stmt = select(scheduler_config_table).where(scheduler_config_table.c.id == 1)
+    with engine.connect() as conn:
+        row = conn.execute(stmt).fetchone()
+
+    if row is None:
+        # Return default config
+        return {
+            "enabled": False,
+            "schedule_time": "02:00",
+            "timezone": "UTC",
+            "last_auto_run": None,
+            "last_auto_status": None,
+        }
+
+    return {
+        "enabled": bool(row.enabled),
+        "schedule_time": row.schedule_time,
+        "timezone": row.timezone,
+        "last_auto_run": row.last_auto_run,
+        "last_auto_status": row.last_auto_status,
+    }
+
+
+def update_scheduler_config(
+    enabled: Optional[bool] = None,
+    schedule_time: Optional[str] = None,
+    timezone: Optional[str] = None,
+    last_auto_run: Optional[str] = None,
+    last_auto_status: Optional[str] = None,
+    path: str = DEFAULT_DB_PATH,
+) -> Dict[str, Any]:
+    """Update scheduler configuration. Creates if doesn't exist."""
+    engine = _get_engine(path)
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+    # Build update dict from provided values
+    update_data = {"id": 1, "updated_at": timestamp}
+    if enabled is not None:
+        update_data["enabled"] = 1 if enabled else 0
+    if schedule_time is not None:
+        update_data["schedule_time"] = schedule_time
+    if timezone is not None:
+        update_data["timezone"] = timezone
+    if last_auto_run is not None:
+        update_data["last_auto_run"] = last_auto_run
+    if last_auto_status is not None:
+        update_data["last_auto_status"] = last_auto_status
+
+    stmt = insert(scheduler_config_table).values(update_data)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[scheduler_config_table.c.id],
+        set_={k: v for k, v in update_data.items() if k != "id"},
+    )
+
+    with engine.begin() as conn:
+        conn.execute(stmt)
+
+    return get_scheduler_config(path)
 
