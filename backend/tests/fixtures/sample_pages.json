@@ -1,0 +1,48 @@
+{
+  "page_with_children": {
+    ":block/uid": "page-123",
+    ":node/title": "Sample Page with Content",
+    ":edit/time": 1700000000000,
+    ":block/children": [
+      {
+        ":block/uid": "block-1",
+        ":block/string": "This is the first block with some meaningful content about software development.",
+        ":block/order": 0,
+        ":edit/time": 1700000000000,
+        ":block/children": [
+          {
+            ":block/uid": "block-1-1",
+            ":block/string": "A nested block discussing testing strategies.",
+            ":block/order": 0,
+            ":edit/time": 1700000000000
+          }
+        ]
+      },
+      {
+        ":block/uid": "block-2",
+        ":block/string": "Second top-level block about deployment practices.",
+        ":block/order": 1,
+        ":edit/time": 1700000000000
+      }
+    ]
+  },
+  "leaf_page": {
+    ":block/uid": "page-456",
+    ":node/title": "Simple Leaf Page",
+    ":edit/time": 1699999000000
+  },
+  "daily_note": {
+    ":block/uid": "11-30-2025",
+    ":node/title": "November 30th, 2025",
+    ":log/id": 1732924800000,
+    ":edit/time": 1732924800000,
+    ":block/children": [
+      {
+        ":block/uid": "dn-block-1",
+        ":block/string": "TODO: Review pull requests",
+        ":block/order": 0,
+        ":edit/time": 1732924800000
+      }
+    ]
+  }
+}
