@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence
 import voyageai
 
 from common.errors import TransientError
+from common.retry import transient_retry
 
 
 class VoyageEmbeddingClient:
@@ -27,12 +28,12 @@ class VoyageEmbeddingClient:
         self._model = model
         self._input_type = input_type
 
+    @transient_retry()
     async def embed_documents(
         self,
         pages: Sequence[Sequence[str]],
-        *,
-        retries: int = 3,
     ) -> List[List[List[float]]]:
+        """Embed documents with contextualized embeddings."""
         loop = asyncio.get_running_loop()
 
         def call() -> List[List[List[float]]]:
@@ -43,18 +44,17 @@ class VoyageEmbeddingClient:
             )
             return [item.embeddings for item in result.results]
 
-        for attempt in range(max(1, retries)):
-            try:
-                return await loop.run_in_executor(None, call)
-            except Exception as exc:
-                if attempt >= retries - 1:
-                    raise TransientError(
-                        f"Voyage embedding failed after {attempt + 1} attempts",
-                        context={"model": self._model, "batch_size": len(pages), "original_error": str(exc)},
-                    ) from exc
-                await asyncio.sleep(min(2 ** (attempt + 1), 10))
+        try:
+            return await loop.run_in_executor(None, call)
+        except Exception as exc:
+            raise TransientError(
+                "Voyage embedding failed",
+                context={"model": self._model, "batch_size": len(pages), "original_error": str(exc)},
+            ) from exc
 
-    async def embed_query(self, query: str, *, retries: int = 3) -> List[float]:
+    @transient_retry()
+    async def embed_query(self, query: str) -> List[float]:
+        """Embed a single query."""
         loop = asyncio.get_running_loop()
 
         def call() -> List[float]:
@@ -65,14 +65,10 @@ class VoyageEmbeddingClient:
             )
             return result.results[0].embeddings[0]
 
-        for attempt in range(max(1, retries)):
-            try:
-                return await loop.run_in_executor(None, call)
-            except Exception as exc:
-                if attempt >= retries - 1:
-                    raise TransientError(
-                        f"Voyage query embedding failed after {attempt + 1} attempts",
-                        context={"model": self._model, "query_length": len(query), "original_error": str(exc)},
-                    ) from exc
-                await asyncio.sleep(min(2 ** (attempt + 1), 10))
-
+        try:
+            return await loop.run_in_executor(None, call)
+        except Exception as exc:
+            raise TransientError(
+                "Voyage query embedding failed",
+                context={"model": self._model, "query_length": len(query), "original_error": str(exc)},
+            ) from exc

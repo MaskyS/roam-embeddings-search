@@ -11,6 +11,7 @@ import structlog
 from funcy import suppress
 
 from common.errors import TransientError
+from common.retry import transient_retry
 
 LOGGER = structlog.get_logger(__name__)
 
@@ -18,8 +19,6 @@ LOGGER = structlog.get_logger(__name__)
 @dataclass
 class ChunkerConfig:
     url: str
-    retries: int = 3
-    base_delay: float = 2.0
 
 
 class ChunkerClient:
@@ -43,45 +42,36 @@ class ChunkerClient:
             await asyncio.sleep(2)
         return False
 
+    @transient_retry()
     async def chunk_text(self, text: str) -> List[Dict[str, Any]]:
         """Chunk ``text`` returning list of chunk dictionaries."""
+        try:
+            response = await self._client.post(
+                f"{self._config.url}/chunk",
+                json={"text": text},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("chunks", [])
+        except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ReadTimeout) as exc:
+            raise TransientError(
+                "Chunker service failed",
+                context={"url": self._config.url, "original_error": str(exc)},
+            ) from exc
 
-        attempt = 0
-        while True:
-            try:
-                response = await self._client.post(
-                    f"{self._config.url}/chunk",
-                    json={"text": text},
-                )
-                response.raise_for_status()
-                data = response.json()
-                return data.get("chunks", [])
-            except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ReadTimeout) as exc:
-                attempt += 1
-                if attempt >= self._config.retries:
-                    raise TransientError(
-                        f"Chunker service failed after {attempt} attempts",
-                        context={"url": self._config.url, "original_error": str(exc)},
-                    ) from exc
-                await asyncio.sleep(self._config.base_delay * (2 ** (attempt - 1)))
-
+    @transient_retry()
     async def chunk_batch(self, texts: Sequence[str]) -> List[List[Dict[str, Any]]]:
-        attempt = 0
-        while True:
-            try:
-                response = await self._client.post(
-                    f"{self._config.url}/chunk/batch",
-                    json={"texts": list(texts)},
-                )
-                response.raise_for_status()
-                data = response.json()
-                return [entry.get("chunks", []) for entry in data.get("results", [])]
-            except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ReadTimeout) as exc:
-                attempt += 1
-                if attempt >= self._config.retries:
-                    raise TransientError(
-                        f"Chunker batch service failed after {attempt} attempts",
-                        context={"url": self._config.url, "batch_size": len(texts), "original_error": str(exc)},
-                    ) from exc
-                await asyncio.sleep(self._config.base_delay * (2 ** (attempt - 1)))
-
+        """Chunk multiple texts in a single request."""
+        try:
+            response = await self._client.post(
+                f"{self._config.url}/chunk/batch",
+                json={"texts": list(texts)},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return [entry.get("chunks", []) for entry in data.get("results", [])]
+        except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ReadTimeout) as exc:
+            raise TransientError(
+                "Chunker batch service failed",
+                context={"url": self._config.url, "batch_size": len(texts), "original_error": str(exc)},
+            ) from exc

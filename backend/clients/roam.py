@@ -8,7 +8,8 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import httpx
 from aiolimiter import AsyncLimiter
-from tenacity import AsyncRetrying, stop_after_attempt, wait_exponential
+
+from common.retry import transient_retry
 
 
 async def query_roam(token: str, graph_name: str, query: str, args: list = None):
@@ -121,22 +122,16 @@ class RoamClient:
         eids_list = " ".join([f'[:block/uid "{uid}"]' for uid in uids])
         return {"eids": f"[{eids_list}]", "selector": selector}
 
+    @transient_retry()
     async def _post(self, endpoint: str, payload: Dict[str, Any], *, timeout: float) -> httpx.Response:
-        async for attempt in AsyncRetrying(
-            stop=stop_after_attempt(3),
-            wait=wait_exponential(max=4),
-            reraise=True,
-        ):
-            with attempt:
-                async with self._limiter:
-                    async with httpx.AsyncClient(
-                        base_url=self.base_url,
-                        headers=self.headers,
-                        follow_redirects=True,
-                        timeout=timeout,
-                    ) as client:
-                        response = await client.post(endpoint, json=payload)
-                if response.status_code >= 500 or response.status_code == 429:
-                    response.raise_for_status()
-                return response
-        raise RuntimeError("Roam API retry loop exhausted")
+        async with self._limiter:
+            async with httpx.AsyncClient(
+                base_url=self.base_url,
+                headers=self.headers,
+                follow_redirects=True,
+                timeout=timeout,
+            ) as client:
+                response = await client.post(endpoint, json=payload)
+        if response.status_code >= 500 or response.status_code == 429:
+            response.raise_for_status()
+        return response
