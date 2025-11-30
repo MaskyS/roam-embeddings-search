@@ -23,7 +23,6 @@ from sync.pipeline.batch_phase import process_batches
 from common.config import SyncConfig, STATE_FLAG_METADATA_APPLIED
 from sync.pipeline.metadata_phase import execute_metadata_phase
 from sync.data.models import SyncRuntime
-from sync.context import SyncContext
 from sync.resources import acquire_resources
 from sync.state.run_state import SyncRunParams, SyncRunState, StatusEmitter
 from sync.state.file_persistence import load_state, remove_state_file
@@ -220,13 +219,7 @@ async def run_sync(
                 logger.info("Applying --since filter", since=params.since, readable=readable_since)
                 await status_emitter.since_applied(since=params.since, readable=readable_since)
 
-            context = SyncContext(
-                config=params.config,
-                resources=resources,
-                roam_client=resources.roam_client,
-                logger=logger.bind(run_id=run_id),
-            )
-            await process_batches(state=state, context=context)
+            await process_batches(state=state, config=params.config, resources=resources)
 
             elapsed_time = time.time() - start_time
             summary = status_emitter.build_summary(status="success", elapsed_seconds=elapsed_time, include_full_failures=True)

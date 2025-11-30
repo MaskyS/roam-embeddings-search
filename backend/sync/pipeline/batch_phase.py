@@ -12,16 +12,9 @@ from funcy import chunks, compact, lcat, lmap, lpluck, lsplit, reductions, last
 from sync.state.file_persistence import persist_state
 from sync.state.db_persistence import upsert_page_state
 from common.config import SyncConfig, STATE_FLAG_METADATA_APPLIED
-from sync.context import SyncContext
+from sync.resources import SyncResources
 from sync.data.models import GroupResult, PageSnapshot, PageWorkItem, WeaviateObjectSet
 from sync.data.transform import collect_page_snapshot, build_weaviate_objects
-from sync.resources import SyncResources
-from common.retry import (
-    chunk_batch_with_retry,
-    embed_documents_with_retry,
-    weaviate_delete_with_retry,
-    weaviate_insert_with_retry,
-)
 from sync.state.run_state import SyncRunState
 
 # Voyage context-3 model limits (see docs/external/voyageai/context-model-guide.md:81-84)
@@ -297,7 +290,7 @@ async def _embed_with_segmentation(
         # Execute each batch and accumulate results back to source pages
         for page_indices, batched_segments in api_calls:
             # Call embedding API with retry logic
-            embeddings_batch = await embed_documents_with_retry(embedder, batched_segments)
+            embeddings_batch = await embedder.embed_documents(batched_segments)
 
             # Distribute embeddings back to their source pages
             # zip pairs each page_idx with its corresponding embeddings
@@ -315,217 +308,147 @@ async def process_page_group(
 ) -> GroupResult:
     """
     Process a group of pages through the full pipeline: chunk → embed → write.
-    
-    Pipeline stages:
-        1. CHUNK: Split pages with children into smaller chunks (optional, via external service)
-        2. BUILD: Transform chunks into Weaviate object structures
-        3. EMBED: Generate embeddings with automatic segmentation for token limits
-        4. VALIDATE: Ensure embedding counts match object counts
-        5. WRITE: Bulk insert to Weaviate and cleanup old versions
-    
+
+    Pipeline stages (each independently testable):
+        1. CHUNK: Split pages with children into smaller chunks (stage_chunk)
+        2. BUILD: Transform chunks into Weaviate object structures (stage_build_payloads)
+        3. EMBED: Generate embeddings with token-aware segmentation (stage_embed)
+        4. VALIDATE: Ensure embedding counts match and attach vectors (stage_attach_vectors)
+        5. WRITE: Bulk insert to Weaviate and cleanup old versions (stage_write)
+
     Args:
         group_items: Pages to process in this group
         resources: Shared resources (chunker, embedder, weaviate, semaphores)
         config: Sync configuration (batch size, version, namespace)
-        
+
     Returns:
         GroupResult with stats, state updates, and failure messages
+
+    Note:
+        Stage functions are imported from sync.pipeline.stages and can be
+        tested independently. This function composes them into a pipeline.
     """
-    result = GroupResult()
+    # Import stage functions (lazy to avoid circular imports)
+    from sync.pipeline.stages import (
+        stage_chunk,
+        stage_build_payloads,
+        stage_embed,
+        stage_attach_vectors,
+        stage_write,
+    )
+    from sync.data.results import aggregate_stage_results
 
     # ============================================================================
     # STAGE 1: CHUNKING
-    # Split pages with children into smaller chunks for better embedding quality
     # ============================================================================
-    try:
-        # Separate pages that need chunking from those that don't
-        # need_chunk: pages with children (need external chunking service)
-        # no_chunk: leaf pages or pages without children (skip chunking)
-        need_chunk, no_chunk = lsplit(
-            lambda p: p[1].snapshot.has_children,
-            enumerate(group_items)
+    chunk_result = await stage_chunk(group_items, resources)
+    if chunk_result.is_err:
+        return GroupResult(
+            pages_failed=len(group_items),
+            fail_messages=[f"  ✗ {err}" for err in chunk_result.errors],
         )
-
-        chunk_results_by_index: Dict[int, List[Dict[str, Any]]] = {}
-
-        if need_chunk:
-            # Extract linearized text from pages that need chunking
-            texts = lmap(lambda p: p[1].snapshot.linearized_text or "", need_chunk)
-
-            # Chunk with semaphore-based rate limiting
-            chunk_wait_start = time.time()
-            async with resources.chunk_semaphore:
-                result.chunk_wait = time.time() - chunk_wait_start
-                chunk_start = time.time()
-                chunk_batches = await chunk_batch_with_retry(resources.chunker, texts)
-                result.chunk_duration = time.time() - chunk_start
-
-            # Map chunk results back to page indices
-            for (idx, _), chunks in zip(need_chunk, chunk_batches):
-                chunk_results_by_index[idx] = chunks or []
-
-        # Pages without children get empty chunk lists
-        for idx, _ in no_chunk:
-            chunk_results_by_index[idx] = []
-
-    except Exception as exc:  # pragma: no cover
-        # Chunking failure fails the entire group (all-or-nothing for consistency)
-        result.pages_failed = len(group_items)
-        result.fail_messages.append(f"  ✗ Chunker failed for group: {exc}")
-        return result
 
     # ============================================================================
     # STAGE 2: PAYLOAD BUILDING
-    # Transform chunks into Weaviate object structures
     # ============================================================================
-    processed_items: List[Tuple[PageWorkItem, WeaviateObjectSet]] = []
-    for idx, item in enumerate(group_items):
-        chunk_data = chunk_results_by_index.get(idx, [])
-        try:
-            payload = build_weaviate_objects(
-                snapshot=item.snapshot,
-                chunk_results=chunk_data,
-                sync_version=config.sync_version,
-                namespace=config.uuid_namespace,
-            )
-            processed_items.append((item, payload))
-        except Exception as exc:
-            # Individual page failures are recorded but don't stop the group
-            result.pages_failed += 1
-            result.fail_messages.append(
-                f"  ✗ Failed building payload for page '{item.page_title}' ({item.page_uid}): {exc}"
-            )
+    payload_result = stage_build_payloads(
+        group_items,
+        chunk_result.chunk_results_by_index,
+        config,
+    )
+    # Note: payload failures are recorded but don't stop the pipeline
+    # (other pages can still proceed)
 
-    if not processed_items:
-        return result
+    if not payload_result.processed_items:
+        return GroupResult(
+            pages_failed=payload_result.pages_failed,
+            fail_messages=[f"  ✗ {err}" for err in payload_result.errors],
+            chunk_duration=chunk_result.chunk_duration,
+            chunk_wait=chunk_result.chunk_wait,
+        )
 
     # ============================================================================
-    # STAGE 3: EMBEDDING WITH SEGMENTATION
-    # Generate embeddings with automatic handling of Voyage AI token limits
+    # STAGE 3: EMBEDDING
     # ============================================================================
-    try:
-        voyage_wait_start = time.time()
-        async with resources.embed_semaphore:
-            result.voyage_wait = time.time() - voyage_wait_start
-            voyage_start = time.time()
-
-            # Extract chunk texts from all payloads
-            pages_texts = lmap(lambda item_payload: item_payload[1].chunk_texts, processed_items)
-
-            # Embed with automatic segmentation for pages exceeding token limits
-            embeddings_nested = await _embed_with_segmentation(
-                pages_texts,
-                resources.embedder,
-                per_doc_budget=DOCUMENT_TOKEN_BUDGET,
-                per_request_budget=REQUEST_TOKEN_BUDGET,
-            )
-
-            result.voyage_duration = time.time() - voyage_start
-    except Exception as exc:
-        # Embedding failure fails all remaining pages in this group
-        result.pages_failed += len(processed_items)
-        result.fail_messages.append(f"  ✗ Voyage embedding failed for group: {exc}")
-        return result
+    embed_result = await stage_embed(payload_result.processed_items, resources)
+    if embed_result.is_err:
+        return GroupResult(
+            pages_failed=len(payload_result.processed_items) + payload_result.pages_failed,
+            fail_messages=(
+                [f"  ✗ {err}" for err in payload_result.errors] +
+                [f"  ✗ {err}" for err in embed_result.errors]
+            ),
+            chunk_duration=chunk_result.chunk_duration,
+            chunk_wait=chunk_result.chunk_wait,
+        )
 
     # ============================================================================
     # STAGE 4: VALIDATION & VECTOR ATTACHMENT
-    # Ensure embedding counts match and attach vectors to objects
     # ============================================================================
-    successful_payloads: List[Tuple[PageWorkItem, WeaviateObjectSet]] = []
-    for (item, payload), embeddings in zip(processed_items, embeddings_nested):
-        # Sanity check: embedding count must match object count
-        if len(embeddings) != len(payload.all_objects):
-            result.pages_failed += 1
-            result.fail_messages.append(
-                f"  ✗ Embedding count mismatch for page '{item.page_title}' ({item.page_uid})"
-            )
-            continue
+    validate_result = stage_attach_vectors(
+        payload_result.processed_items,
+        embed_result.embeddings_nested,
+    )
+    # Note: validation failures are recorded but don't stop the pipeline
 
-        # Attach vector to each Weaviate object
-        for obj, vector in zip(payload.all_objects, embeddings):
-            obj["vector"] = vector
-
-        successful_payloads.append((item, payload))
-
-    if not successful_payloads:
-        return result
-
-    # ============================================================================
-    # STAGE 5: WEAVIATE WRITE & CLEANUP
-    # Bulk insert new objects and delete old versions
-    # ============================================================================
-    # Flatten all objects from all pages using funcy's lcat (concatenate lists)
-    weaviate_objects = lcat(lmap(lambda p: p[1].all_objects, successful_payloads))
-
-    try:
-        weaviate_wait_start = time.time()
-        async with resources.weaviate_semaphore:
-            result.weaviate_wait = time.time() - weaviate_wait_start
-            weaviate_start = time.time()
-
-            # Bulk insert with retry logic
-            failed_objects = await weaviate_insert_with_retry(resources.weaviate,
-weaviate_objects)
-            result.weaviate_duration = time.time() - weaviate_start
-
-            # Check for insertion failures
-            if failed_objects:
-                raise RuntimeError(
-                    f"Weaviate reported {len(failed_objects)} failed objects: "
-                    f"{', '.join((error.message or '') for error in failed_objects[:3])}"
-                )
-
-            # Delete old versions by content hash (cleanup stale embeddings)
-            for item, payload in successful_payloads:
-                await weaviate_delete_with_retry(
-                    resources.weaviate,
-                    item.page_uid,
-                    payload.content_hash,
-                )
-
-    except Exception as exc:
-        # Write failure fails all pages in this group
-        result.pages_failed += len(successful_payloads)
-        result.fail_messages.append(f"  ✗ Weaviate write failed for group: {exc}")
-        return result
+    if not validate_result.validated_payloads:
+        return GroupResult(
+            pages_failed=(
+                payload_result.pages_failed +
+                validate_result.pages_failed
+            ),
+            fail_messages=(
+                [f"  ✗ {err}" for err in payload_result.errors] +
+                [f"  ✗ {err}" for err in validate_result.errors]
+            ),
+            chunk_duration=chunk_result.chunk_duration,
+            chunk_wait=chunk_result.chunk_wait,
+            voyage_duration=embed_result.voyage_duration,
+            voyage_wait=embed_result.voyage_wait,
+        )
 
     # ============================================================================
-    # RESULT ASSEMBLY
-    # Populate result with stats and state updates
+    # STAGE 5: WRITE
     # ============================================================================
-    result.docs_added = len(weaviate_objects)
-    result.pages_updated = len(successful_payloads)
-    result.chunks_created = sum(len(payload.chunk_objects) for _, payload in successful_payloads)
+    write_result = await stage_write(validate_result.validated_payloads, resources)
 
-    # Prepare state updates for persistence
-    state_updates: Dict[str, Dict[str, Optional[str]]] = {}
-    for item, payload in successful_payloads:
-        meta = item.snapshot.meta
-        aggregated_edit = meta.max_edit_time or meta.max_block_edit_time
-        state_updates[item.page_uid] = {
-            "last_synced_edit_time": aggregated_edit,
-            "content_hash": payload.content_hash,
-        }
-    result.state_updates = state_updates
+    # ============================================================================
+    # AGGREGATE RESULTS
+    # ============================================================================
+    final_result = aggregate_stage_results(
+        chunk_result,
+        payload_result,
+        embed_result,
+        validate_result,
+        write_result,
+    )
 
-    return result
+    # Format error messages for display
+    final_result.fail_messages = (
+        [f"  ✗ {err}" for err in payload_result.errors] +
+        [f"  ✗ {err}" for err in validate_result.errors] +
+        [f"  ✗ {err}" for err in write_result.errors]
+    )
+
+    return final_result
 
 
-async def process_batches(*, state: SyncRunState, context: SyncContext) -> int:
+async def process_batches(*, state: SyncRunState, config: SyncConfig, resources: SyncResources) -> int:
     """
     Main orchestration loop for processing batches of pages.
-    
+
     Workflow:
         1. Fetch page data from Roam (optimized: childless pages skip full pull)
         2. Convert to work items with snapshots
         3. Dispatch groups to parallel processing via asyncio.TaskGroup
         4. Aggregate results, metrics, and state updates
         5. Persist checkpoint state for resumability
-    
+
     Args:
         state: Runtime state (pending UIDs, stats, timers)
-        context: Sync context (resources, config, Roam client)
-        
+        config: Sync configuration
+        resources: External clients and concurrency guards
+
     Returns:
         Total number of pages processed in this run
     """
@@ -535,9 +458,7 @@ async def process_batches(*, state: SyncRunState, context: SyncContext) -> int:
     if status_emitter is None:
         raise RuntimeError("StatusEmitter not attached to SyncRunState")
 
-    resources = context.resources
-    config = context.config
-    roam_client = context.roam_client
+    roam_client = resources.roam_client
 
     pages_processed = 0
     batch_num = 0
