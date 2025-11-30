@@ -3,6 +3,7 @@
 
 services:
   weaviate:
+    profiles: ["local-weaviate"]
     image: cr.weaviate.io/semitechnologies/weaviate:1.33.0
     ports:
       - "8080:8080"
@@ -26,7 +27,9 @@ services:
       # Only mount data directory for persistence
       - ./backend/data:/app/data
     depends_on:
-      - weaviate
+      # Weaviate is optional when using Weaviate Cloud or remote instances.
+      # Start it via profile 'local-weaviate' and include 'weaviate' in the up command when needed.
+      # - weaviate
       - chunker
     restart: unless-stopped
     environment:

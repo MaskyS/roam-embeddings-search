@@ -190,7 +190,6 @@ async def cancel_sync(request: Request, ctx=Depends(get_context)) -> Dict[str, A
 
 @router.post("/sync/clear", status_code=202)
 async def clear_database(request: Request, ctx=Depends(get_context)) -> Dict[str, Any]:
-    import weaviate
     from common.config import CONFIG as SYNC_CONFIG
 
     lock: asyncio.Lock = request.app.state.sync_lock
@@ -199,21 +198,11 @@ async def clear_database(request: Request, ctx=Depends(get_context)) -> Dict[str
         if job.get("status") == "running":
             raise HTTPException(status_code=409, detail=_job_view(job))
 
-        client = weaviate.connect_to_custom(
-            http_host=SYNC_CONFIG.weaviate_http_host,
-            http_port=SYNC_CONFIG.weaviate_http_port,
-            http_secure=SYNC_CONFIG.weaviate_http_secure,
-            grpc_host=SYNC_CONFIG.weaviate_grpc_host,
-            grpc_port=SYNC_CONFIG.weaviate_grpc_port,
-            grpc_secure=SYNC_CONFIG.weaviate_grpc_secure,
-            skip_init_checks=True,
-        )
-        try:
-            name = SYNC_CONFIG.collection_name
-            if client.collections.exists(name):
-                client.collections.delete(name)
-        finally:
-            client.close()
+        # Reuse existing async client from app context
+        client = ctx.client
+        name = SYNC_CONFIG.collection_name
+        if await client.collections.exists(name):
+            await client.collections.delete(name)
 
         cleared_at = datetime.utcnow().isoformat()
         # Clear cached page_state rows in SQLite to keep state consistent with Weaviate
@@ -323,7 +312,32 @@ async def update_schedule(
                     "resume": False,
                     "since": None,
                 }
-                await _run_sync_job(app_state, sync_kwargs)
+                # Guard against concurrent syncs; mirror /sync/start behavior
+                lock: asyncio.Lock = app_state.state.sync_lock
+                job: Dict[str, Any] = app_state.state.sync_job
+                async with lock:
+                    if job.get("status") in {"running", "cancelling"}:
+                        return
+                    job.update(
+                        {
+                            "status": "running",
+                            "mode": mode,
+                            "params": {
+                                "clear_existing": False,
+                                "recreate_collection": False,
+                                "resume": False,
+                                "state_file": DEFAULT_STATE_FILE,
+                                "since": None,
+                                "limit": None,
+                            },
+                            "started_at": datetime.utcnow().isoformat(),
+                            "finished_at": None,
+                            "progress": {},
+                            "summary": {},
+                            "error": None,
+                        }
+                    )
+                    job["task"] = asyncio.create_task(_run_sync_job(app_state, sync_kwargs))
 
             await reschedule_job(updated_config, trigger_sync)
         except Exception as exc:

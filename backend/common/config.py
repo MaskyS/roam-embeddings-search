@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 
 STATE_FLAG_METADATA_APPLIED = "metadata_applied"
@@ -22,6 +23,8 @@ class SyncConfig:
     weaviate_grpc_host: str
     weaviate_grpc_port: int
     weaviate_grpc_secure: bool
+    weaviate_cloud_url: Optional[str]
+    weaviate_cloud_api_key: Optional[str]
     chunker_url: str
     chunker_retries: int
     chunker_retry_delay: int
@@ -32,6 +35,11 @@ class SyncConfig:
     voyage_concurrency: int
     weaviate_write_concurrency: int
     roam_requests_per_minute: int
+
+    @property
+    def is_weaviate_cloud(self) -> bool:
+        """Check if Weaviate Cloud mode is enabled."""
+        return bool(self.weaviate_cloud_url)
 
 
 CONFIG = SyncConfig(
@@ -45,6 +53,8 @@ CONFIG = SyncConfig(
     weaviate_grpc_host=os.getenv("WEAVIATE_HTTP_HOST", "127.0.0.1"),
     weaviate_grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
     weaviate_grpc_secure=os.getenv("WEAVIATE_GRPC_SECURE", "false").lower() == "true",
+    weaviate_cloud_url=os.getenv("WEAVIATE_CLOUD_URL"),
+    weaviate_cloud_api_key=os.getenv("WEAVIATE_CLOUD_API_KEY"),
     chunker_url=os.getenv("CHUNKER_SERVICE_URL", "http://127.0.0.1:8003"),
     chunker_retries=3,
     chunker_retry_delay=2,

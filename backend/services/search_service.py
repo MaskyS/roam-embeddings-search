@@ -11,10 +11,12 @@ import os
 import re
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
 import weaviate
+from weaviate.classes.init import Auth
 from weaviate.classes.query import Filter, Rerank
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,22 +68,39 @@ class AppContext:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     LOGGER.info("Initialising Weaviate client")
-    client = weaviate.use_async_with_custom(
-        http_host=WEAVIATE_HTTP_HOST,
-        http_port=WEAVIATE_HTTP_PORT,
-        http_secure=WEAVIATE_HTTP_SECURE,
-        grpc_host=WEAVIATE_GRPC_HOST,
-        grpc_port=WEAVIATE_GRPC_PORT,
-        grpc_secure=WEAVIATE_GRPC_SECURE,
-        headers={
-            "X-VoyageAI-Api-Key": settings.voyageai_api_key
-        },
-        skip_init_checks=True,
-    )
+
+    # Create Weaviate client based on deployment mode
+    if SYNC_CONFIG.is_weaviate_cloud:
+        LOGGER.info("Using Weaviate Cloud at %s", SYNC_CONFIG.weaviate_cloud_url)
+        client = weaviate.use_async_with_weaviate_cloud(
+            cluster_url=SYNC_CONFIG.weaviate_cloud_url,
+            auth_credentials=Auth.api_key(SYNC_CONFIG.weaviate_cloud_api_key),
+            headers={
+                "X-VoyageAI-Api-Key": settings.voyageai_api_key
+            },
+            skip_init_checks=False,  # Fail fast for cloud
+        )
+    else:
+        LOGGER.info("Using local Weaviate at %s:%s", WEAVIATE_HTTP_HOST, WEAVIATE_HTTP_PORT)
+        client = weaviate.use_async_with_custom(
+            http_host=WEAVIATE_HTTP_HOST,
+            http_port=WEAVIATE_HTTP_PORT,
+            http_secure=WEAVIATE_HTTP_SECURE,
+            grpc_host=WEAVIATE_GRPC_HOST,
+            grpc_port=WEAVIATE_GRPC_PORT,
+            grpc_secure=WEAVIATE_GRPC_SECURE,
+            headers={
+                "X-VoyageAI-Api-Key": settings.voyageai_api_key
+            },
+            skip_init_checks=True,
+        )
     try:
         @async_retry(tries=5, timeout=lambda attempt: min(2 ** attempt, 10), errors=(Exception,))
         async def connect_with_retry():
-            LOGGER.info("Connecting to Weaviate at %s:%s", WEAVIATE_HTTP_HOST, WEAVIATE_HTTP_PORT)
+            if SYNC_CONFIG.is_weaviate_cloud:
+                LOGGER.info("Connecting to Weaviate Cloud")
+            else:
+                LOGGER.info("Connecting to Weaviate at %s:%s", WEAVIATE_HTTP_HOST, WEAVIATE_HTTP_PORT)
             await client.connect()
 
         await connect_with_retry()
@@ -111,9 +130,9 @@ async def lifespan(app: FastAPI):
             from services.scheduler import initialize_scheduler
             from services.sync_service import _run_sync_job
 
-            # Create sync trigger function
+            # Create sync trigger function guarded against concurrent runs
             async def trigger_auto_sync(mode: str = "since"):
-                """Trigger an automatic sync job."""
+                """Trigger an automatic sync job if none is currently running/cancelling."""
                 DEFAULT_STATE_FILE = os.getenv(
                     "SYNC_STATE_FILE",
                     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "sync_state.json"),
@@ -126,7 +145,36 @@ async def lifespan(app: FastAPI):
                     "resume": False,
                     "since": None,  # Will use last successful run time
                 }
-                await _run_sync_job(app, sync_kwargs)
+
+                # Guard against concurrent syncs
+                lock: asyncio.Lock = app.state.sync_lock
+                job: Dict[str, Any] = app.state.sync_job
+                async with lock:
+                    if job.get("status") in {"running", "cancelling"}:
+                        LOGGER.info("Auto-sync skipped: job already in progress", status=job.get("status"))
+                        return
+                    # Mirror /sync/start minimal state to avoid overlapping runs
+                    job.update(
+                        {
+                            "status": "running",
+                            "mode": mode,
+                            "params": {
+                                "clear_existing": False,
+                                "recreate_collection": False,
+                                "resume": False,
+                                "state_file": DEFAULT_STATE_FILE,
+                                "since": None,
+                                "limit": None,
+                            },
+                            "started_at": datetime.utcnow().isoformat(),
+                            "finished_at": None,
+                            "progress": {},
+                            "summary": {},
+                            "error": None,
+                        }
+                    )
+                    task = asyncio.create_task(_run_sync_job(app, sync_kwargs))
+                    job["task"] = task
 
             scheduler = await initialize_scheduler(trigger_auto_sync)
             app.state.scheduler = scheduler

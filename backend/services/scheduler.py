@@ -20,6 +20,48 @@ from sync.state.db_persistence import get_scheduler_config, update_scheduler_con
 
 logger = structlog.get_logger(__name__)
 
+
+def get_local_timezone() -> str:
+    """
+    Detect the system's local timezone.
+
+    Returns:
+        Timezone name as string (e.g., 'America/Los_Angeles', 'UTC')
+    """
+    try:
+        # Get local timezone from system
+        local_tz = datetime.now().astimezone().tzinfo
+
+        # Try to get the timezone name
+        # tzname() returns a tuple like ('PST', 'PDT') or just the name
+        tz_name = local_tz.tzname(None)
+
+        # Try to map to a pytz timezone
+        # If we have a standard timezone name, use it
+        if hasattr(local_tz, 'zone'):
+            return local_tz.zone
+
+        # For Docker containers and systems without proper timezone info,
+        # this will typically return 'UTC'
+        logger.info("Detected local timezone", timezone=tz_name)
+
+        # Attempt to find matching pytz timezone
+        # Most modern systems will have zone attribute, but fall back to UTC if not
+        for tz in pytz.common_timezones:
+            try:
+                if pytz.timezone(tz).tzname(datetime.now()) == tz_name:
+                    return tz
+            except:
+                continue
+
+        # Default to UTC if we can't determine
+        logger.warning("Could not determine local timezone, defaulting to UTC")
+        return "UTC"
+
+    except Exception as exc:
+        logger.warning("Failed to detect local timezone, defaulting to UTC", error=str(exc))
+        return "UTC"
+
 # Global scheduler instance
 _scheduler: Optional[AsyncIOScheduler] = None
 
@@ -123,7 +165,8 @@ async def initialize_scheduler(sync_trigger_fn: Callable) -> AsyncIOScheduler:
     # Read configuration from environment or database
     default_enabled = os.getenv("AUTO_SYNC_ENABLED", "false").lower() == "true"
     default_time = os.getenv("AUTO_SYNC_TIME", "02:00")
-    default_timezone = os.getenv("AUTO_SYNC_TIMEZONE", "UTC")
+    # Auto-detect system's local timezone instead of requiring configuration
+    default_timezone = get_local_timezone()
 
     # Get or create scheduler config
     config = get_scheduler_config()
