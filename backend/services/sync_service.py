@@ -38,6 +38,21 @@ def _job_view(job: Dict[str, Any]) -> Dict[str, Any]:
     return public
 
 
+def _init_job_state(job: Dict[str, Any], mode: str, params: Dict[str, Any]) -> None:
+    """Initialize sync job state. Used by both /sync/start and /sync/schedule."""
+    job.update({
+        "status": "running",
+        "run_id": datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
+        "mode": mode,
+        "params": params,
+        "started_at": datetime.utcnow().isoformat(),
+        "finished_at": None,
+        "progress": {},
+        "summary": {},
+        "error": None,
+    })
+
+
 async def _run_sync_job(app, sync_kwargs: Dict[str, Any]) -> None:
     lock: asyncio.Lock = app.state.sync_lock
     job: Dict[str, Any] = app.state.sync_job
@@ -123,26 +138,14 @@ async def start_sync(
         if job.get("status") == "running":
             raise HTTPException(status_code=409, detail=_job_view(job))
 
-        job.update(
-            {
-                "status": "running",
-                "run_id": datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
-                "mode": mode,
-                "params": {
-                    "clear": clear,
-                    "recreate_collection": recreate,
-                    "resume": resume,
-                    "state_file": state_file_path,
-                    "since": since_value,
-                    "limit": payload.get("limit"),
-                },
-                "started_at": datetime.utcnow().isoformat(),
-                "finished_at": None,
-                "progress": {},
-                "summary": {},
-                "error": None,
-            }
-        )
+        _init_job_state(job, mode, {
+            "clear": clear,
+            "recreate_collection": recreate,
+            "resume": resume,
+            "state_file": state_file_path,
+            "since": since_value,
+            "limit": payload.get("limit"),
+        })
 
         sync_kwargs: Dict[str, Any] = {
             "clear_existing": clear,
@@ -318,25 +321,14 @@ async def update_schedule(
                 async with lock:
                     if job.get("status") in {"running", "cancelling"}:
                         return
-                    job.update(
-                        {
-                            "status": "running",
-                            "mode": mode,
-                            "params": {
-                                "clear_existing": False,
-                                "recreate_collection": False,
-                                "resume": False,
-                                "state_file": DEFAULT_STATE_FILE,
-                                "since": None,
-                                "limit": None,
-                            },
-                            "started_at": datetime.utcnow().isoformat(),
-                            "finished_at": None,
-                            "progress": {},
-                            "summary": {},
-                            "error": None,
-                        }
-                    )
+                    _init_job_state(job, mode, {
+                        "clear_existing": False,
+                        "recreate_collection": False,
+                        "resume": False,
+                        "state_file": DEFAULT_STATE_FILE,
+                        "since": None,
+                        "limit": None,
+                    })
                     job["task"] = asyncio.create_task(_run_sync_job(app_state, sync_kwargs))
 
             await reschedule_job(updated_config, trigger_sync)

@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Sequence
 import structlog
 import weaviate
 from funcy import lsplit
+
+from common.retry import transient_retry
 from weaviate.classes.config import Configure, DataType, Property, Tokenization
 from weaviate.classes.query import Filter
 from weaviate.collections.classes.batch import ErrorObject
@@ -99,6 +101,7 @@ class WeaviateSyncAdapter:
 
         return state
 
+    @transient_retry()
     async def delete_stale_objects(self, page_uid: str, content_hash: str) -> None:
         collection = self.get_collection()
         if content_hash:
@@ -107,6 +110,7 @@ class WeaviateSyncAdapter:
             filters = Filter.by_property("page_uid").equal(page_uid)
         await collection.data.delete_many(where=filters)
 
+    @transient_retry()
     async def insert_objects(self, objects: Sequence[Dict[str, Any]]) -> List[ErrorObject]:
         collection = self.get_collection()
         if not objects:

@@ -16,7 +16,6 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 import weaviate
-from weaviate.classes.init import Auth
 from weaviate.classes.query import Filter, Rerank
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +26,7 @@ from pydantic_settings import BaseSettings
 from common.utils import async_retry
 from common.logging import configure_logging
 from common.config import CONFIG as SYNC_CONFIG
+from common.weaviate_factory import create_weaviate_client_from_config
 from clients.voyage import VoyageEmbeddingClient
 from sync.state.db_persistence import list_recent_runs
 
@@ -69,31 +69,10 @@ class AppContext:
 async def lifespan(app: FastAPI):
     LOGGER.info("Initialising Weaviate client")
 
-    # Create Weaviate client based on deployment mode
-    if SYNC_CONFIG.is_weaviate_cloud:
-        LOGGER.info("Using Weaviate Cloud at %s", SYNC_CONFIG.weaviate_cloud_url)
-        client = weaviate.use_async_with_weaviate_cloud(
-            cluster_url=SYNC_CONFIG.weaviate_cloud_url,
-            auth_credentials=Auth.api_key(SYNC_CONFIG.weaviate_cloud_api_key),
-            headers={
-                "X-VoyageAI-Api-Key": settings.voyageai_api_key
-            },
-            skip_init_checks=False,  # Fail fast for cloud
-        )
-    else:
-        LOGGER.info("Using local Weaviate at %s:%s", WEAVIATE_HTTP_HOST, WEAVIATE_HTTP_PORT)
-        client = weaviate.use_async_with_custom(
-            http_host=WEAVIATE_HTTP_HOST,
-            http_port=WEAVIATE_HTTP_PORT,
-            http_secure=WEAVIATE_HTTP_SECURE,
-            grpc_host=WEAVIATE_GRPC_HOST,
-            grpc_port=WEAVIATE_GRPC_PORT,
-            grpc_secure=WEAVIATE_GRPC_SECURE,
-            headers={
-                "X-VoyageAI-Api-Key": settings.voyageai_api_key
-            },
-            skip_init_checks=True,
-        )
+    client = create_weaviate_client_from_config(
+        SYNC_CONFIG,
+        headers={"X-VoyageAI-Api-Key": settings.voyageai_api_key},
+    )
     try:
         @async_retry(tries=5, timeout=lambda attempt: min(2 ** attempt, 10), errors=(Exception,))
         async def connect_with_retry():

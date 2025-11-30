@@ -1,0 +1,44 @@
+# Render Blueprint for one-click deploy (free tier)
+# Uses VoyageAI for chunking to minimize cold start time
+
+envVarGroups:
+  - name: roam-semantic-secrets
+    envVars:
+      - key: VOYAGEAI_API_KEY
+        sync: false
+
+services:
+  - type: web
+    name: roam-semantic-backend
+    runtime: image
+    image:
+      url: ghcr.io/maskys/roam-embeddings-search-backend:latest
+    envVars:
+      - key: ROAM_GRAPH_NAME
+        sync: false
+      - key: ROAM_API_TOKEN
+        sync: false
+      - key: WEAVIATE_CLOUD_URL
+        sync: false
+      - key: WEAVIATE_CLOUD_API_KEY
+        sync: false
+      - key: CHUNKER_SERVICE_URL
+        fromService:
+          name: roam-semantic-chunker
+          type: web
+          property: host
+      - fromGroup: roam-semantic-secrets
+    disk:
+      name: sync-data
+      mountPath: /app/data
+      sizeGB: 1
+
+  - type: web
+    name: roam-semantic-chunker
+    runtime: image
+    image:
+      url: ghcr.io/maskys/roam-embeddings-search-chunker:latest
+    envVars:
+      - key: CHUNKER_EMBEDDING_PROVIDER
+        value: voyageai
+      - fromGroup: roam-semantic-secrets
