@@ -3,9 +3,9 @@
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     FastAPI Backend                          │
-│                                                              │
+┌────────────────────────────────────────────────────────────┐
+│                     FastAPI Backend                        │
+│                                                            │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
 │  │   Search    │  │    Sync     │  │  Scheduler  │         │
 │  │  Service    │  │   Service   │  │   Service   │         │
@@ -13,8 +13,8 @@
 │  │ GET /search │  │ POST /sync  │  │ APScheduler │         │
 │  │ GET /       │  │ GET /status │  │ daily cron  │         │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
-│         │                │                │                 │
-└─────────┼────────────────┼────────────────┼─────────────────┘
+│         │                │                │                │
+└─────────┼────────────────┼────────────────┼────────────────┘
           │                │                │
           │    ┌───────────┴────────────────┘
           │    │
@@ -69,10 +69,10 @@ The sync pipeline processes pages through multiple phases:
    │                                                          │
    │  For each batch (default: 50 pages):                     │
    │                                                          │
-   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
-   │  │  CHUNK  │→│ PAYLOAD │→│  EMBED  │→│  WRITE  │       │
-   │  │ (async) │ │ (sync)  │ │ (async) │ │ (async) │       │
-   │  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │
+   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐         │
+   │  │  CHUNK  │→│ PAYLOAD │→│  EMBED  │→│  WRITE  │         │
+   │  │ (async) │ │ (sync)  │ │ (async) │ │ (async) │         │
+   │  └─────────┘ └─────────┘ └─────────┘ └─────────┘         │
    │                                                          │
    │  CHUNK: Send to Chonkie for semantic splitting           │
    │  PAYLOAD: Build Weaviate objects with UUIDs              │
@@ -134,43 +134,43 @@ Query: "machine learning papers"
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 1. EMBED QUERY                                               │
+│ 1. EMBED QUERY                                              │
 │    VoyageAI embed(query, input_type="query")                │
-│    → query_vector (1024 dims)                                │
+│    → query_vector (1024 dims)                               │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 2. HYBRID SEARCH                                             │
-│    Weaviate hybrid query:                                    │
+│ 2. HYBRID SEARCH                                            │
+│    Weaviate hybrid query:                                   │
 │    - BM25 keyword matching on chunk_text_preview            │
-│    - Vector similarity on embeddings                         │
-│    - alpha=0.5 (equal weight by default)                     │
-│    → top-K results with scores                               │
+│    - Vector similarity on embeddings                        │
+│    - alpha=0.5 (equal weight by default)                    │
+│    → top-K results with scores                              │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 3. OPTIONAL RERANKING                                        │
+│ 3. OPTIONAL RERANKING                                       │
 │    VoyageAI rerank-2-lite on chunk_text_preview             │
-│    → reordered results with better relevance                 │
+│    → reordered results with better relevance                │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 4. ENRICHMENT                                                │
-│    Roam API pull-many for primary_uids                       │
-│    → current block text, parent context                      │
+│ 4. ENRICHMENT                                               │
+│    Roam API pull-many for primary_uids                      │
+│    → current block text, parent context                     │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 5. RESPONSE                                                  │
-│    Format results with:                                      │
-│    - uid, parent_uid, page_uid                               │
-│    - similarity score                                        │
-│    - highlighted chunk_text_preview                          │
-│    - page_title, parent_text                                 │
+│ 5. RESPONSE                                                 │
+│    Format results with:                                     │
+│    - uid, parent_uid, page_uid                              │
+│    - similarity score                                       │
+│    - highlighted chunk_text_preview                         │
+│    - page_title, parent_text                                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -229,14 +229,14 @@ backend/
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Semaphore Guards                          │
-│                                                              │
+│                    Semaphore Guards                         │
+│                                                             │
 │  chunk_semaphore (1)   ─── Rate limit chunker service       │
 │  embed_semaphore (1)   ─── Rate limit VoyageAI API          │
 │  weaviate_semaphore (1)─── Rate limit Weaviate writes       │
-│                                                              │
+│                                                             │
 │  sync_lock (1)         ─── Prevent concurrent sync jobs     │
-│                                                              │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 
 Within a batch:
