@@ -26,12 +26,14 @@ services:
         fromService:
           name: roam-semantic-chunker
           type: web
-          property: host
+          property: hostport
       - fromGroup: roam-semantic-secrets
     disk:
       name: sync-data
       mountPath: /app/data
       sizeGB: 1
+    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
+    healthCheckPath: /
 
   - type: web
     name: roam-semantic-chunker
@@ -41,4 +43,8 @@ services:
     envVars:
       - key: CHUNKER_EMBEDDING_PROVIDER
         value: voyageai
+      - key: CHUNKER_VOYAGE_MODEL
+        value: voyage-3-lite
       - fromGroup: roam-semantic-secrets
+    startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8003
+    healthCheckPath: /health
