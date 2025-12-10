@@ -264,6 +264,12 @@ async def pull_many_blocks_for_context(uids: List[str]) -> Dict[str, Dict]:
     return {uid: block for uid, block in pairs.items() if block}
 
 
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint that always returns 200 OK."""
+    return {"status": "healthy"}
+
+
 @app.get("/")
 async def read_root(ctx=Depends(get_context)):
     # Be resilient: return a 200 with readiness info even if schema is missing
