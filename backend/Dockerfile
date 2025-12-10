@@ -24,3 +24,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the rest of the application's code into the container at /app
 COPY . .
+
+# Default command - runs the main search/sync service
+# For chunker service, override with: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
+CMD ["uvicorn", "services.search_service:app", "--host", "0.0.0.0", "--port", "8000"]
