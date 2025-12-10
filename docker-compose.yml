@@ -81,7 +81,8 @@ services:
       - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - CHUNKER_EMBEDDING_PROVIDER=${CHUNKER_EMBEDDING_PROVIDER:-granite}
+      # Use voyageai (default) for low memory footprint, or granite for local model
+      - CHUNKER_EMBEDDING_PROVIDER=${CHUNKER_EMBEDDING_PROVIDER:-voyageai}
       - CHUNKER_VOYAGE_MODEL=${CHUNKER_VOYAGE_MODEL:-voyage-3-lite}
       - VOYAGE_API_KEY=${VOYAGEAI_API_KEY}
       - CHUNKER_MODEL=${CHUNKER_MODEL:-ibm-granite/granite-embedding-small-english-r2}

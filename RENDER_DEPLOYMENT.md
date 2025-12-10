@@ -37,14 +37,20 @@ uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
 **Environment Variables:**
 ```bash
 PYTHONUNBUFFERED=1
-CHUNKER_EMBEDDING_PROVIDER=granite
+# Use VoyageAI for low memory footprint (~150-250MB vs ~600-900MB with local model)
+CHUNKER_EMBEDDING_PROVIDER=voyageai
 CHUNKER_VOYAGE_MODEL=voyage-3-lite
 VOYAGE_API_KEY=<your-voyageai-api-key>
-CHUNKER_MODEL=ibm-granite/granite-embedding-small-english-r2
 CHUNKER_THRESHOLD=0.6
 CHUNKER_CHUNK_SIZE=800
 CHUNKER_SKIP_WINDOW=1
 CHUNKER_MIN_CHUNK_SIZE=50
+```
+
+**Note:** Using `voyageai` provider significantly reduces memory usage. For local model alternative (requires 1GB+ RAM), use:
+```bash
+CHUNKER_EMBEDDING_PROVIDER=granite
+CHUNKER_MODEL=ibm-granite/granite-embedding-small-english-r2
 ```
 
 **Health Check:**
@@ -127,6 +133,12 @@ CHUNKER_SERVICE_URL=http://roam-chunker:8000
 - Backend service uses `--workers 2` for better performance
 - Chunker uses single worker (default) as it's less critical path
 - Adjust based on your plan and load
+
+### Memory Requirements
+- **Chunker service with VoyageAI (recommended):** ~150-250MB
+- **Chunker service with local Granite model:** ~600-900MB
+- **Backend service:** ~300-500MB base + ~100-200MB per worker
+- **Recommendation:** Use VoyageAI for chunker on free tier or small instances
 
 ### Deployment from Git
 - Render will automatically build the Docker image from your repository
