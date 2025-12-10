@@ -36,7 +36,7 @@ configure_logging(json=True)
 class Settings(BaseSettings):
     roam_graph_name: str
     roam_api_token: str
-    google_api_key: str
+    google_api_key: Optional[str] = None
     voyageai_api_key: str
     embedding_provider: str = "voyage_context"
     ollama_url: str = "http://ollama:11434"
