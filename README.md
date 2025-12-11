@@ -2,50 +2,192 @@
 
 Add powerful semantic search to your Roam Research graph. This system ingests your Roam pages into a vector database using AI embeddings, letting you find relevant notes by meaning rather than just keywords. Includes a FastAPI backend, optional auto-sync, and a Roam extension for in-app search.
 
-## Before You Begin
+## Quick Start (Cloud Deployment)
 
-### System Requirements Checklist
+Deploy to the cloud in **10-15 minutes** with no local setup required. This is the recommended approach for most users.
 
-Verify you have these tools installed:
+### What You'll Need
+
+Before deploying, gather these API keys and accounts:
+
+1. **Roam API token**
+   - You must be an admin of your Roam graph
+   - Generate under *Settings ▸ Graph ▸ API Tokens*
+   - Use "read-only" or "read+edit" role
+   - [Roam API documentation](https://roamresearch.com/#/app/developer-documentation/page/W4Po8pcHQ)
+
+2. **VoyageAI API key**
+   - Sign up at [voyageai.com](https://www.voyageai.com)
+   - Create a key with access to `voyage-context-3` and `rerank-2-lite`
+
+3. **Weaviate Cloud account** (required for cloud deployment)
+   - Sign up at [console.weaviate.cloud](https://console.weaviate.cloud)
+   - Create a cluster using the [Weaviate Cloud Quickstart](https://docs.weaviate.io/cloud/quickstart)
+   - Create an API key with **Admin** role
+   - Note your cluster's **REST URL** (e.g., `https://your-cluster.weaviate.network`)
+   - **Cost**: Flex Plan starts at $45/month (free tier keeps database for 14 days only)
+
+4. **Render account with billing**
+   - Sign up at [render.com](https://render.com)
+   - Add billing information (credit card required)
+   - **Cost**: ~$15/month (2 Starter instances + 1GB disk)
+
+**Total monthly cost**: ~$60 (Render + Weaviate Cloud)
+
+### Deploy to Render
+
+1. Click the deploy button below:
+
+   [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MaskyS/roam-embeddings-search)
+
+2. Render will prompt for environment variables. Fill them in:
+   - `ROAM_GRAPH_NAME` - Your Roam graph slug (from your graph URL)
+   - `ROAM_API_TOKEN` - Your Roam API token (starts with `roam-graph-token-`)
+   - `VOYAGEAI_API_KEY` - Your VoyageAI API key
+   - `VOYAGE_API_KEY` - Same as `VOYAGEAI_API_KEY` (used by chunker)
+   - `WEAVIATE_CLOUD_URL` - Your Weaviate cluster REST URL
+   - `WEAVIATE_CLOUD_API_KEY` - Your Weaviate API key (admin role)
+
+3. Click **Apply** to deploy both services:
+   - `roam-semantic-chunker` - Text chunking service
+   - `roam-semantic-backend` - Main search & sync API
+
+4. Wait 5-10 minutes for deployment to complete
+   - Both services should show "Live" status
+   - Check logs if deployment fails
+
+### Get Your Backend URL
+
+Once deployed:
+
+1. In your Render dashboard, click **roam-semantic-backend**
+2. Copy the URL at the top (format: `https://roam-semantic-backend-XXXX.onrender.com`)
+3. Save this URL - you'll need it for the Roam extension configuration
+
+> **Detailed deployment guide:** [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+
+### Trigger Initial Sync
+
+Populate your vector database with your Roam graph:
+
+```bash
+# Replace <YOUR-BACKEND-URL> with your actual Render URL
+curl -X POST https://roam-semantic-backend-XXXX.onrender.com/sync/start \
+  -H 'Content-Type: application/json' \
+  -d '{"mode": "full", "recreate_collection": true}'
+```
+
+Monitor sync progress:
+```bash
+# Check sync status
+curl https://roam-semantic-backend-XXXX.onrender.com/sync/status
+
+# View recent sync runs
+curl https://roam-semantic-backend-XXXX.onrender.com/sync/runs
+```
+
+The sync will:
+1. Fetch all page UIDs from your Roam graph
+2. Pull page content and detect changes
+3. Break pages into semantic chunks
+4. Generate embeddings with VoyageAI
+5. Store in Weaviate for hybrid search
+
+**First sync timing**: Depends on your graph size (expect 5-20 minutes for most graphs)
+
+**Cancel if needed:**
+```bash
+curl -X POST https://roam-semantic-backend-XXXX.onrender.com/sync/cancel
+```
+
+### Install the Roam Extension
+
+#### Enable Developer Mode
+
+1. Sign in to your Roam Research graph
+2. Go to **Settings** → **Roam Depot** → **Installed Extensions**
+3. Enable **Developer Mode**
+
+#### Install the Extension
+
+1. In Roam Depot, click **Add Extension by URL**
+2. Paste this URL: `https://raw.githubusercontent.com/MaskyS/roam-embeddings-search/refs/heads/main/roam-semantic-search/`
+3. Click **Add** to install the extension
+
+> **Note**: This URL points to the latest version on the `main` branch. The extension will auto-update when you refresh Roam.
+
+#### Configure the Extension
+
+1. Go to **Settings** → **Extension Settings** → **Semantic Search (dev)**
+2. Set **Backend URL** to your Render URL (e.g., `https://roam-semantic-backend-XXXX.onrender.com`)
+   - For local development, use `http://localhost:8002` instead
+3. Adjust settings as needed:
+   - Result limits (default: 10 blocks, 5 pages)
+   - Enable/disable VoyageAI reranking
+   - Search alpha (hybrid search balance: 0=keyword only, 1=vector only)
+
+#### Test the Connection
+
+1. In the extension settings, click **Test Connection** button
+2. Should confirm collection exists and show document count
+3. If connection fails, verify the backend URL and check that services are running
+
+#### Start Searching
+
+1. Open Command Palette (Cmd/Ctrl + P)
+2. Type "Semantic Search"
+3. Enter your query and press Enter
+4. Use ↑/↓ arrows to navigate results, Enter to open block in Roam
+
+## Using the Extension
+
+### Search Interface
+- **Command Palette**: Type "Semantic Search" to open modal
+- **Keyboard navigation**: ↑/↓ arrows to browse results, Enter to open
+- **Filtering**: Toggle "Hide Page Results" to show only blocks
+- **Reranking**: Enable "Use VoyageAI Rerank" for better relevance (uses more API calls)
+
+### Sync Controls
+Built-in buttons in extension settings:
+- **Sync Recently Edited Pages** – Incremental sync (only changed pages)
+- **Full Sync** – Re-index entire graph (use sparingly)
+- **Clear Database** – Deletes all vectors (destructive, requires full sync after)
+
+### Search Tips
+- Searches find semantically similar content, not just keyword matches
+- Better for concepts and questions than exact phrase matching
+- Results show context (parent block) and link directly to Roam blocks
+
+---
+
+## Local Development
+
+For developers who want to run the system locally or modify the code.
+
+### System Requirements
 
 **1. Docker**
    - Check: `docker --version` (should show v24.0 or higher)
    - Check: `docker compose version` (should show v2.x)
-   - If not installed: [Get Docker](https://docs.docker.com/get-docker/) (includes Docker Compose)
+   - If not installed: [Get Docker](https://docs.docker.com/get-docker/)
 
-**2. Git** (for downloading the code)
+**2. Git**
    - Check: `git --version`
    - If not installed: [Install Git](https://git-scm.com/downloads)
 
 **3. curl** (for API testing)
    - Check: `curl --version`
    - Usually pre-installed on Mac/Linux
-   - Windows users: Use PowerShell (built-in) or [install curl](https://curl.se/download.html)
+   - Windows: Use PowerShell or [install curl](https://curl.se/download.html)
 
 ### Get the Code
 
-Clone this repository and navigate into it:
+Clone this repository:
 
 ```bash
 git clone https://github.com/MaskyS/roam-embeddings-search.git
 cd roam-embeddings-search
 ```
-
-> **Troubleshooting**: If `git clone` fails, verify git is installed and you have network access. All following commands assume you're in the `roam-embeddings-search` directory.
-
----
-
-## Quick Start
-
-Get running in **5-10 minutes** (after completing setup above).
-
-### API Keys & Accounts
-
-You'll need these before starting:
-
-1. **Roam graph token** – Generate under *Settings ▸ Graph ▸ API Tokens* (read-only or read+edit scope)
-2. **VoyageAI API key** – Sign up at [voyageai.com](https://www.voyageai.com) and create a key with access to `voyage-context-3` and `rerank-2-lite`
-3. **Optional: Weaviate Cloud account** – Only if you prefer managed hosting over local vector database ([console.weaviate.cloud](https://console.weaviate.cloud))
 
 ### Configuration
 
@@ -66,24 +208,24 @@ You'll need these before starting:
 
    | **Local Weaviate** | **Weaviate Cloud** |
    |--------------------|--------------------|
-   | ✅ No signup required | ✅ Managed, no infrastructure |
-   | ✅ Runs in Docker on your machine | ✅ High availability + backups |
-   | ✅ Good for development & personal use | ✅ Better for production teams |
-   | ⚠️ Uses ~2GB RAM + disk space | ⚠️ Requires account + API key |
+   | ✅ No signup required | ✅ Managed hosting |
+   | ✅ Runs in Docker | ✅ High availability |
+   | ✅ Good for development | ✅ Better for production |
+   | ⚠️ Uses ~2GB RAM + disk | ⚠️ Requires account ($45/mo) |
 
-   **For Local Weaviate** (default): Your `.env` is already configured correctly. Skip to Deploy step.
+   **For Local Weaviate** (default): Skip to Deploy step.
 
    **For Weaviate Cloud**:
-   - Sign up at [console.weaviate.cloud](https://console.weaviate.cloud) and create a cluster
-   - Add these to your `.env` (replace cluster URL and key):
+   - Create cluster at [console.weaviate.cloud](https://console.weaviate.cloud)
+   - Add to `.env`:
      ```bash
      WEAVIATE_CLOUD_URL=https://your-cluster.weaviate.network
-     WEAVIATE_CLOUD_API_KEY=your-weaviate-cloud-api-key
+     WEAVIATE_CLOUD_API_KEY=your-weaviate-api-key
      ```
 
-### Deploy
+### Deploy Locally
 
-**Option 1: Pre-built images (recommended)** – Instant startup, tested builds
+**Option 1: Pre-built images (recommended)**
 
 ```bash
 # With local Weaviate
@@ -93,7 +235,7 @@ docker compose -f docker-compose.prod.yml --profile local-weaviate up -d
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-**Option 2: Build from source** – Only if you're modifying the code
+**Option 2: Build from source** (for development)
 
 ```bash
 # Build images (takes 5-10 minutes first time)
@@ -108,17 +250,15 @@ docker compose up -d chunker backend-semantic
 
 ### Verify Services
 
-Check that everything is running:
-
 ```bash
 # Health checks
-curl http://localhost:8003/health          # chunker ready
-curl http://localhost:8002/                # backend (shows graph + doc count)
+curl http://localhost:8003/health          # chunker
+curl http://localhost:8002/                # backend
 
 # View logs
 docker compose logs -f chunker backend-semantic
 
-# Add 'weaviate' to logs command if using local Weaviate
+# Add weaviate if using local
 docker compose logs -f chunker backend-semantic weaviate
 ```
 
@@ -129,12 +269,9 @@ Expected endpoints:
 
 > **Note**: First chunker startup downloads ML models (~1-2 minute delay).
 
-### Initial Sync
-
-Populate the vector database with your Roam graph:
+### Trigger Initial Sync
 
 ```bash
-# Trigger full sync (creates collection and indexes all pages)
 curl -X POST http://localhost:8002/sync/start \
   -H 'Content-Type: application/json' \
   -d '{"mode": "full", "recreate_collection": true}'
@@ -142,68 +279,31 @@ curl -X POST http://localhost:8002/sync/start \
 
 Monitor progress:
 ```bash
-# Watch sync status (press Ctrl+C to stop watching)
+# Watch sync status
 watch -n5 "curl -s http://localhost:8002/sync/status | jq"
 
 # Or check recent runs
 curl http://localhost:8002/sync/runs | jq
 ```
 
-The sync will:
-1. Fetch all page UIDs from your Roam graph
-2. Pull page content and detect changes (skips unchanged pages on future syncs)
-3. Break pages into semantic chunks
-4. Generate embeddings with VoyageAI
-5. Store in Weaviate for hybrid search
-
 **Cancel if needed:**
 ```bash
 curl -X POST http://localhost:8002/sync/cancel
 ```
 
-### Install the Roam Extension
+### Development Tips
 
-1. Open `roam-semantic-search/extension.js` and copy its contents
+Development compose file (`docker-compose.yml`):
+- Source code mounted for live editing
+- Single-worker backend with auto-reload
+- Verbose logging
 
-2. In Roam, paste the script:
-   - **Option A**: Create a block with `{{[[roam/js]]}}` and paste code as a child block, or
-   - **Option B**: Host on GitHub Gist/CDN and load via `<script src="...">` tag
+Production compose file (`docker-compose.prod.yml`):
+- Multi-worker backend (4 workers)
+- Healthchecks and auto-restart
+- Pre-built images from GitHub Container Registry
 
-3. Configure the extension:
-   - Open Command Palette → "Semantic Search: Open Settings" (or use Roam Depot settings)
-   - Set **Backend URL** to `http://localhost:8002` (or your production URL)
-   - Adjust settings as needed:
-     - Result limits (default: 10 blocks, 5 pages)
-     - Enable/disable VoyageAI reranking
-     - Search alpha (hybrid search balance)
-
-4. Test the connection:
-   - Click **Test Connection** button in settings
-   - Should confirm collection exists and show document count
-
-5. Start searching:
-   - Command Palette → "Semantic Search"
-   - Type your query and press Enter
-   - Use ↑/↓ to navigate, Enter to open block in Roam
-
-## Using the Extension
-
-### Search Interface
-- **Command Palette**: Type "Semantic Search" to open modal
-- **Keyboard navigation**: ↑/↓ arrows to browse results, Enter to open
-- **Filtering**: Toggle "Hide Page Results" to show only blocks
-- **Reranking**: Enable "Use VoyageAI Rerank" for better relevance (uses more API calls)
-
-### Sync Controls
-Built-in buttons in extension settings:
-- **Sync Recently Edited Pages** – Incremental sync (only changed pages)
-- **Full Sync** – Re-index entire graph (use sparingly)
-- **Clear Database** – Deletes all vectors (destructive, requires full sync after)
-
-### Search Tips
-- Searches find semantically similar content, not just keyword matches
-- Better for concepts and questions than exact phrase matching
-- Results show context (parent block) and link directly to Roam blocks
+---
 
 ## Advanced
 
@@ -253,34 +353,7 @@ SYNC_STATE_FILE=/app/data/sync_state.json
 
 **Tip**: Persist `backend/data/` to keep incremental sync state across container restarts.
 
-### Building from Source
-
-For developers modifying the code:
-
-```bash
-# Build images (includes ML models, takes 5-10 minutes)
-docker compose build chunker backend-semantic
-
-# Launch (with local Weaviate)
-docker compose --profile local-weaviate up -d
-
-# Or use docker-compose.yml for development (hot reload)
-docker compose up -d
-```
-
-> **Note**: If you haven't cloned the repository yet, see the "Before You Begin" section above.
-
-Development compose file (`docker-compose.yml`) includes:
-- Source code mounted for live editing
-- Single-worker backend with reload
-- Verbose logging
-
-Production compose file (`docker-compose.prod.yml`) optimizes for:
-- Multi-worker backend (4 workers)
-- Healthchecks and auto-restart
-- Pre-built images from GitHub Container Registry
-
-### Production Deployment
+### Self-Hosted Production Deployment
 
 #### Security
 - **Reverse proxy**: Use nginx/Caddy/Traefik to terminate TLS and authenticate requests
@@ -323,8 +396,9 @@ Snapshot these directories regularly:
 
 **Chunker not responding**
 - First startup downloads models (~1-2 minutes)
-- Check logs: `docker compose logs chunker`
-- Ensure container has ~2GB RAM available
+- **Local**: Check logs with `docker compose logs chunker`
+- **Render**: Check logs in Render dashboard for `roam-semantic-chunker`
+- Ensure service has ~2GB RAM available (512MB minimum)
 
 **Weaviate rejects writes**
 - Confirm reranker module is enabled (automatic in our schema)
@@ -333,16 +407,21 @@ Snapshot these directories regularly:
 
 **Extension can't reach backend**
 - If Roam is HTTPS, backend must be HTTPS too (browser mixed-content policy)
+  - Render URLs are HTTPS by default ✅
+  - Local development requires reverse proxy for HTTPS
 - Check CORS: backend allows all origins by default
-- Test backend directly: `curl http://localhost:8002/`
+- Test backend directly:
+  - **Local**: `curl http://localhost:8002/`
+  - **Render**: `curl https://roam-semantic-backend-XXXX.onrender.com/`
 
-**Sync state not persisting**
+**Sync state not persisting** (Local deployments)
 - Ensure `backend/data/` is persisted (volume or bind mount)
 - Without persistence, each restart requires full sync
+- **Render**: Persistent disk is configured automatically in `render.yaml`
 
 **Empty or missing results**
-- Verify sync completed: `curl http://localhost:8002/sync/runs`
-- Check collection has documents: `curl http://localhost:8002/` (shows count)
+- Verify sync completed: `curl <YOUR-BACKEND-URL>/sync/runs`
+- Check collection has documents: `curl <YOUR-BACKEND-URL>/` (shows count)
 - Try simple queries first: "test", "March", specific page titles
 
 ## How It Works
