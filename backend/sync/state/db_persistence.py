@@ -27,10 +27,14 @@ from sqlalchemy import (
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.engine import Engine
 
-DEFAULT_DB_PATH = os.getenv(
-    "SEMANTIC_SYNC_DB",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "semantic_sync.db"),
-)
+# Determine project root: go up from sync/state/ to backend/,
+# then use data/ subdirectory
+_this_file = os.path.abspath(__file__)
+# backend/sync/state -> backend
+_backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(_this_file)))
+_default_db_path = os.path.join(_backend_dir, "data", "semantic_sync.db")
+
+DEFAULT_DB_PATH = os.getenv("SEMANTIC_SYNC_DB", _default_db_path)
 
 _metadata = MetaData()
 
@@ -277,4 +281,3 @@ def update_scheduler_config(
         conn.execute(stmt)
 
     return get_scheduler_config(path)
-

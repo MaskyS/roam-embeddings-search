@@ -112,10 +112,11 @@ async def lifespan(app: FastAPI):
             # Create sync trigger function guarded against concurrent runs
             async def trigger_auto_sync(mode: str = "since"):
                 """Trigger an automatic sync job if none is currently running/cancelling."""
-                DEFAULT_STATE_FILE = os.getenv(
-                    "SYNC_STATE_FILE",
-                    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "sync_state.json"),
-                )
+                # Determine backend directory: go up from services/ to backend/
+                _this_file = os.path.abspath(__file__)
+                _backend_dir = os.path.dirname(os.path.dirname(_this_file))
+                _default = os.path.join(_backend_dir, "data", "sync_state.json")
+                DEFAULT_STATE_FILE = os.getenv("SYNC_STATE_FILE", _default)
                 sync_kwargs = {
                     "clear_existing": False,
                     "test_limit": None,

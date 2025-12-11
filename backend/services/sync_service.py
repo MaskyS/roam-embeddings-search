@@ -21,10 +21,12 @@ from sync.state.db_persistence import (
 router = APIRouter()
 
 
-DEFAULT_STATE_FILE = os.getenv(
-    "SYNC_STATE_FILE",
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sync_state.json"),
-)
+# Determine backend directory: go up from services/ to backend/
+_this_file = os.path.abspath(__file__)
+_backend_dir = os.path.dirname(os.path.dirname(_this_file))
+_default_state_file = os.path.join(_backend_dir, "data", "sync_state.json")
+
+DEFAULT_STATE_FILE = os.getenv("SYNC_STATE_FILE", _default_state_file)
 
 
 def _job_view(job: Dict[str, Any]) -> Dict[str, Any]:
