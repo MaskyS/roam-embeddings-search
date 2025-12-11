@@ -1,50 +1,66 @@
-# Render Blueprint for one-click deploy (free tier)
-# Uses VoyageAI for chunking to minimize cold start time
+# Render Blueprint for one-click deploy
+# Uses prebuilt images from GitHub Container Registry
 
-envVarGroups:
-  - name: roam-semantic-secrets
-    envVars:
-      - key: VOYAGEAI_API_KEY
-        sync: false
+version: "1"
 
 services:
-  - type: web
-    name: roam-semantic-backend
-    runtime: image
-    image:
-      url: ghcr.io/maskys/roam-embeddings-search-backend:latest
-    envVars:
-      - key: ROAM_GRAPH_NAME
-        sync: false
-      - key: ROAM_API_TOKEN
-        sync: false
-      - key: WEAVIATE_CLOUD_URL
-        sync: false
-      - key: WEAVIATE_CLOUD_API_KEY
-        sync: false
-      - key: CHUNKER_SERVICE_URL
-        fromService:
-          name: roam-semantic-chunker
-          type: web
-          property: hostport
-      - fromGroup: roam-semantic-secrets
-    disk:
-      name: sync-data
-      mountPath: /app/data
-      sizeGB: 1
-    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
-    healthCheckPath: /
-
+  # Chunker Service
   - type: web
     name: roam-semantic-chunker
     runtime: image
     image:
       url: ghcr.io/maskys/roam-embeddings-search-chunker:latest
+    plan: starter
+    region: singapore
+    healthCheckPath: /health
+    startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
     envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: CHUNKER_EMBEDDING_PROVIDER
         value: voyageai
       - key: CHUNKER_VOYAGE_MODEL
         value: voyage-3-lite
-      - fromGroup: roam-semantic-secrets
-    startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8003
-    healthCheckPath: /health
+      - key: CHUNKER_THRESHOLD
+        value: "0.6"
+      - key: CHUNKER_CHUNK_SIZE
+        value: "800"
+      - key: CHUNKER_SKIP_WINDOW
+        value: "1"
+      - key: CHUNKER_MIN_CHUNK_SIZE
+        value: "50"
+      - key: VOYAGE_API_KEY
+        sync: false
+
+  # Main Backend Service
+  - type: web
+    name: roam-semantic-backend
+    runtime: image
+    image:
+      url: ghcr.io/maskys/roam-embeddings-search-backend:latest
+    plan: starter
+    region: singapore
+    # Re-enable health check once docker image for main backend supports it
+    # healthCheckPath: /health
+    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
+    disk:
+      name: sync-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: CHUNKER_SERVICE_URL
+        value: http://roam-semantic-chunker:8000
+      - key: WEAVIATE_COLLECTION_NAME
+        value: RoamSemanticChunks
+      - key: ROAM_API_TOKEN
+        sync: false
+      - key: ROAM_GRAPH_NAME
+        sync: false
+      - key: VOYAGEAI_API_KEY
+        sync: false
+      - key: WEAVIATE_CLOUD_URL
+        sync: false
+      - key: WEAVIATE_CLOUD_API_KEY
+        sync: false
