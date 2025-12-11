@@ -29,6 +29,8 @@ Click the button above to deploy. You'll be prompted to enter the following API 
 
 All other settings are pre-configured in the `render.yaml` file.
 
+Once both services have been successfully deployed, copy the instance URL of the web service `roam-semantic-backend-<ID>` and use it as backend URL for the Roam extension. The URL looks like `https://roam-semantic-backend-<ID>.onrender.com`
+
 ## What Gets Deployed
 
 The blueprint creates two services:
@@ -91,6 +93,6 @@ The blueprint creates two services:
 
 ## Service Communication
 
-- **Chunker ↔ Backend:** Uses Render's internal networking (`http://roam-semantic-chunker:8000`)
+- **Chunker ↔ Backend:** Uses Render's internal networking (`http://roam-semantic-chunker-<ID>:8000`)
 - **Backend → External APIs:** Public internet (VoyageAI, Weaviate Cloud, Roam)
 - **User → Backend:** Public HTTPS endpoint provided by Render
