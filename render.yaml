@@ -1,18 +1,18 @@
+# Render Blueprint for one-click deploy
+# Uses prebuilt images from GitHub Container Registry
+
 version: "1"
+
 services:
   # Chunker Service
   - type: web
-    name: roam-chunker
-    runtime: docker
-    repo: https://github.com/MaskyS/roam-embeddings-search
+    name: roam-semantic-chunker
+    runtime: image
+    image:
+      url: ghcr.io/maskys/roam-embeddings-search-chunker:new-docs-93ea4d7
     plan: starter
-    # region: singapore
     healthCheckPath: /health
-    dockerCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
-    dockerContext: .
-    dockerfilePath: ./Dockerfile
-    rootDir: backend
-    autoDeployTrigger: commit
+    startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
@@ -31,18 +31,15 @@ services:
       - key: VOYAGE_API_KEY
         sync: false
 
-  # Main Service
+  # Main Backend Service
   - type: web
-    name: roam-embeddings-search
-    runtime: docker
-    repo: https://github.com/MaskyS/roam-embeddings-search
+    name: roam-semantic-backend
+    runtime: image
+    image:
+      url: ghcr.io/maskys/roam-embeddings-search-backend:new-docs-93ea4d7
     plan: starter
-    # region: singapore
-    # healthCheckPath: /health
-    dockerContext: .
-    dockerfilePath: ./Dockerfile
-    rootDir: backend
-    autoDeployTrigger: commit
+    healthCheckPath: /health
+    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
     disk:
       name: disk
       mountPath: /app/data
@@ -51,7 +48,7 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: CHUNKER_SERVICE_URL
-        value: http://roam-chunker:8000
+        value: http://roam-semantic-chunker:8000
       - key: WEAVIATE_COLLECTION_NAME
         value: RoamSemanticChunks
       - key: ROAM_API_TOKEN
