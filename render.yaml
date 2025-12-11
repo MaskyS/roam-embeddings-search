@@ -39,7 +39,7 @@ services:
       url: ghcr.io/maskys/roam-embeddings-search-backend:new-docs-0efcebc
     plan: starter
     healthCheckPath: /health
-    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
+    startCommand: sh -c 'export CHUNKER_SERVICE_URL=http://$CHUNKER_HOSTPORT && uvicorn services.search_service:app --host 0.0.0.0 --port 8000'
     disk:
       name: disk
       mountPath: /app/data
@@ -47,8 +47,11 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
-      - key: CHUNKER_SERVICE_URL
-        value: http://roam-semantic-chunker:8000
+      - key: CHUNKER_HOSTPORT
+        fromService:
+          type: web
+          name: roam-semantic-chunker
+          property: hostport
       - key: WEAVIATE_COLLECTION_NAME
         value: RoamSemanticChunks
       - key: ROAM_API_TOKEN
