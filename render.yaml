@@ -11,7 +11,6 @@ services:
     image:
       url: ghcr.io/maskys/roam-embeddings-search-chunker:latest
     plan: starter
-    region: singapore
     healthCheckPath: /health
     startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
     envVars:
@@ -39,7 +38,6 @@ services:
     image:
       url: ghcr.io/maskys/roam-embeddings-search-backend:latest
     plan: starter
-    region: singapore
     # Re-enable health check once docker image for main backend supports it
     # healthCheckPath: /health
     startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
