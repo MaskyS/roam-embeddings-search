@@ -48,6 +48,7 @@ services:
     # Development: Build from source with hot-reload
     build:
       context: ./backend
+      dockerfile: Dockerfile.backend
     # Production alternative: Use pre-built image from GHCR
     # Uncomment the line below and comment out 'build' section:
     # image: ghcr.io/maskys/roam-embeddings-search-backend:latest
@@ -71,6 +72,7 @@ services:
     # Development: Build from source
     build:
       context: ./backend
+      dockerfile: Dockerfile.chunker
     # Production alternative: Use pre-built image from GHCR
     # Uncomment the line below and comment out 'build' section:
     # image: ghcr.io/maskys/roam-embeddings-search-chunker:latest
