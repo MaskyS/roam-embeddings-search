@@ -124,6 +124,15 @@ Performs semantic search across your Roam graph.
   - `url`: Deep link to Roam (optional, when `GRAPH_SLUG` is set)
   - `highlights`: Query match highlights (optional)
 
+## Complementary Tools
+
+This server focuses exclusively on semantic search. For direct Roam API access (creating/updating pages and blocks, structured queries, Datomic queries), consider using [roam-research-mcp](https://github.com/2b3pro/roam-research-mcp) alongside this server. The two MCP servers serve different purposes:
+
+- **This server**: AI-powered semantic search using VoyageAI embeddings and vector similarity
+- **roam-research-mcp**: Direct CRUD operations and structured queries against Roam's API
+
+Both can be installed together in Claude Desktop for complementary functionality.
+
 ## Notes
 
 - Logging goes to stderr; no stdout prints to keep stdio transport stable
