@@ -13,7 +13,10 @@ Deploy the Roam Semantic Search system to [Render](https://render.com/) with one
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MaskyS/roam-embeddings-search)
 
-Click the button above to deploy. You'll be prompted to enter the following API keys:
+Click the button above to deploy. You'll be prompted to:
+1. Set a **Blueprint Name** (can be anything you like)
+2. Set the **Branch** to `main` (important: must be `main`)
+3. Enter the required API keys listed below:
 
 ### Required Environment Variables
 
