@@ -1,0 +1,15 @@
+{
+  "name": "Roam Semantic Search",
+  "short_description": "Hybrid semantic search using VoyageAI embeddings and Weaviate vector database",
+  "author": "MaskyS",
+  "tags": [
+    "semantic search",
+    "embeddings",
+    "vector search",
+    "hybrid search"
+  ],
+  "source_url": "https://github.com/MaskyS/roam-embeddings-search",
+  "source_repo": "https://github.com/MaskyS/roam-embeddings-search.git",
+  "source_commit": "4320a4c1bcf34bd05ef2dd06d4915e82649a5ab0",
+  "source_subdir": "roam-semantic-search"
+}
