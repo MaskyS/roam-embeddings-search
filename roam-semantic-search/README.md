@@ -22,7 +22,7 @@ An extension that lets you run hybrid semantic search inside Roam. It provides a
 ## Prerequisites
 
 Before loading the extension, make sure you have:
-- **Semantic backend running** – See the [Installation](#installation) section below for server setup instructions.
+- **Semantic backend running** – See the Installation section below for server setup instructions.
 - **Initial sync completed** – Trigger `/sync/start` with `mode: "full"` (and optionally `recreate_collection: true`) so Weaviate has your graph content. New installs must finish at least one successful sync.
 - **Browser access to the backend** – If Roam is accessed over HTTPS, expose the backend through HTTPS (reverse proxy) or a trusted tunnel. CORS is already configured server-side for Roam domains and `localhost`.
 
