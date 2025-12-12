@@ -9,7 +9,7 @@ services:
     name: roam-semantic-chunker
     runtime: image
     image:
-      url: ghcr.io/maskys/roam-embeddings-search-chunker:new-docs-0efcebc
+      url: ghcr.io/maskys/roam-embeddings-search-chunker:latest
     plan: starter
     healthCheckPath: /health
     startCommand: uvicorn services.chunker_service:app --host 0.0.0.0 --port 8000
@@ -36,7 +36,7 @@ services:
     name: roam-semantic-backend
     runtime: image
     image:
-      url: ghcr.io/maskys/roam-embeddings-search-backend:new-docs-0efcebc
+      url: ghcr.io/maskys/roam-embeddings-search-backend:latest
     plan: starter
     healthCheckPath: /health
     startCommand: sh -c 'export CHUNKER_SERVICE_URL=http://$CHUNKER_HOSTPORT && uvicorn services.search_service:app --host 0.0.0.0 --port 8000'
