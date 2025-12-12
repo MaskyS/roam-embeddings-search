@@ -36,6 +36,27 @@ All other settings are pre-configured in the `render.yaml` file.
 
 Once both services have been successfully deployed, copy the instance URL of the web service `roam-semantic-backend-<ID>` and use it as backend URL for the Roam extension. The URL looks like `https://roam-semantic-backend-<ID>.onrender.com`
 
+## Important: Manual Sync Required for Updates
+
+**Blueprint and its services do not automatically sync after a commit is pushed to GitHub.** You must manually trigger updates in Render:
+
+### When to Sync Blueprint
+If you've made changes to `render.yaml` (e.g., updated environment variables, changed service configuration, added new services):
+1. Go to your Render dashboard
+2. Navigate to **Blueprints**
+3. Find your blueprint and click **Sync Blueprint**
+4. Render will apply the changes from the updated `render.yaml`
+
+### When to Deploy Latest Image
+If you've made changes to the application code (Python files, Dockerfile, etc.) but **not** to `render.yaml`:
+1. Go to your Render dashboard
+2. For each affected service (`roam-semantic-backend` and/or `roam-semantic-chunker`):
+   - Click on the service name
+   - Click **Manual Deploy** → **Deploy latest commit**
+   - Or click **Manual Deploy** → **Clear build cache & deploy** if you need a fresh build
+
+> **Note:** Docker images are built automatically via GitHub Actions and pushed to GitHub Container Registry (GHCR). However, Render won't pull the new images until you manually trigger a deployment for each service.
+
 ## What Gets Deployed
 
 The blueprint creates two services:
