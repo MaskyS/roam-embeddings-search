@@ -277,9 +277,9 @@ async def ping():
     Ping endpoint that pings the chunker service to keep both services alive.
     Useful for preventing free tier services from spinning down.
     """
+    chunker_url = SYNC_CONFIG.chunker_url
     try:
         # Ping the chunker service
-        chunker_url = SYNC_CONFIG.chunker_url
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(f"{chunker_url}/health")
             response.raise_for_status()
@@ -288,14 +288,16 @@ async def ping():
         return {
             "status": "ok",
             "message": "Backend and chunker services are alive",
+            "chunker_url": chunker_url,
             "chunker_status": chunker_data.get("status", "unknown"),
             "chunker_loaded": chunker_data.get("chunker_loaded", False),
         }
     except Exception as e:
-        LOGGER.error("Failed to ping chunker service", error=str(e))
+        LOGGER.error("Failed to ping chunker service", error=str(e), chunker_url=chunker_url)
         return {
             "status": "ok",
             "message": "Backend is alive, but chunker ping failed",
+            "chunker_url": chunker_url,
             "chunker_error": str(e),
         }
 
