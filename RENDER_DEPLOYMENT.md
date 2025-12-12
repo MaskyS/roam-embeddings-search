@@ -30,6 +30,8 @@ Click the button above to deploy. You'll be prompted to:
 - `WEAVIATE_CLOUD_URL` - Your Weaviate Cloud instance URL (REST Endpoint)
 - `WEAVIATE_CLOUD_API_KEY` - Your Weaviate Cloud API key with admin role
 
+> **⚠️ Important:** When pasting environment variable values in Render's UI, ensure there are **no extra spaces or newlines** before or after the values. Trailing whitespace can cause authentication failures and service errors.
+
 All other settings are pre-configured in the `render.yaml` file.
 
 Once both services have been successfully deployed, copy the instance URL of the web service `roam-semantic-backend-<ID>` and use it as backend URL for the Roam extension. The URL looks like `https://roam-semantic-backend-<ID>.onrender.com`
