@@ -30,6 +30,11 @@ const autoSyncState = {
   next_run_time: null,
 };
 
+const autoPingState = {
+  enabled: false,
+  intervalId: null,
+};
+
 function isJobActive(status) {
   const st = status?.status || status?.summary?.status;
   return st === "running" || st === "cancelling";
@@ -1024,6 +1029,62 @@ function updateAutoSyncDisplay() {
   }
 }
 
+function isRenderUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.includes('onrender.com');
+  } catch {
+    return false;
+  }
+}
+
+async function pingBackend() {
+  try {
+    const url = `${config.backendURL}/ping`;
+    console.log(`[Semantic Search] Auto-ping: ${url}`);
+    const response = await fetch(url);
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`[Semantic Search] Ping successful:`, data);
+    } else {
+      console.warn(`[Semantic Search] Ping returned status ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`[Semantic Search] Ping failed:`, error);
+  }
+}
+
+function startAutoPing() {
+  if (autoPingState.intervalId) {
+    clearInterval(autoPingState.intervalId);
+  }
+
+  // Ping every 14 minutes (840000 ms)
+  autoPingState.intervalId = setInterval(pingBackend, 14 * 60 * 1000);
+  console.log('[Semantic Search] Auto-ping started (every 14 minutes)');
+
+  // Do initial ping
+  pingBackend();
+}
+
+function stopAutoPing() {
+  if (autoPingState.intervalId) {
+    clearInterval(autoPingState.intervalId);
+    autoPingState.intervalId = null;
+    console.log('[Semantic Search] Auto-ping stopped');
+  }
+}
+
+function updateAutoPing() {
+  const shouldPing = autoPingState.enabled && isRenderUrl(config.backendURL);
+
+  if (shouldPing && !autoPingState.intervalId) {
+    startAutoPing();
+  } else if (!shouldPing && autoPingState.intervalId) {
+    stopAutoPing();
+  }
+}
+
 async function performSearch() {
   const input = document.querySelector(".rss-input");
   if (!input) return;
@@ -1501,7 +1562,22 @@ function createSettingsPanel() {
               extensionAPI.settings.set("backend-url", newUrl);
               searchAPI = new SearchAPI(newUrl);
               console.log("[Semantic Search] Backend URL updated:", newUrl);
+              // Update auto-ping based on new URL
+              updateAutoPing();
             }
+          },
+        },
+      },
+      {
+        id: "auto-ping-enabled",
+        name: "Auto-Ping (Render Keep-Alive)",
+        description: "Automatically ping backend every 14 minutes if URL is from Render (prevents free tier spin-down)",
+        action: {
+          type: "switch",
+          onChange: (e) => {
+            autoPingState.enabled = e.target.checked;
+            extensionAPI.settings.set("auto-ping-enabled", autoPingState.enabled);
+            updateAutoPing();
           },
         },
       },
@@ -1735,10 +1811,20 @@ export default {
     // Initialize API client
     searchAPI = new SearchAPI(config.backendURL);
 
+    // Load auto-ping preference
+    const autoPingSetting = extensionAPI.settings.get("auto-ping-enabled");
+    autoPingState.enabled = autoPingSetting === true; // Default to false if not set
+    if (autoPingSetting === undefined || autoPingSetting === null) {
+      extensionAPI.settings.set("auto-ping-enabled", false);
+    }
+
     // Create settings panel
     extensionAPI.settings.panel.create(createSettingsPanel());
     setTimeout(() => updateSyncStatusDisplay(syncState.lastStatus), 100);
     setTimeout(() => fetchScheduleConfig(), 200);
+
+    // Start auto-ping if enabled and URL is from Render
+    updateAutoPing();
 
     // Resume polling if a job is already running
     fetchAndNotifyStatus(false)
@@ -1798,6 +1884,7 @@ export default {
     }
 
     stopSyncPolling();
+    stopAutoPing();
 
     // Remove styles
     const styles = document.getElementById("rss-styles");

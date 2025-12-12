@@ -75,6 +75,7 @@ You're ready to search! Open the Command Palette (Cmd/Ctrl + P) and type "Semant
 
 Open the command palette (`Cmd/Ctrl+P`) → "Semantic Search: Open Settings" or use the Roam Depot settings drawer. Key settings:
 - **Backend URL** – Point this to your deployment (e.g., `http://localhost:8002` or `https://search.example.com`). Changing it updates the API client immediately.
+- **Auto-Ping (Render Keep-Alive)** – Automatically pings the backend every 14 minutes when the backend URL is from Render (contains `onrender.com`). This prevents Render's free tier from spinning down after 15 minutes of inactivity. **Disabled by default**. Enable this if you're using Render's free tier.
 - **Result Limit** – Maximum rows the modal renders (1–100).
 - **Search Delay (ms)** – Debounce between keystrokes and API calls (100–1000ms).
 - **Sync Test Page Limit** – Default `limit` used when running "Sync Test Page Limit" mode from the panel.
@@ -121,3 +122,4 @@ Status updates poll `/sync/status` and display progress, including failures.
 - The extension exports `onload`/`onunload` for Depot compatibility; use `extension.old.js` for prior experiments.
 - When iterating locally, keep the backend running with `uvicorn main_semantic:app --reload` on port 8002 so requests succeed.
 - Inspect the browser console (`Cmd/Ctrl+Shift+J`) for diagnostic logs prefixed with `[Semantic Search]`.
+- **Auto-ping logs**: When auto-ping is enabled, you'll see `[Semantic Search] Auto-ping: <url>` and `[Semantic Search] Ping successful: <data>` messages in the console every 14 minutes. This helps verify the keep-alive mechanism is working.

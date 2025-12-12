@@ -271,6 +271,35 @@ async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/ping")
+async def ping():
+    """
+    Ping endpoint that pings the chunker service to keep both services alive.
+    Useful for preventing free tier services from spinning down.
+    """
+    try:
+        # Ping the chunker service
+        chunker_url = SYNC_CONFIG.chunker_url
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{chunker_url}/health")
+            response.raise_for_status()
+            chunker_data = response.json()
+
+        return {
+            "status": "ok",
+            "message": "Backend and chunker services are alive",
+            "chunker_status": chunker_data.get("status", "unknown"),
+            "chunker_loaded": chunker_data.get("chunker_loaded", False),
+        }
+    except Exception as e:
+        LOGGER.error("Failed to ping chunker service", error=str(e))
+        return {
+            "status": "ok",
+            "message": "Backend is alive, but chunker ping failed",
+            "chunker_error": str(e),
+        }
+
+
 @app.get("/")
 async def read_root(ctx=Depends(get_context)):
     # Be resilient: return a 200 with readiness info even if schema is missing

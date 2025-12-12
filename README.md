@@ -152,6 +152,7 @@ Built-in buttons in extension settings:
 - **Sync Recently Edited Pages** – Incremental sync (only changed pages)
 - **Full Sync** – Re-index entire graph (use sparingly)
 - **Clear Database** – Deletes all vectors (destructive, requires full sync after)
+- **Auto-Ping (Render Keep-Alive)** – Enable this toggle if using Render's free tier. Automatically pings the backend every 14 minutes to prevent the service from spinning down after 15 minutes of inactivity. Only activates when the backend URL contains `onrender.com`. Disabled by default.
 
 ### Search Tips
 - Searches find semantically similar content, not just keyword matches
@@ -483,6 +484,22 @@ Roam pages don't update their `:edit/time` when children change, so we aggregate
 For pages without children, all content lives in `:node/title`. The pipeline skips the second Roam pull and chunker entirely, embedding only the page object. This saves API calls and chunker latency for ~30-50% of typical graphs.
 
 ## Reference
+
+### Backend API Endpoints
+
+- **GET /ping** - Keep-alive endpoint that pings both backend and chunker service. Returns status of both services. Useful for preventing free tier services (like Render) from spinning down.
+- **GET /health** - Simple health check for the backend service only.
+- **GET /** - Returns backend status, Weaviate readiness, and collection statistics.
+- **GET /search** - Hybrid semantic search (query parameters: `q`, `limit`, `alpha`, `exclude_pages`, `rerank`).
+- **POST /sync/start** - Start a sync job (body: `mode`, `limit`, `recreate_collection`).
+- **POST /sync/cancel** - Cancel a running sync job.
+- **GET /sync/status** - Get current sync job status and progress.
+- **GET /sync/runs** - List recent sync runs from database.
+- **POST /sync/clear** - Clear all documents from Weaviate (destructive).
+- **GET /sync/schedule** - Get auto-sync schedule configuration.
+- **POST /sync/schedule** - Update auto-sync schedule (body: `enabled`, `schedule_time`, `timezone`).
+
+### Source Code
 
 - **Backend source**: `backend/` (see `services/`, `sync/`, `clients/`, `common/`)
 - **CLI sync**: `backend/cli/sync.py` (run sync outside API)
