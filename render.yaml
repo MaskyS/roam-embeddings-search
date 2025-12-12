@@ -39,7 +39,7 @@ services:
       url: ghcr.io/maskys/roam-embeddings-search-backend:latest
     plan: starter
     healthCheckPath: /health
-    startCommand: bash start.sh
+    startCommand: uvicorn services.search_service:app --host 0.0.0.0 --port 8000
     disk:
       name: disk
       mountPath: /app/data

@@ -42,6 +42,17 @@ class SyncConfig:
         return bool(self.weaviate_cloud_url)
 
 
+# Determine chunker_url programmatically if CHUNKER_HOSTPORT is set by render.yaml (This implies that the code is running on a Render instance).
+_chunker_hostport = os.getenv("CHUNKER_HOSTPORT")
+if _chunker_hostport:
+    # Extract hostname (before the colon)
+    _chunker_host = _chunker_hostport.split(":", 1)[0]
+    chunker_url = f"https://{_chunker_host}.onrender.com"
+else:
+    # Fallback to CHUNKER_SERVICE_URL or local default
+    chunker_url = os.getenv("CHUNKER_SERVICE_URL", "http://127.0.0.1:8003")
+
+
 CONFIG = SyncConfig(
     batch_size=20,
     metadata_batch_size=int(os.getenv("ROAM_METADATA_BATCH_SIZE", "500")),
@@ -55,7 +66,7 @@ CONFIG = SyncConfig(
     weaviate_grpc_secure=os.getenv("WEAVIATE_GRPC_SECURE", "false").lower() == "true",
     weaviate_cloud_url=os.getenv("WEAVIATE_CLOUD_URL"),
     weaviate_cloud_api_key=os.getenv("WEAVIATE_CLOUD_API_KEY"),
-    chunker_url=os.getenv("CHUNKER_SERVICE_URL", "http://127.0.0.1:8003"),
+    chunker_url=chunker_url,
     chunker_retries=3,
     chunker_retry_delay=2,
     sync_version="semantic_v3_incremental",
