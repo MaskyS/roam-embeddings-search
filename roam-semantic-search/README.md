@@ -1,34 +1,75 @@
 # Roam Semantic Search Extension
 
-A Roam Depot–compatible extension that lets you run hybrid semantic search inside Roam by connecting to the backend in this repository. It provides a search modal, sync controls, reranking toggles, and status visibility directly from Roam's UI.
+An extension that lets you run hybrid semantic search inside Roam. It provides a search modal, sync controls, reranking toggles, and status visibility directly from Roam's UI.
+
+![Semantic Search Settings](https://raw.githubusercontent.com/MaskyS/roam-embeddings-search/main/roam-semantic-search/search-settings.png)
+
+![Semantic Search in Action](https://raw.githubusercontent.com/MaskyS/roam-embeddings-search/main/roam-semantic-search/search-results.png)
+
+*The semantic search modal showing results with highlighted matches, similarity scores, and parent context.*
+
+## Main Features
+
+- **Semantic Search Modal** – Find blocks by meaning, not just keywords. Search using natural language queries to discover relevant content across your entire graph.
+- **Hybrid Search** – Combines vector similarity with BM25 keyword matching for best-of-both-worlds results. Adjust the alpha slider to balance semantic vs. keyword search.
+- **VoyageAI Reranking** – Optional server-side reranking for improved result relevance using state-of-the-art reranking models.
+- **In-Roam Sync Controls** – Trigger full syncs, incremental syncs, or limited test syncs directly from the extension settings panel.
+- **Real-time Status** – View sync progress, success/failure states, and collection statistics without leaving Roam.
+- **Keyboard Navigation** – Fast result browsing with arrow keys, Enter to open in main pane, Shift+Enter for sidebar.
+- **Contextual Results** – Each result shows the block text with highlighted matches, parent context, similarity score, and source page.
+- **Flexible Configuration** – Customize result limits, search debounce, hybrid search balance, and more from the settings panel.
 
 ## Prerequisites
 
 Before loading the extension, make sure you have:
-- **Semantic backend running** – Follow `../README.md` to launch Weaviate, the chunker service, and `backend/main_semantic.py`. The default local endpoint is `http://localhost:8002`.
+- **Semantic backend running** – See the [Installation](#installation) section below for server setup instructions.
 - **Initial sync completed** – Trigger `/sync/start` with `mode: "full"` (and optionally `recreate_collection: true`) so Weaviate has your graph content. New installs must finish at least one successful sync.
 - **Browser access to the backend** – If Roam is accessed over HTTPS, expose the backend through HTTPS (reverse proxy) or a trusted tunnel. CORS is already configured server-side for Roam domains and `localhost`.
 
-## Installation options
+## Installation
 
-### 1. Inline `roam/js`
-1. Open `roam-semantic-search/extension.js` and copy the file contents.
-2. In Roam, create a block containing `{{[[roam/js]]}}`.
-3. Add a child code block (\`\`\`javascript) and paste the script.
-4. Click "Yes, I know what I'm doing" when prompted and refresh the page if necessary.
+### Step 1: Set Up the Backend Server
 
-### 2. Hosted script (e.g., GitHub Gist)
-1. Upload `extension.js` to a public location that serves a raw JavaScript file.
-2. In Roam, create a `{{[[roam/js]]}}` block.
-3. In a child block, add:
-   ```javascript
-   var s = document.createElement("script");
-   s.src = "https://your-hosted-extension.js";
-   document.head.appendChild(s);
-   ```
-4. Reload Roam so the script initializes.
+You need a running backend server to use this extension. You have two options:
 
-Once the code is loaded, the extension registers in Roam Depot settings and command palette automatically.
+**Option A: Cloud Deployment (Recommended)**
+- Quick setup with Render and Weaviate Cloud (~10-15 minutes)
+- No local infrastructure required
+- **Cost**: ~$60/month (Render + Weaviate Cloud)
+- [Follow the Quick Start guide](https://github.com/MaskyS/roam-embeddings-search#quick-start-cloud-deployment) in the main repository
+
+**Option B: Local Development**
+- Run everything on your machine using Docker
+- Free to run, but requires Docker setup
+- Good for development and testing
+- [Follow the Local Development guide](https://github.com/MaskyS/roam-embeddings-search#local-development) in the main repository
+
+Once your backend is running, you'll have a URL (e.g., `https://roam-semantic-backend-XXXX.onrender.com` for cloud or `http://localhost:8002` for local).
+
+### Step 2: Install the Extension in Roam
+
+1. Sign in to your Roam Research graph
+2. Go to **Settings** → **Roam Depot** → **Installed Extensions**
+3. Enable **Developer Mode**
+4. Click **Add Extension by URL**
+5. Paste this URL: `https://raw.githubusercontent.com/MaskyS/roam-embeddings-search/refs/heads/main/roam-semantic-search/`
+6. Click **Add** to install
+
+### Step 3: Configure the Extension
+
+1. Go to **Settings** → **Extension Settings** → **Semantic Search (dev)**
+2. Set **Backend URL** to your server URL:
+   - Cloud: `https://roam-semantic-backend-XXXX.onrender.com`
+   - Local: `http://localhost:8002`
+3. Click **Test Connection** to verify it works
+
+You're ready to search! Open the Command Palette (Cmd/Ctrl + P) and type "Semantic Search".
+
+---
+
+**For more information, check out our docs at https://github.com/MaskyS/roam-embeddings-search**
+
+---
 
 ## Configuration
 
@@ -80,5 +121,3 @@ Status updates poll `/sync/status` and display progress, including failures.
 - The extension exports `onload`/`onunload` for Depot compatibility; use `extension.old.js` for prior experiments.
 - When iterating locally, keep the backend running with `uvicorn main_semantic:app --reload` on port 8002 so requests succeed.
 - Inspect the browser console (`Cmd/Ctrl+Shift+J`) for diagnostic logs prefixed with `[Semantic Search]`.
-
-For end-to-end setup details, see the repository root `README.md`.
