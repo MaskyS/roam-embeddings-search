@@ -66,40 +66,6 @@ Once deployed:
 
 > **Detailed deployment guide:** [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
 
-### Trigger Initial Sync
-
-Populate your vector database with your Roam graph:
-
-```bash
-# Replace <YOUR-BACKEND-URL> with your actual Render URL
-curl -X POST https://roam-semantic-backend-XXXX.onrender.com/sync/start \
-  -H 'Content-Type: application/json' \
-  -d '{"mode": "full", "recreate_collection": true}'
-```
-
-Monitor sync progress:
-```bash
-# Check sync status
-curl https://roam-semantic-backend-XXXX.onrender.com/sync/status
-
-# View recent sync runs
-curl https://roam-semantic-backend-XXXX.onrender.com/sync/runs
-```
-
-The sync will:
-1. Fetch all page UIDs from your Roam graph
-2. Pull page content and detect changes
-3. Break pages into semantic chunks
-4. Generate embeddings with VoyageAI
-5. Store in Weaviate for hybrid search
-
-**First sync timing**: Depends on your graph size (expect 5-20 minutes for most graphs)
-
-**Cancel if needed:**
-```bash
-curl -X POST https://roam-semantic-backend-XXXX.onrender.com/sync/cancel
-```
-
 ### Install the Roam Extension
 
 #### Enable Developer Mode
