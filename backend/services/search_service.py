@@ -278,6 +278,13 @@ async def ping():
     Useful for preventing free tier services from spinning down.
     """
     chunker_url = SYNC_CONFIG.chunker_url
+    chunker_hostport = os.getenv("CHUNKER_HOSTPORT", "not set")
+    LOGGER.info(
+        "Ping endpoint called",
+        chunker_url=chunker_url,
+        chunker_hostport=chunker_hostport,
+        chunker_service_url_env=os.getenv("CHUNKER_SERVICE_URL", "not set"),
+    )
     try:
         # Ping the chunker service
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -289,6 +296,8 @@ async def ping():
             "status": "ok",
             "message": "Backend and chunker services are alive",
             "chunker_url": chunker_url,
+            "chunker_hostport": chunker_hostport,
+            "chunker_service_url_env": os.getenv("CHUNKER_SERVICE_URL", "not set"),
             "chunker_status": chunker_data.get("status", "unknown"),
             "chunker_loaded": chunker_data.get("chunker_loaded", False),
         }
@@ -298,6 +307,8 @@ async def ping():
             "status": "ok",
             "message": "Backend is alive, but chunker ping failed",
             "chunker_url": chunker_url,
+            "chunker_hostport": chunker_hostport,
+            "chunker_service_url_env": os.getenv("CHUNKER_SERVICE_URL", "not set"),
             "chunker_error": str(e),
         }
 
