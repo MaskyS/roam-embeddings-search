@@ -8,7 +8,6 @@ services:
   - type: web
     name: roam-semantic-chunker
     runtime: image
-    branch: main
     image:
       url: ghcr.io/maskys/roam-embeddings-search-chunker:latest
     plan: starter
@@ -36,7 +35,6 @@ services:
   - type: web
     name: roam-semantic-backend
     runtime: image
-    branch: main
     image:
       url: ghcr.io/maskys/roam-embeddings-search-backend:latest
     plan: starter
