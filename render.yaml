@@ -39,7 +39,7 @@ services:
       url: ghcr.io/maskys/roam-embeddings-search-backend:latest
     plan: starter
     healthCheckPath: /health
-    startCommand: bash -c 'export CHUNKER_SERVICE_URL=https://${CHUNKER_HOSTPORT%%:*}.onrender.com && uvicorn services.search_service:app --host 0.0.0.0 --port 8000'
+    startCommand: bash start.sh
     disk:
       name: disk
       mountPath: /app/data
