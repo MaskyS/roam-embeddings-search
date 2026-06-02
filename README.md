@@ -1,6 +1,10 @@
+
 # Roam Semantic Search
 
 Add powerful semantic search to your Roam Research graph. This system ingests your Roam pages into a vector database using AI embeddings, letting you find relevant notes by meaning rather than just keywords. Includes a FastAPI backend, optional auto-sync, and a Roam extension for in-app search.
+
+# IMPORTANT: ARCHIVED
+- The Official Roam team adapted some thinking in here and did some other things of their own; an official semantic search feature exists now and will be out of beta soon.
 
 ## Quick Start (Cloud Deployment)
 
